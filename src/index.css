@@ -127,11 +127,34 @@ select:focus {
 
 /* Custom button styles */
 .btn-primary {
-  @apply bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-200;
+  @apply bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-200 px-4 py-2 sm:px-6 sm:py-3;
 }
 
 .btn-secondary {
-  @apply backdrop-blur-lg bg-white/10 border border-white/20 text-white rounded-lg hover:bg-white/20 transition-colors;
+  @apply backdrop-blur-lg bg-white/10 border border-white/20 text-white rounded-lg hover:bg-white/20 transition-colors px-4 py-2 sm:px-6 sm:py-3;
+}
+
+/* Responsive containers */
+.container-responsive {
+  @apply px-4 sm:px-6 lg:px-8;
+}
+
+/* Responsive grid */
+.grid-responsive {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6;
+}
+
+/* Responsive text */
+.text-responsive-xl {
+  @apply text-2xl sm:text-3xl lg:text-4xl xl:text-5xl;
+}
+
+.text-responsive-lg {
+  @apply text-xl sm:text-2xl lg:text-3xl;
+}
+
+.text-responsive-base {
+  @apply text-sm sm:text-base lg:text-lg;
 }
 
 /* Status indicators */
@@ -203,4 +226,77 @@ select:focus {
   transform: translateX(100%);
   opacity: 0;
   transition: transform 300ms ease-in, opacity 300ms ease-in;
+}
+
+/* Responsive utilities */
+@media (max-width: 480px) {
+  .xs\:hidden {
+    display: none;
+  }
+  
+  .xs\:inline {
+    display: inline;
+  }
+  
+  .xs\:block {
+    display: block;
+  }
+  
+  .xs\:flex {
+    display: flex;
+  }
+}
+
+/* Mobile-first responsive text */
+@media (max-width: 640px) {
+  .mobile-text-sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  
+  .mobile-text-xs {
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+}
+
+/* Touch-friendly buttons */
+@media (hover: none) and (pointer: coarse) {
+  button, .btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Prevent zoom on input focus on iOS */
+@media screen and (max-width: 767px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* Safe area for mobile devices with notches */
+@supports (padding: max(0px)) {
+  .safe-area-inset {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+  
+  .safe-area-top {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+  
+  .safe-area-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
 }

@@ -31,7 +31,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, isLoading, error }) 
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-4 sm:p-6 relative overflow-hidden">
       {/* Animated Background */}
       <div className="fixed inset-0 overflow-hidden">
         <div className="absolute -top-4 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
@@ -40,17 +40,17 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, isLoading, error }) 
         <div className="absolute top-1/2 right-1/3 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-6000"></div>
       </div>
 
-      <div className="relative z-10 w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
+      <div className="relative z-10 w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-center">
         {/* Left Side - Branding */}
-        <div className="text-center lg:text-left space-y-8">
+        <div className="text-center lg:text-left space-y-6 lg:space-y-8 order-2 lg:order-1">
           <div>
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-6">
-              <span className="text-white font-bold text-2xl">S</span>
+            <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4 sm:mb-6">
+              <span className="text-white font-bold text-xl sm:text-2xl">S</span>
             </div>
-            <h1 className="text-5xl font-bold text-white mb-4">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-3 sm:mb-4">
               Support<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">Desk</span>
             </h1>
-            <p className="text-xl text-gray-300 leading-relaxed">
+            <p className="text-base sm:text-lg lg:text-xl text-gray-300 leading-relaxed">
               Advanced customer support ticketing system with real-time collaboration and intelligent automation.
             </p>
           </div>
@@ -59,12 +59,12 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, isLoading, error }) 
         </div>
 
         {/* Right Side - Login Form */}
-        <div className="backdrop-blur-lg bg-white/10 border border-white/20 rounded-2xl p-8 shadow-2xl">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-white mb-2">
+        <div className="backdrop-blur-lg bg-white/10 border border-white/20 rounded-2xl p-6 sm:p-8 shadow-2xl order-1 lg:order-2">
+          <div className="text-center mb-6 sm:mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
               {isLoginMode ? 'Welcome Back' : 'Create Account'}
             </h2>
-            <p className="text-gray-300">
+            <p className="text-sm sm:text-base text-gray-300">
               {isLoginMode ? 'Sign in to your account' : 'Sign up for a new account'}
             </p>
           </div>
@@ -75,7 +75,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, isLoading, error }) 
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             {!isLoginMode && (
               <>
                 <div>
@@ -88,7 +88,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, isLoading, error }) 
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="w-full pl-10 pr-4 py-2 sm:py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm sm:text-base"
                       placeholder="Enter your full name"
                       required
                     />
@@ -104,7 +104,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, isLoading, error }) 
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="w-full pl-10 pr-4 py-2 sm:py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm sm:text-base"
                       placeholder="Enter your phone number"
                       required
                     />
@@ -123,7 +123,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, isLoading, error }) 
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-4 py-2 sm:py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm sm:text-base"
                   placeholder="Enter your email"
                   autoComplete="username"
                   required
@@ -141,7 +141,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, isLoading, error }) 
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-12 py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-12 py-2 sm:py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm sm:text-base"
                   placeholder="Enter your password"
                   autoComplete="current-password"
                   required
@@ -197,7 +197,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, isLoading, error }) 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              className="w-full py-2 sm:py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-sm sm:text-base"
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>

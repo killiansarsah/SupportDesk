@@ -58,13 +58,13 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ user, tickets, on
     icon: React.ReactNode;
     color: string;
   }> = ({ title, value, icon, color }) => (
-    <div className="backdrop-blur-lg bg-white/10 border border-white/20 rounded-xl p-6 hover:bg-white/15 transition-all duration-300">
+    <div className="backdrop-blur-lg bg-white/10 border border-white/20 rounded-xl p-3 sm:p-6 hover:bg-white/15 transition-all duration-300">
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-gray-300 text-sm">{title}</p>
-          <p className="text-2xl font-bold text-white mt-1">{value}</p>
+        <div className="min-w-0 flex-1">
+          <p className="text-gray-300 text-xs sm:text-sm truncate">{title}</p>
+          <p className="text-lg sm:text-2xl font-bold text-white mt-1">{value}</p>
         </div>
-        <div className={`p-3 rounded-lg ${color}`}>
+        <div className={`p-2 sm:p-3 rounded-lg ${color} flex-shrink-0`}>
           {icon}
         </div>
       </div>
@@ -95,22 +95,23 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ user, tickets, on
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-center space-y-4 lg:space-y-0">
-        <div className="text-center lg:text-left">
-          <h1 className="text-4xl font-bold text-white">My Support Tickets</h1>
-          <p className="text-gray-300">Track and manage your support requests</p>
+      <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0 gap-4">
+        <div className="text-center sm:text-left">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">My Support Tickets</h1>
+          <p className="text-sm sm:text-base text-gray-300">Track and manage your support requests</p>
         </div>
         <button
           onClick={() => setShowCreateTicket(true)}
-          className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-200"
+          className="flex items-center space-x-2 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-200 text-sm sm:text-base whitespace-nowrap"
         >
-          <Plus className="w-5 h-5" />
-          <span>Create New Ticket</span>
+          <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span className="hidden xs:inline">Create New Ticket</span>
+          <span className="xs:hidden">Create</span>
         </button>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         <StatCard
           title="Open Tickets"
           value={openTickets.length}
@@ -138,10 +139,10 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ user, tickets, on
       </div>
 
       {/* Tickets Section */}
-      <div className="backdrop-blur-lg bg-white/10 border border-white/20 rounded-xl p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-white">Your Tickets</h2>
-          <span className="text-gray-300 text-sm">{tickets.length} total tickets</span>
+      <div className="backdrop-blur-lg bg-white/10 border border-white/20 rounded-xl p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-2">
+          <h2 className="text-lg sm:text-xl font-semibold text-white">Your Tickets</h2>
+          <span className="text-gray-300 text-xs sm:text-sm">{tickets.length} total tickets</span>
         </div>
 
         {tickets.length === 0 ? (
@@ -151,7 +152,7 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ user, tickets, on
             <p className="text-gray-400 mb-6">Create your first support ticket to get help from our team.</p>
             <button
               onClick={() => setShowCreateTicket(true)}
-              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-200"
+              className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-200 text-sm sm:text-base"
             >
               Create First Ticket
             </button>

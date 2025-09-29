@@ -92,25 +92,25 @@ const TicketList: React.FC<TicketListProps> = ({
         <div
           key={ticket.id}
           onClick={() => onSelectTicket(ticket)}
-          className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-lg p-4 hover:bg-white/10 transition-all duration-200 cursor-pointer"
+          className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-lg p-3 sm:p-4 hover:bg-white/10 transition-all duration-200 cursor-pointer"
         >
           <div className="flex items-start justify-between mb-3">
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 pr-2">
               <div className="flex items-center space-x-2 mb-1">
                 {getPriorityIcon(ticket.priority)}
-                <h3 className="font-medium text-white truncate">{ticket.title}</h3>
+                <h3 className="font-medium text-white truncate text-sm sm:text-base">{ticket.title}</h3>
               </div>
-              <p className="text-gray-400 text-sm line-clamp-2">{ticket.description}</p>
+              <p className="text-gray-400 text-xs sm:text-sm line-clamp-2">{ticket.description}</p>
             </div>
             
-            <div className="flex flex-col items-end space-y-2 ml-4">
-              <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(ticket.status)}`}>
+            <div className="flex flex-col items-end space-y-2 flex-shrink-0">
+              <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(ticket.status)} whitespace-nowrap`}>
                 {ticket.status.replace('-', ' ')}
               </span>
               {showAssignOption && !ticket.assignedTo && (
                 <button
                   onClick={(e) => handleAssignToMe(e, ticket)}
-                  className="px-2 py-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 text-xs rounded border border-blue-500/30 transition-colors"
+                  className="px-2 py-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 text-xs rounded border border-blue-500/30 transition-colors whitespace-nowrap"
                 >
                   Assign to me
                 </button>
@@ -118,21 +118,21 @@ const TicketList: React.FC<TicketListProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center space-x-4 text-gray-400">
-              <span>#{ticket.id}</span>
-              <span className="flex items-center space-x-1">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs sm:text-sm">
+            <div className="flex items-center space-x-2 sm:space-x-4 text-gray-400 overflow-x-auto">
+              <span className="whitespace-nowrap">#{ticket.id}</span>
+              <span className="flex items-center space-x-1 whitespace-nowrap">
                 <User className="w-3 h-3" />
-                <span>{ticket.category}</span>
+                <span className="truncate max-w-20 sm:max-w-none">{ticket.category}</span>
               </span>
               {ticket.messages.length > 0 && (
-                <span className="flex items-center space-x-1">
+                <span className="flex items-center space-x-1 whitespace-nowrap">
                   <MessageSquare className="w-3 h-3" />
                   <span>{ticket.messages.length}</span>
                 </span>
               )}
             </div>
-            <span className="text-gray-400">{formatDate(ticket.updatedAt)}</span>
+            <span className="text-gray-400 text-xs sm:text-sm whitespace-nowrap">{formatDate(ticket.updatedAt)}</span>
           </div>
         </div>
       ))}
