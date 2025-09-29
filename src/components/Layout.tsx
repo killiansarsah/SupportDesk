@@ -16,12 +16,10 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, onNavigate, currentPage = 'dashboard' }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
-
   const userMenuRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
 
-  // Close user menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       try {
@@ -31,14 +29,12 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, onNavigate, c
         if (!containsInWrapper && !containsInDropdown) {
           setShowUserMenu(false);
         }
-      } catch (err) {
-        // defensive
+      } catch {
         setShowUserMenu(false);
       }
     };
 
     if (showUserMenu) {
-      // use 'click' so that menu item mouse/click handlers run first
       document.addEventListener('click', handleClickOutside);
     }
 
@@ -81,11 +77,12 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, onNavigate, c
         : 'bg-white/10 hover:bg-white/20 text-white'
     }`;
 
-  const NavButton = ({ page, icon: Icon, title }: { page: string; icon: any; title: string }) => (
+  const NavButton = ({ page, icon: Icon, title }: { page: string; icon: React.ElementType; title: string }) => (
     <button 
       onClick={() => onNavigate?.(page)}
-      className={getButtonClass(page)}
+      className={`${getButtonClass(page)} relative z-20`}
       title={title}
+      style={{ pointerEvents: 'auto' }}
     >
       <Icon className="w-4 h-4" />
     </button>
@@ -95,13 +92,25 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, onNavigate, c
     const menu = (
       <div
         ref={(el) => { dropdownRef.current = el; }}
-        style={menuPos ? { position: 'absolute', top: menuPos.top, left: menuPos.left, width: 192 } : undefined}
-        className="backdrop-blur-lg bg-white/10 border border-white/20 rounded-xl shadow-xl py-2 z-[999999] pointer-events-auto"
+        style={menuPos ? { 
+          position: 'fixed', 
+          top: menuPos.top, 
+          left: menuPos.left, 
+          width: 192,
+          zIndex: 999999,
+          pointerEvents: 'auto'
+        } : undefined}
+        className="backdrop-blur-lg bg-white/10 border border-white/20 rounded-xl shadow-xl py-2"
       >
         <button
           type="button"
-          onClick={handleSettingsClick}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleSettingsClick();
+          }}
           className="flex items-center w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10 transition-colors cursor-pointer"
+          style={{ pointerEvents: 'auto' }}
         >
           <Settings className="w-4 h-4 mr-3" />
           <span>Settings</span>
@@ -126,10 +135,9 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, onNavigate, c
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 relative">
       {renderAnimatedBackground()}
 
-      {/* Header */}
-      <header className="relative z-10 backdrop-blur-lg bg-white/10 border-b border-white/20">
+      <header className="relative z-[9999] backdrop-blur-lg bg-white/10 border-b border-white/20">
         <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <div className="flex items-center space-x-4">
               <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-xl">S</span>
@@ -140,24 +148,23 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, onNavigate, c
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2 relative z-[9999] min-h-[44px] flex-wrap">
               <ConnectionStatus className="mr-4" />
               
-              {/* Dashboard - Always First */}
               <button 
                 onClick={() => onNavigate?.('dashboard')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors duration-200 font-medium ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors duration-200 font-medium relative z-20 ${
                   currentPage === 'dashboard' 
                     ? 'bg-blue-600 text-white' 
                     : 'bg-white/10 hover:bg-white/20 text-white'
                 }`}
                 title="Dashboard"
+                style={{ pointerEvents: 'auto' }}
               >
                 <Home className="w-4 h-4" />
                 <span className="hidden sm:inline">Dashboard</span>
               </button>
               
-              {/* Agent Tools */}
               {user.role !== 'customer' && (
                 <>
                   <NavButton page="templates" icon={FileText} title="Ticket Templates" />
@@ -186,16 +193,23 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, onNavigate, c
                 }}
               />
               
-              <button
-                type="button"
-                onClick={onLogout}
-                className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 transition-colors duration-200"
+              <div
+                className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 transition-colors duration-200 cursor-pointer relative"
+                style={{ 
+                  zIndex: 99999,
+                  pointerEvents: 'auto',
+                  minWidth: '80px',
+                  minHeight: '40px'
+                }}
+                onMouseUp={() => onLogout()}
+                onTouchEnd={() => onLogout()}
+                onClick={() => onLogout()}
               >
                 <LogOut className="w-4 h-4 text-red-300" />
                 <span className="text-sm text-red-300">Logout</span>
-              </button>
+              </div>
               
-              <div className="relative" ref={userMenuRef}>
+              <div className="relative z-40 shrink-0" ref={userMenuRef}>
                 <button
                   onClick={(e) => {
                     e.preventDefault();
@@ -203,9 +217,9 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, onNavigate, c
                     const next = !showUserMenu;
                     if (next && userMenuRef.current) {
                       const rect = userMenuRef.current.getBoundingClientRect();
-                      const menuWidth = 192; // approx 12rem (w-48)
+                      const menuWidth = 192;
                       const left = Math.max(8, rect.right + window.scrollX - menuWidth);
-                      const top = rect.bottom + window.scrollY + 8; // small offset
+                      const top = rect.bottom + window.scrollY + 8;
                       setMenuPos({ top, left });
                     }
                     setShowUserMenu(next);
@@ -222,12 +236,10 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, onNavigate, c
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="relative z-10 container mx-auto px-6 py-8">
         {children}
       </main>
       
-      {/* Live Chat Widget */}
       <LiveChat />
     </div>
   );

@@ -4,7 +4,7 @@ import AuthService from './services/authService';
 import Login from './components/Login';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
-import ToastContainer from './components/ToastContainer';
+
 import KnowledgeBase from './components/KnowledgeBase';
 import TicketTemplates from './components/TicketTemplates';
 import CannedResponses from './components/CannedResponses';
@@ -16,7 +16,7 @@ import CustomerSatisfaction from './components/CustomerSatisfaction';
 import PerformanceDashboard from './components/PerformanceDashboard';
 import EmailIntegration from './components/EmailIntegration';
 import DataMigration from './components/DataMigration';
-import ToastService from './services/toastService';
+
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -46,11 +46,7 @@ function App() {
       if (result.success && result.user) {
         setUser(result.user);
         
-        // Show success toast
-        setTimeout(() => {
-          const toastService = ToastService.getInstance();
-          toastService.success('Login Successful', `Welcome back, ${result.user.name}!`);
-        }, 500);
+
       } else {
         setLoginError(result.error || 'Login failed');
       }
@@ -72,11 +68,7 @@ function App() {
       if (result.success && result.user) {
         setUser(result.user);
         
-        // Show success toast
-        setTimeout(() => {
-          const toastService = ToastService.getInstance();
-          toastService.success('Registration Successful', `Welcome, ${result.user.name}!`);
-        }, 500);
+
       } else {
         setLoginError(result.error || 'Registration failed');
       }
@@ -88,9 +80,16 @@ function App() {
   };
 
   const handleLogout = () => {
-    const authService = AuthService.getInstance();
-    authService.logout();
-    setUser(null);
+    console.log('Logout function called');
+    try {
+      const authService = AuthService.getInstance();
+      authService.logout();
+      setUser(null);
+      setCurrentPage('dashboard');
+      console.log('Logout completed');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   const handleNavigate = (page: string) => {
@@ -187,7 +186,7 @@ function App() {
       <Layout user={user} onLogout={handleLogout} onNavigate={handleNavigate} currentPage={currentPage}>
         {renderCurrentPage()}
       </Layout>
-      <ToastContainer />
+
     </>
   );
 }

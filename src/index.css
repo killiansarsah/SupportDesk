@@ -96,11 +96,28 @@ select:focus {
   }
 }
 
-/* Smooth transitions */
+/* Smooth transitions - exclude transform to prevent conflicts */
 * {
-  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, opacity, box-shadow, filter, backdrop-filter;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
+}
+
+/* Chrome zoom fix for buttons */
+@media screen {
+  button {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+  
+  /* Fix for input button positioning */
+  .relative input + button {
+    position: absolute !important;
+    right: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    z-index: 10 !important;
+  }
 }
 
 /* Enhanced hover effects */

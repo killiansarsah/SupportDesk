@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Bell, X, Clock } from 'lucide-react';
-import { User } from '../types';
+import { Bell, Clock } from 'lucide-react';
+import { User, Ticket } from '../types';
 
 interface Notification {
   id: string;
@@ -22,6 +22,8 @@ export default function NotificationSystem({ user, onNavigateToTicket }: Notific
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [dropdownPos, setDropdownPos] = useState<{top: number, left: number} | null>(null);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const loadNotifications = () => {
@@ -40,24 +42,33 @@ export default function NotificationSystem({ user, onNavigateToTicket }: Notific
       }
     }, 2000);
 
-    // Close dropdown when clicking outside
+    // Close dropdown when clicking outside (check both wrapper and portal dropdown)
     const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      if (!target.closest('.notification-dropdown')) {
+      try {
+        const target = event.target as Node;
+        const insideWrapper = !!(wrapperRef.current && wrapperRef.current.contains(target));
+        const insideDropdown = !!(dropdownRef.current && dropdownRef.current.contains(target));
+        if (!insideWrapper && !insideDropdown) {
+          setShowDropdown(false);
+        }
+      } catch {
         setShowDropdown(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    if (showDropdown) {
+      // use 'click' so that pointer/mouse handlers on items run first
+      document.addEventListener('click', handleClickOutside);
+    }
 
     return () => {
       clearInterval(interval);
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('click', handleClickOutside);
     };
-  }, [user.role]);
+  }, [user.role, showDropdown]);
 
   const checkForNewTickets = () => {
-    const tickets = JSON.parse(localStorage.getItem('tickets') || '[]');
+    const tickets = JSON.parse(localStorage.getItem('tickets') || '[]') as Ticket[];
     const lastCheck = localStorage.getItem('lastNotificationCheck');
     const now = new Date().toISOString();
     
@@ -66,12 +77,12 @@ export default function NotificationSystem({ user, onNavigateToTicket }: Notific
       return;
     }
 
-    const newTickets = tickets.filter((ticket: any) => 
+    const newTickets = tickets.filter((ticket) => 
       ticket.createdAt > lastCheck && ticket.status === 'open'
     );
 
     if (newTickets.length > 0) {
-      const newNotifications = newTickets.map((ticket: any) => ({
+      const newNotifications = newTickets.map((ticket: Ticket) => ({
         id: `ticket-${ticket.id}-${Date.now()}`,
         type: 'new-ticket' as const,
         title: 'New Support Ticket',
@@ -112,15 +123,17 @@ export default function NotificationSystem({ user, onNavigateToTicket }: Notific
     localStorage.setItem('notifications', JSON.stringify(updated));
   };
 
-  const toggleDropdown = (e: React.MouseEvent) => {
+  const toggleDropdown = (e: React.PointerEvent | React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     const next = !showDropdown;
     if (next) {
       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      const menuWidth = 320;
+      const left = Math.max(8, rect.right - menuWidth);
       setDropdownPos({
-        top: rect.bottom + window.scrollY + 8,
-        left: rect.right + window.scrollX - 320
+        top: rect.bottom + 8,
+        left: left
       });
     }
     setShowDropdown(next);
@@ -134,24 +147,31 @@ export default function NotificationSystem({ user, onNavigateToTicket }: Notific
 
     const dropdown = (
       <div 
-        className="fixed w-80 backdrop-blur-lg bg-white/10 border border-white/20 rounded-xl shadow-xl z-[999999]"
-        style={{ top: dropdownPos.top, left: dropdownPos.left }}
+        ref={(el) => { dropdownRef.current = el; }}
+        className="fixed w-80 backdrop-blur-lg bg-white/10 border border-white/20 rounded-xl shadow-xl"
+        style={{ 
+          top: dropdownPos.top, 
+          left: dropdownPos.left, 
+          zIndex: 999999,
+          pointerEvents: 'auto'
+        }}
       >
         <div className="p-4 border-b border-white/20">
           <div className="flex items-center justify-between">
             <h3 className="text-white font-medium">Notifications</h3>
             {unreadCount > 0 && (
-              <button
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  clearAll();
-                }}
-                className="text-blue-400 hover:text-blue-300 text-sm"
-              >
-                Mark all read
-              </button>
-            )}
+                  <button
+                    onPointerDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      clearAll();
+                    }}
+                    className="text-blue-400 hover:text-blue-300 text-sm"
+                    style={{ touchAction: 'manipulation' }}
+                  >
+                    Mark all read
+                  </button>
+                )}
           </div>
         </div>
 
@@ -164,10 +184,15 @@ export default function NotificationSystem({ user, onNavigateToTicket }: Notific
             recentNotifications.map((notification) => (
               <div
                 key={notification.id}
-                onClick={() => handleNotificationClick(notification)}
+                onPointerDown={(ev) => {
+                  ev.preventDefault();
+                  ev.stopPropagation();
+                  handleNotificationClick(notification);
+                }}
                 className={`p-4 border-b border-white/10 cursor-pointer hover:bg-white/5 transition-colors ${
                   !notification.read ? 'bg-blue-500/10' : ''
                 }`}
+                style={{ touchAction: 'manipulation' }}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -200,24 +225,25 @@ export default function NotificationSystem({ user, onNavigateToTicket }: Notific
 
   return (
     <>
-      <div className="relative notification-dropdown">
-        <button
-          onClick={toggleDropdown}
-          className={`relative p-2 rounded-lg transition-colors duration-200 ${
-            unreadCount > 0 
-              ? 'bg-red-500/20 hover:bg-red-500/30' 
-              : 'bg-white/10 hover:bg-white/20'
-          }`}
-        >
-          <Bell className={`w-5 h-5 ${unreadCount > 0 ? 'text-red-300' : 'text-white'}`} />
-          {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </span>
-          )}
-        </button>
-      </div>
-      {renderDropdown()}
-    </>
-  );
-}
+      <div className="relative notification-dropdown" ref={wrapperRef}>
+         <button
+           onPointerDown={(e: React.PointerEvent) => toggleDropdown(e)}
+           className={`relative p-2 rounded-lg transition-colors duration-200 z-10 ${
+             unreadCount > 0 
+               ? 'bg-red-500/20 hover:bg-red-500/30' 
+               : 'bg-white/10 hover:bg-white/20'
+           }`}
+           style={{ pointerEvents: 'auto', touchAction: 'manipulation' }}
+         >
+           <Bell className={`w-5 h-5 ${unreadCount > 0 ? 'text-red-300' : 'text-white'}`} />
+           {unreadCount > 0 && (
+             <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+               {unreadCount > 9 ? '9+' : unreadCount}
+             </span>
+           )}
+         </button>
+       </div>
+       {renderDropdown()}
+     </>
+   );
+ }

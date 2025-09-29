@@ -2,6 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import bcrypt from 'bcryptjs';
 import User from './models/User.js';
 import Ticket from './models/Ticket.js';
 
@@ -57,12 +58,11 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(401).json({ success: false, error: 'Invalid email or password' });
     }
     
-    // Check password - handle both custom passwords and default password
-    const isValidPassword = password === user.password || 
-                           (user.password === 'password123' && password === 'password123');
+    // Check password using bcrypt
+    const isValidPassword = await user.comparePassword(password);
     
     if (!isValidPassword) {
-      console.log('❌ Invalid password for:', email, 'Expected:', user.password, 'Received:', password);
+      console.log('❌ Invalid password for:', email);
       return res.status(401).json({ success: false, error: 'Invalid email or password' });
     }
     

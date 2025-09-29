@@ -176,7 +176,8 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, isLoading, error }) 
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  className="absolute right-3 top-1/2 text-gray-400 hover:text-white transition-colors z-10"
+                  style={{ transform: 'translateY(-50%)', pointerEvents: 'auto' }}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
