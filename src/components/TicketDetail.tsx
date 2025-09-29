@@ -1,7 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Send, Paperclip, Download, Clock, User, Tag, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Send, Paperclip, Download, Clock, User, Tag, AlertCircle, Users, FileText } from 'lucide-react';
 import { Ticket, User as UserType, Message } from '../types';
 import TicketService from '../services/ticketService';
+import ApiService from '../services/apiService';
+import ToastService from '../services/toastService';
+import TemplateManager from './TemplateManager';
 
 interface TicketDetailProps {
   ticket: Ticket;
@@ -15,11 +18,30 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [ticketStatus, setTicketStatus] = useState(ticket.status);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [assignedTo, setAssignedTo] = useState(ticket.assignedTo || '');
+  const [isUpdatingAssignment, setIsUpdatingAssignment] = useState(false);
+  const [availableAgents, setAvailableAgents] = useState<UserType[]>([]);
+  const [showTemplates, setShowTemplates] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     scrollToBottom();
-  }, [ticket.messages]);
+    loadAvailableAgents();
+    // Update local state when ticket prop changes
+    setTicketStatus(ticket.status);
+    setAssignedTo(ticket.assignedTo || '');
+  }, [ticket]);
+
+  const loadAvailableAgents = async () => {
+    try {
+      const apiService = ApiService.getInstance();
+      const users = await apiService.getUsers();
+      const agents = users.filter(u => u.role === 'support-agent' || u.role === 'administrator');
+      setAvailableAgents(agents);
+    } catch (error) {
+      console.error('Error loading agents:', error);
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -32,15 +54,19 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
     setIsSubmitting(true);
     try {
       const ticketService = TicketService.getInstance();
-      await ticketService.addMessage(
+      const message = await ticketService.addMessage(
         ticket.id,
         newMessage.trim(),
-        user.id,
+        user._id || user.id,
         user.name,
         false
       );
-      setNewMessage('');
-      onUpdate();
+      
+      if (message) {
+        setNewMessage('');
+        // Force refresh of ticket data
+        onUpdate();
+      }
     } catch (error) {
       console.error('Error sending message:', error);
     } finally {
@@ -64,6 +90,47 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
       console.error('Error updating status:', error);
     } finally {
       setIsUpdatingStatus(false);
+    }
+  };
+
+  const handleAssignmentChange = async (newAssignedTo: string) => {
+    console.log('Assignment change requested:', { ticketId: ticket.id, newAssignedTo, currentUser: user });
+    
+    setIsUpdatingAssignment(true);
+    try {
+      const ticketService = TicketService.getInstance();
+      const updatedTicket = await ticketService.updateTicket(
+        ticket.id,
+        { assignedTo: newAssignedTo || null },
+        user._id || user.id,
+        user.name
+      );
+      
+      console.log('Assignment update result:', updatedTicket);
+      
+      if (updatedTicket) {
+        setAssignedTo(newAssignedTo);
+        
+        // Show success toast
+        const toastService = ToastService.getInstance();
+        if (newAssignedTo) {
+          const agentName = availableAgents.find(a => (a._id || a.id) === newAssignedTo)?.name || 'Agent';
+          toastService.success('Ticket Assigned', `Ticket assigned to ${agentName} successfully`);
+        } else {
+          toastService.success('Ticket Unassigned', 'Ticket has been unassigned successfully');
+        }
+        
+        // Force a complete refresh of the parent component
+        setTimeout(() => {
+          onUpdate();
+        }, 500);
+      }
+    } catch (error) {
+      console.error('Error updating assignment:', error);
+      const toastService = ToastService.getInstance();
+      toastService.error('Assignment Failed', 'Failed to update ticket assignment. Please try again.');
+    } finally {
+      setIsUpdatingAssignment(false);
     }
   };
 
@@ -100,6 +167,7 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
   };
 
   const canChangeStatus = user.role === 'administrator' || user.role === 'support-agent';
+  const canAssignTickets = user.role === 'administrator' || user.role === 'support-agent';
 
   return (
     <div className="space-y-6">
@@ -118,19 +186,40 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
           </div>
         </div>
 
-        {canChangeStatus && (
-          <select
-            value={ticketStatus}
-            onChange={(e) => handleStatusChange(e.target.value)}
-            disabled={isUpdatingStatus}
-            className="px-4 py-2 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="open">Open</option>
-            <option value="in-progress">In Progress</option>
-            <option value="resolved">Resolved</option>
-            <option value="closed">Closed</option>
-          </select>
-        )}
+        <div className="flex space-x-3">
+          {canChangeStatus && (
+            <select
+              value={ticketStatus}
+              onChange={(e) => handleStatusChange(e.target.value)}
+              disabled={isUpdatingStatus}
+              className="px-4 py-2 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="open">Open</option>
+              <option value="in-progress">In Progress</option>
+              <option value="resolved">Resolved</option>
+              <option value="closed">Closed</option>
+            </select>
+          )}
+          
+          {canAssignTickets && (
+            <select
+              value={assignedTo}
+              onChange={(e) => handleAssignmentChange(e.target.value)}
+              disabled={isUpdatingAssignment}
+              className="px-4 py-2 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+            >
+              <option value="">Unassigned</option>
+              {availableAgents.map((agent) => {
+                const agentId = agent._id || agent.id;
+                return (
+                  <option key={agentId} value={agentId}>
+                    {agent.name} ({agent.role})
+                  </option>
+                );
+              })}
+            </select>
+          )}
+        </div>
       </div>
 
       {/* Ticket Info */}
@@ -156,6 +245,17 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
             <User className="w-4 h-4 text-gray-400" />
             <span className="text-gray-300 text-sm">Category:</span>
             <span className="text-white">{ticket.category}</span>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <Users className="w-4 h-4 text-gray-400" />
+            <span className="text-gray-300 text-sm">Assigned to:</span>
+            <span className="text-white">
+              {assignedTo ? 
+                availableAgents.find(a => (a._id || a.id) === assignedTo)?.name || 'Loading...' : 
+                'Unassigned'
+              }
+            </span>
           </div>
           
           <div className="flex items-center space-x-2">
@@ -225,18 +325,43 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
 
         {/* Message Input */}
         <div className="p-4 border-t border-white/10">
+          {/* Template Selector */}
+          {(user.role === 'support-agent' || user.role === 'administrator') && (
+            <div className="mb-4">
+              <button
+                onClick={() => setShowTemplates(!showTemplates)}
+                className="flex items-center gap-2 px-4 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-300 rounded-lg border border-green-400/30 transition-colors text-sm"
+              >
+                <FileText className="w-4 h-4" />
+                {showTemplates ? 'Hide Templates' : 'Use Template'}
+              </button>
+              
+              {showTemplates && (
+                <div className="mt-4 max-h-96 overflow-y-auto">
+                  <TemplateManager 
+                    type="response" 
+                    onTemplateSelect={(template) => {
+                      setNewMessage(template.content);
+                      setShowTemplates(false);
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+          
           <form onSubmit={handleSendMessage} className="flex space-x-3">
-            <input
-              type="text"
+            <textarea
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Type your message..."
-              className="flex-1 px-4 py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              rows={3}
+              className="flex-1 px-4 py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             />
             <button
               type="submit"
               disabled={isSubmitting || !newMessage.trim()}
-              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 self-end"
             >
               {isSubmitting ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>

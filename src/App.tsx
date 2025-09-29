@@ -4,6 +4,7 @@ import AuthService from './services/authService';
 import Login from './components/Login';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
+import ToastContainer from './components/ToastContainer';
 import KnowledgeBase from './components/KnowledgeBase';
 import TicketTemplates from './components/TicketTemplates';
 import CannedResponses from './components/CannedResponses';
@@ -14,6 +15,8 @@ import ScreenshotCapture from './components/ScreenshotCapture';
 import CustomerSatisfaction from './components/CustomerSatisfaction';
 import PerformanceDashboard from './components/PerformanceDashboard';
 import EmailIntegration from './components/EmailIntegration';
+import DataMigration from './components/DataMigration';
+import ToastService from './services/toastService';
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -42,8 +45,40 @@ function App() {
       
       if (result.success && result.user) {
         setUser(result.user);
+        
+        // Show success toast
+        setTimeout(() => {
+          const toastService = ToastService.getInstance();
+          toastService.success('Login Successful', `Welcome back, ${result.user.name}!`);
+        }, 500);
       } else {
         setLoginError(result.error || 'Login failed');
+      }
+    } catch (error) {
+      setLoginError('An unexpected error occurred');
+    } finally {
+      setIsLoginLoading(false);
+    }
+  };
+
+  const handleRegister = async (email: string, password: string, name: string, phone: string, role: 'customer' | 'support-agent' | 'administrator') => {
+    setIsLoginLoading(true);
+    setLoginError(null);
+
+    try {
+      const authService = AuthService.getInstance();
+      const result = await authService.registerWithRole(email, password, name, phone, role);
+      
+      if (result.success && result.user) {
+        setUser(result.user);
+        
+        // Show success toast
+        setTimeout(() => {
+          const toastService = ToastService.getInstance();
+          toastService.success('Registration Successful', `Welcome, ${result.user.name}!`);
+        }, 500);
+      } else {
+        setLoginError(result.error || 'Registration failed');
       }
     } catch (error) {
       setLoginError('An unexpected error occurred');
@@ -82,6 +117,8 @@ function App() {
         return <PerformanceDashboard />;
       case 'email-integration':
         return <EmailIntegration />;
+      case 'data-migration':
+        return <DataMigration />;
       case 'settings':
         return (
           <div className="max-w-4xl mx-auto">
@@ -138,6 +175,7 @@ function App() {
     return (
       <Login
         onLogin={handleLogin}
+        onRegister={handleRegister}
         isLoading={isLoginLoading}
         error={loginError}
       />
@@ -145,9 +183,12 @@ function App() {
   }
 
   return (
-    <Layout user={user} onLogout={handleLogout} onNavigate={handleNavigate} currentPage={currentPage}>
-      {renderCurrentPage()}
-    </Layout>
+    <>
+      <Layout user={user} onLogout={handleLogout} onNavigate={handleNavigate} currentPage={currentPage}>
+        {renderCurrentPage()}
+      </Layout>
+      <ToastContainer />
+    </>
   );
 }
 

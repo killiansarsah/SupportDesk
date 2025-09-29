@@ -1,21 +1,31 @@
 import React, { useState } from 'react';
-import { Mail, Lock, Eye, EyeOff, LogIn, UserPlus } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, LogIn, UserPlus, User, Shield, Headphones, Phone } from 'lucide-react';
 
 interface LoginProps {
   onLogin: (email: string, password: string) => Promise<void>;
+  onRegister?: (email: string, password: string, name: string, phone: string, role: 'customer' | 'support-agent' | 'administrator') => Promise<void>;
   isLoading: boolean;
   error: string | null;
 }
 
-const Login: React.FC<LoginProps> = ({ onLogin, isLoading, error }) => {
+const Login: React.FC<LoginProps> = ({ onLogin, onRegister, isLoading, error }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [role, setRole] = useState<'customer' | 'support-agent' | 'administrator'>('customer');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoginMode, setIsLoginMode] = useState(true);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onLogin(email, password);
+    if (isLoginMode) {
+      await onLogin(email, password);
+    } else {
+      if (onRegister) {
+        await onRegister(email, password, name, phone, role);
+      }
+    }
   };
 
   const demoCredentials = [
@@ -93,6 +103,43 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, error }) => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {!isLoginMode && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Full Name
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      placeholder="Enter your full name"
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Phone Number
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      placeholder="Enter your phone number"
+                      required
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Email Address
@@ -105,6 +152,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, error }) => {
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   placeholder="Enter your email"
+                  autoComplete="username"
                   required
                 />
               </div>
@@ -122,6 +170,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, error }) => {
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-10 pr-12 py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   placeholder="Enter your password"
+                  autoComplete="current-password"
                   required
                 />
                 <button
@@ -133,6 +182,43 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, error }) => {
                 </button>
               </div>
             </div>
+
+            {!isLoginMode && (
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Account Type
+                </label>
+                <div className="grid grid-cols-1 gap-3">
+                  {[
+                    { value: 'customer', label: 'Customer', icon: User, desc: 'Create and manage support tickets' },
+                    { value: 'support-agent', label: 'Support Agent', icon: Headphones, desc: 'Handle customer support requests' },
+                    { value: 'administrator', label: 'Administrator', icon: Shield, desc: 'Full system access and management' }
+                  ].map((option) => {
+                    const Icon = option.icon;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setRole(option.value as any)}
+                        className={`p-4 rounded-lg border transition-all text-left ${
+                          role === option.value
+                            ? 'bg-blue-500/20 border-blue-500/50 text-white'
+                            : 'bg-white/5 border-white/20 text-gray-300 hover:bg-white/10'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <Icon className="w-5 h-5" />
+                          <div>
+                            <div className="font-medium">{option.label}</div>
+                            <div className="text-sm opacity-75">{option.desc}</div>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             <button
               type="submit"
@@ -152,7 +238,14 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoading, error }) => {
 
           <div className="mt-6 text-center">
             <button
-              onClick={() => setIsLoginMode(!isLoginMode)}
+              onClick={() => {
+                setIsLoginMode(!isLoginMode);
+                setEmail('');
+                setPassword('');
+                setName('');
+                setPhone('');
+                setRole('customer');
+              }}
               className="text-blue-400 hover:text-blue-300 transition-colors"
             >
               {isLoginMode ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}

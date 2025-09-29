@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { Mail, Plus, CheckCircle, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Mail, Plus, CheckCircle, X, Send, Clock, AlertCircle } from 'lucide-react';
+import EmailService from '../services/emailService';
 
 interface EmailTicket {
   id: string;
@@ -29,6 +30,32 @@ export default function EmailIntegration() {
       converted: false
     }
   ]);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<'emails' | 'notifications'>('emails');
+
+  useEffect(() => {
+    const emailService = EmailService.getInstance();
+    setNotifications(emailService.getNotificationHistory());
+  }, []);
+
+  const sendTestNotification = async () => {
+    const emailService = EmailService.getInstance();
+    const mockTicket = {
+      id: 'TEST-001',
+      title: 'Test Notification',
+      description: 'This is a test notification',
+      priority: 'medium',
+      category: 'Test',
+      customerName: 'Test Customer',
+      customerEmail: 'customer@example.com'
+    };
+    const mockAgent = { email: 'agent@company.com' };
+    
+    await emailService.sendNewTicketNotification(mockTicket, mockAgent);
+    setNotifications(emailService.getNotificationHistory());
+  };
+
+
 
   const convertToTicket = (emailId: string) => {
     const email = emails.find(e => e.id === emailId);
@@ -67,9 +94,42 @@ export default function EmailIntegration() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Email Integration</h1>
-        <p className="text-gray-300">Convert emails into support tickets</p>
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-white mb-2">Email Integration</h1>
+          <p className="text-gray-300">Bidirectional email notifications and ticket conversion</p>
+        </div>
+        <button
+          onClick={sendTestNotification}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+        >
+          <Send className="w-4 h-4" />
+          Send Test Email
+        </button>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-4 mb-6">
+        <button
+          onClick={() => setActiveTab('emails')}
+          className={`px-4 py-2 rounded-lg transition-colors ${
+            activeTab === 'emails'
+              ? 'bg-blue-600 text-white'
+              : 'bg-white/10 text-gray-300 hover:bg-white/20'
+          }`}
+        >
+          Incoming Emails
+        </button>
+        <button
+          onClick={() => setActiveTab('notifications')}
+          className={`px-4 py-2 rounded-lg transition-colors ${
+            activeTab === 'notifications'
+              ? 'bg-blue-600 text-white'
+              : 'bg-white/10 text-gray-300 hover:bg-white/20'
+          }`}
+        >
+          Email Notifications
+        </button>
       </div>
 
       {/* Stats */}
@@ -99,8 +159,9 @@ export default function EmailIntegration() {
         </div>
       </div>
 
-      {/* Email List */}
-      <div className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+      {/* Content */}
+      {activeTab === 'emails' ? (
+        <div className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
         <div className="p-6 border-b border-white/20">
           <h2 className="text-xl font-bold text-white">Incoming Emails</h2>
         </div>
@@ -162,6 +223,51 @@ export default function EmailIntegration() {
           </div>
         )}
       </div>
+      ) : (
+        <div className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+          <div className="p-6 border-b border-white/20">
+            <h2 className="text-xl font-bold text-white">Email Notifications</h2>
+          </div>
+          
+          <div className="divide-y divide-white/10">
+            {notifications.map((notification) => (
+              <div key={notification.id} className="p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      {notification.status === 'sent' ? (
+                        <CheckCircle className="w-4 h-4 text-green-400" />
+                      ) : (
+                        <AlertCircle className="w-4 h-4 text-red-400" />
+                      )}
+                      <span className="text-white font-medium">{notification.to}</span>
+                      <span className={`px-2 py-1 text-xs rounded ${
+                        notification.status === 'sent'
+                          ? 'bg-green-500/20 text-green-300'
+                          : 'bg-red-500/20 text-red-300'
+                      }`}>
+                        {notification.status}
+                      </span>
+                    </div>
+                    
+                    <h3 className="text-white font-medium mb-2">{notification.subject}</h3>
+                    <p className="text-gray-500 text-xs">
+                      {new Date(notification.timestamp).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {notifications.length === 0 && (
+            <div className="p-12 text-center">
+              <Send className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-400">No email notifications sent</p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

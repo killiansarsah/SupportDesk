@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Paperclip, X, Upload } from 'lucide-react';
-import { User, Ticket } from '../types';
+import { User } from '../types';
 import TicketService from '../services/ticketService';
 
 interface CreateTicketProps {
@@ -29,14 +29,12 @@ const CreateTicket: React.FC<CreateTicketProps> = ({ user, onBack, onTicketCreat
 
   const handleFileUpload = (files: FileList) => {
     const newFiles = Array.from(files).filter(file => {
-      // Check file size (max 10MB)
       if (file.size > 10 * 1024 * 1024) {
         alert(`File ${file.name} is too large. Maximum size is 10MB.`);
         return false;
       }
       return true;
     });
-
     setAttachments(prev => [...prev, ...newFiles]);
   };
 
@@ -64,19 +62,16 @@ const CreateTicket: React.FC<CreateTicketProps> = ({ user, onBack, onTicketCreat
     try {
       const ticketService = TicketService.getInstance();
       
-      const newTicket = await ticketService.createTicket({
+      const ticketData = {
         title: title.trim(),
         description: description.trim(),
         category,
         priority,
-        status: 'open',
         customerId: user.id,
-        attachments: [],
-        internalNotes: [],
-        language: 'en',
-      });
+      };
+      
+      const newTicket = await ticketService.createTicket(ticketData);
 
-      // Upload attachments if any
       for (const file of attachments) {
         await ticketService.addAttachment(newTicket.id, file, user.id);
       }
@@ -84,7 +79,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({ user, onBack, onTicketCreat
       onTicketCreated();
     } catch (error) {
       console.error('Error creating ticket:', error);
-      alert('Error creating ticket. Please try again.');
+      alert('Failed to create ticket. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -92,7 +87,6 @@ const CreateTicket: React.FC<CreateTicketProps> = ({ user, onBack, onTicketCreat
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div className="flex items-center space-x-4">
         <button
           onClick={onBack}
@@ -106,10 +100,8 @@ const CreateTicket: React.FC<CreateTicketProps> = ({ user, onBack, onTicketCreat
         </div>
       </div>
 
-      {/* Form */}
       <div className="backdrop-blur-lg bg-white/10 border border-white/20 rounded-xl p-8">
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Title */}
           <div>
             <label className="block text-sm font-medium text-white mb-2">
               Subject <span className="text-red-400">*</span>
@@ -124,7 +116,6 @@ const CreateTicket: React.FC<CreateTicketProps> = ({ user, onBack, onTicketCreat
             />
           </div>
 
-          {/* Category and Priority */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-white mb-2">
@@ -136,9 +127,9 @@ const CreateTicket: React.FC<CreateTicketProps> = ({ user, onBack, onTicketCreat
                 className="w-full px-4 py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               >
-                <option value="">Select a category</option>
+                <option value="" className="bg-gray-800 text-white">Select a category</option>
                 {categories.map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
+                  <option key={cat} value={cat} className="bg-gray-800 text-white">{cat}</option>
                 ))}
               </select>
             </div>
@@ -152,15 +143,14 @@ const CreateTicket: React.FC<CreateTicketProps> = ({ user, onBack, onTicketCreat
                 onChange={(e) => setPriority(e.target.value as any)}
                 className="w-full px-4 py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="urgent">Urgent</option>
+                <option value="low" className="bg-gray-800 text-white">Low</option>
+                <option value="medium" className="bg-gray-800 text-white">Medium</option>
+                <option value="high" className="bg-gray-800 text-white">High</option>
+                <option value="urgent" className="bg-gray-800 text-white">Urgent</option>
               </select>
             </div>
           </div>
 
-          {/* Description */}
           <div>
             <label className="block text-sm font-medium text-white mb-2">
               Description <span className="text-red-400">*</span>
@@ -170,21 +160,18 @@ const CreateTicket: React.FC<CreateTicketProps> = ({ user, onBack, onTicketCreat
               onChange={(e) => setDescription(e.target.value)}
               rows={6}
               className="w-full px-4 py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-              placeholder="Please provide detailed information about your issue, including steps to reproduce if applicable..."
+              placeholder="Please provide detailed information about your issue..."
               required
             />
           </div>
 
-          {/* File Upload */}
           <div>
             <label className="block text-sm font-medium text-white mb-2">
               Attachments
             </label>
             <div
               className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                dragOver
-                  ? 'border-blue-400 bg-blue-500/10'
-                  : 'border-white/20 bg-white/5'
+                dragOver ? 'border-blue-400 bg-blue-500/10' : 'border-white/20 bg-white/5'
               }`}
               onDrop={handleDrop}
               onDragOver={(e) => {
@@ -209,67 +196,55 @@ const CreateTicket: React.FC<CreateTicketProps> = ({ user, onBack, onTicketCreat
               <p className="text-sm text-gray-400">Maximum file size: 10MB</p>
             </div>
 
-            {/* Attachment List */}
             {attachments.length > 0 && (
               <div className="mt-4 space-y-2">
-                {attachments.map((file, index) => {
-                  const isImage = file.type.startsWith('image/');
-                  return (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 backdrop-blur-lg bg-white/5 border border-white/10 rounded-lg"
-                    >
-                      <div className="flex items-center space-x-3">
-                        {isImage ? (
-                          <img
-                            src={URL.createObjectURL(file)}
-                            alt={file.name}
-                            className="w-12 h-12 object-cover rounded border border-white/20"
-                          />
-                        ) : (
-                          <Paperclip className="w-4 h-4 text-gray-400" />
-                        )}
-                        <div>
-                          <span className="text-white text-sm block">{file.name}</span>
-                          <span className="text-gray-400 text-xs">
-                            ({(file.size / 1024 / 1024).toFixed(2)} MB)
-                          </span>
-                        </div>
+                {attachments.map((file, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 backdrop-blur-lg bg-white/5 border border-white/10 rounded-lg"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <Paperclip className="w-4 h-4 text-gray-400" />
+                      <div>
+                        <p className="text-white text-sm">{file.name}</p>
+                        <p className="text-gray-400 text-xs">
+                          {(file.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => removeAttachment(index)}
-                        className="p-1 rounded hover:bg-white/10 transition-colors"
-                      >
-                        <X className="w-4 h-4 text-gray-400" />
-                      </button>
                     </div>
-                  );
-                })}
+                    <button
+                      type="button"
+                      onClick={() => removeAttachment(index)}
+                      className="p-1 rounded-full hover:bg-white/10 transition-colors"
+                    >
+                      <X className="w-4 h-4 text-gray-400" />
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
           </div>
 
-          {/* Submit Button */}
           <div className="flex justify-end space-x-4">
             <button
               type="button"
               onClick={onBack}
-              className="px-6 py-3 backdrop-blur-lg bg-white/10 border border-white/20 text-white rounded-lg hover:bg-white/20 transition-colors"
+              className="px-6 py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-colors duration-200"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 text-white rounded-lg transition-colors duration-200 flex items-center space-x-2"
             >
               {isSubmitting ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              ) : (
                 <>
-                  <span>Create Ticket</span>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Creating...</span>
                 </>
+              ) : (
+                <span>Create Ticket</span>
               )}
             </button>
           </div>

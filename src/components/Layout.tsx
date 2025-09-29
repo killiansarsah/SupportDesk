@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { User, LogOut, Bell, Settings, BookOpen, FileText, MessageSquare, StickyNote, Home, Star, BarChart3, Mail } from 'lucide-react';
+import { User, LogOut, Settings, BookOpen, FileText, MessageSquare, Home, Star, BarChart3, Mail } from 'lucide-react';
 import { User as UserType } from '../types';
 import LiveChat from './LiveChat';
 import NotificationSystem from './NotificationSystem';
-
+import ConnectionStatus from './ConnectionStatus';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -47,13 +47,6 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, onNavigate, c
     };
   }, [showUserMenu]);
 
-  const handleLogout = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setShowUserMenu(false);
-    onLogout();
-  };
-
   const getRoleDisplay = (role: string) => {
     const roleMap = {
       'administrator': 'Administrator',
@@ -76,15 +69,29 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, onNavigate, c
     </div>
   );
 
-  // NOTE: handleSettingsClick was unused — navigation is handled inline in the dropdown.
+  const handleSettingsClick = () => {
+    onNavigate?.('settings');
+    setShowUserMenu(false);
+  };
+
+  const getButtonClass = (page: string) => 
+    `p-2 rounded-lg transition-colors duration-200 ${
+      currentPage === page
+        ? 'bg-blue-600 text-white'
+        : 'bg-white/10 hover:bg-white/20 text-white'
+    }`;
+
+  const NavButton = ({ page, icon: Icon, title }: { page: string; icon: any; title: string }) => (
+    <button 
+      onClick={() => onNavigate?.(page)}
+      className={getButtonClass(page)}
+      title={title}
+    >
+      <Icon className="w-4 h-4" />
+    </button>
+  );
 
   const renderDropdownMenu = () => {
-    const handleSettingsNavigation = () => {
-      if (onNavigate) {
-        onNavigate('settings');
-      }
-      setShowUserMenu(false);
-    };
     const menu = (
       <div
         ref={(el) => { dropdownRef.current = el; }}
@@ -93,11 +100,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, onNavigate, c
       >
         <button
           type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            handleSettingsNavigation();
-          }}
+          onClick={handleSettingsClick}
           className="flex items-center w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10 transition-colors cursor-pointer"
         >
           <Settings className="w-4 h-4 mr-3" />
@@ -106,12 +109,9 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, onNavigate, c
       </div>
     );
 
-    if (typeof document !== 'undefined' && menuPos) {
-      return createPortal(menu, document.body);
-    }
-
-    // fallback when document not available (SSR)
-    return menu;
+    return menuPos && typeof document !== 'undefined' 
+      ? createPortal(menu, document.body) 
+      : menu;
   };
 
   const renderAnimatedBackground = () => (
@@ -141,6 +141,8 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, onNavigate, c
             </div>
 
             <div className="flex items-center space-x-2">
+              <ConnectionStatus className="mr-4" />
+              
               {/* Dashboard - Always First */}
               <button 
                 onClick={() => onNavigate?.('dashboard')}
@@ -158,86 +160,20 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, onNavigate, c
               {/* Agent Tools */}
               {user.role !== 'customer' && (
                 <>
-                  <button 
-                    onClick={() => onNavigate?.('templates')}
-                    className={`p-2 rounded-lg transition-colors duration-200 ${
-                      currentPage === 'templates'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-white/10 hover:bg-white/20 text-white'
-                    }`}
-                    title="Ticket Templates"
-                  >
-                    <FileText className="w-4 h-4" />
-                  </button>
-                  <button 
-                    onClick={() => onNavigate?.('canned-responses')}
-                    className={`p-2 rounded-lg transition-colors duration-200 ${
-                      currentPage === 'canned-responses'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-white/10 hover:bg-white/20 text-white'
-                    }`}
-                    title="Canned Responses"
-                  >
-                    <MessageSquare className="w-4 h-4" />
-                  </button>
+                  <NavButton page="templates" icon={FileText} title="Ticket Templates" />
+                  <NavButton page="canned-responses" icon={MessageSquare} title="Canned Responses" />
                 </>
               )}
               
-              <button 
-                onClick={() => onNavigate?.('knowledge-base')}
-                className={`p-2 rounded-lg transition-colors duration-200 ${
-                  currentPage === 'knowledge-base'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white/10 hover:bg-white/20 text-white'
-                }`}
-                title="Help Center"
-              >
-                <BookOpen className="w-4 h-4" />
-              </button>
-              
-              <button 
-                onClick={() => onNavigate?.('csat')}
-                className={`p-2 rounded-lg transition-colors duration-200 ${
-                  currentPage === 'csat'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white/10 hover:bg-white/20 text-white'
-                }`}
-                title="Customer Satisfaction"
-              >
-                <Star className="w-4 h-4" />
-              </button>
+              <NavButton page="knowledge-base" icon={BookOpen} title="Help Center" />
+              <NavButton page="csat" icon={Star} title="Customer Satisfaction" />
               
               {user.role !== 'customer' && (
                 <>
-                  <button 
-                    onClick={() => onNavigate?.('performance')}
-                    className={`p-2 rounded-lg transition-colors duration-200 ${
-                      currentPage === 'performance'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-white/10 hover:bg-white/20 text-white'
-                    }`}
-                    title="Performance Dashboard"
-                  >
-                    <BarChart3 className="w-4 h-4" />
-                  </button>
-                  
-                  <button 
-                    onClick={() => onNavigate?.('email-integration')}
-                    className={`p-2 rounded-lg transition-colors duration-200 ${
-                      currentPage === 'email-integration'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-white/10 hover:bg-white/20 text-white'
-                    }`}
-                    title="Email Integration"
-                  >
-                    <Mail className="w-4 h-4" />
-                  </button>
+                  <NavButton page="performance" icon={BarChart3} title="Performance Dashboard" />
+                  <NavButton page="email-integration" icon={Mail} title="Email Integration" />
                 </>
               )}
-              
-
-              
-
               
               <NotificationSystem 
                 user={user} 

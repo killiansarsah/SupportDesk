@@ -61,30 +61,48 @@ class TicketService {
   }
 
   async getTickets(filters?: TicketFilters, userId?: string, userRole?: string): Promise<Ticket[]> {
-    await new Promise(resolve => setTimeout(resolve, 500));
+    try {
+      const ApiService = (await import('./apiService')).default;
+      const apiService = ApiService.getInstance();
+      
+      const params: any = {};
+      if (userId) params.userId = userId;
+      if (userRole) params.userRole = userRole;
+      
+      if (filters) {
+        if (filters.status?.length) params.status = filters.status.join(',');
+        if (filters.priority?.length) params.priority = filters.priority.join(',');
+        if (filters.category) params.category = filters.category;
+        if (filters.assignedTo) params.assignedTo = filters.assignedTo;
+        if (filters.search) params.search = filters.search;
+      }
+      
+      const tickets = await apiService.getTickets(params);
+      return tickets;
+    } catch (error) {
+      console.error('Error fetching tickets from API:', error);
+      return this.getTicketsFromStorage(filters, userId, userRole);
+    }
+  }
 
+  private getTicketsFromStorage(filters?: TicketFilters, userId?: string, userRole?: string): Ticket[] {
     let tickets = [...MOCK_TICKETS];
-
-    // Filter by user role and access
+    
     if (userRole === 'customer' && userId) {
       tickets = tickets.filter(ticket => ticket.customerId === userId);
     } else if (userRole === 'support-agent' && userId) {
       tickets = tickets.filter(ticket => ticket.assignedTo === userId || !ticket.assignedTo);
     }
-
-    // Apply filters
+    
     if (filters) {
-      if (filters.status && filters.status.length > 0) {
+      if (filters.status?.length) {
         tickets = tickets.filter(ticket => filters.status!.includes(ticket.status));
       }
-      if (filters.priority && filters.priority.length > 0) {
+      if (filters.priority?.length) {
         tickets = tickets.filter(ticket => filters.priority!.includes(ticket.priority));
       }
       if (filters.category) {
         tickets = tickets.filter(ticket => ticket.category === filters.category);
-      }
-      if (filters.assignedTo) {
-        tickets = tickets.filter(ticket => ticket.assignedTo === filters.assignedTo);
       }
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
@@ -94,7 +112,7 @@ class TicketService {
         );
       }
     }
-
+    
     return tickets.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   }
 
@@ -104,8 +122,27 @@ class TicketService {
   }
 
   async createTicket(ticketData: Omit<Ticket, 'id' | 'createdAt' | 'updatedAt' | 'messages' | 'history'>): Promise<Ticket> {
-    await new Promise(resolve => setTimeout(resolve, 800));
+    try {
+      const ApiService = (await import('./apiService')).default;
+      const apiService = ApiService.getInstance();
+      
+      const newTicket = await apiService.createTicket({
+        title: ticketData.title,
+        description: ticketData.description,
+        category: ticketData.category,
+        priority: ticketData.priority,
+        customerId: ticketData.customerId,
+        language: ticketData.language || 'en'
+      });
+      
+      return newTicket;
+    } catch (error) {
+      console.error('Error creating ticket via API:', error);
+      return this.createTicketInStorage(ticketData);
+    }
+  }
 
+  private async createTicketInStorage(ticketData: Omit<Ticket, 'id' | 'createdAt' | 'updatedAt' | 'messages' | 'history'>): Promise<Ticket> {
     const ticketId = `ticket_${Date.now()}`;
     const newTicket: Ticket = {
       ...ticketData,
@@ -128,20 +165,26 @@ class TicketService {
       ],
     };
 
-    // Auto-assign to available agent (simple round-robin)
-    if (!newTicket.assignedTo) {
-      const agents = ['2']; // In real app, get from user service
-      newTicket.assignedTo = agents[MOCK_TICKETS.length % agents.length];
-    }
-
     MOCK_TICKETS.push(newTicket);
     saveTicketsToStorage();
+    
     return newTicket;
   }
 
   async updateTicket(id: string, updates: Partial<Ticket>, userId: string, userName: string): Promise<Ticket | null> {
-    await new Promise(resolve => setTimeout(resolve, 500));
+    try {
+      const ApiService = (await import('./apiService')).default;
+      const apiService = ApiService.getInstance();
+      
+      const updatedTicket = await apiService.updateTicket(id, updates);
+      return updatedTicket;
+    } catch (error) {
+      console.error('Error updating ticket via API:', error);
+      return this.updateTicketInStorage(id, updates, userId, userName);
+    }
+  }
 
+  private async updateTicketInStorage(id: string, updates: Partial<Ticket>, userId: string, userName: string): Promise<Ticket | null> {
     const ticketIndex = MOCK_TICKETS.findIndex(ticket => ticket.id === id);
     if (ticketIndex === -1) return null;
 
@@ -154,6 +197,11 @@ class TicketService {
       updatedAt: new Date().toISOString(),
     };
     saveTicketsToStorage();
+    
+    // Send email notification for status changes
+    if (updates.status && updates.status !== oldStatus) {
+      this.notifyCustomerOfUpdate(MOCK_TICKETS[ticketIndex], updates.status);
+    }
 
     // Add history entry for status change
     if (updates.status && updates.status !== oldStatus) {
@@ -173,8 +221,41 @@ class TicketService {
   }
 
   async addMessage(ticketId: string, content: string, userId: string, userName: string, isInternal: boolean = false): Promise<Message | null> {
-    await new Promise(resolve => setTimeout(resolve, 300));
+    try {
+      const response = await fetch(`http://localhost:3002/api/tickets/${ticketId}/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content,
+          senderId: userId,
+          senderName: userName,
+          isInternal
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const message = await response.json();
+      return {
+        id: message.id,
+        ticketId,
+        userId,
+        userName,
+        content: message.content,
+        timestamp: message.timestamp,
+        isInternal: message.isInternal
+      };
+    } catch (error) {
+      console.error('Error adding message via API:', error);
+      return this.addMessageToStorage(ticketId, content, userId, userName, isInternal);
+    }
+  }
 
+  private async addMessageToStorage(ticketId: string, content: string, userId: string, userName: string, isInternal: boolean = false): Promise<Message | null> {
     const ticketIndex = MOCK_TICKETS.findIndex(ticket => ticket.id === ticketId);
     if (ticketIndex === -1) return null;
 
@@ -191,18 +272,6 @@ class TicketService {
     MOCK_TICKETS[ticketIndex].messages.push(message);
     MOCK_TICKETS[ticketIndex].updatedAt = new Date().toISOString();
     saveTicketsToStorage();
-
-    // Add history entry
-    const historyEntry: HistoryEntry = {
-      id: `history_${Date.now()}`,
-      ticketId,
-      userId,
-      userName,
-      action: 'message_added',
-      details: isInternal ? 'Internal note added' : 'Message added',
-      timestamp: new Date().toISOString(),
-    };
-    MOCK_TICKETS[ticketIndex].history.push(historyEntry);
 
     return message;
   }
@@ -251,6 +320,34 @@ class TicketService {
     saveTicketsToStorage();
 
     return note;
+  }
+
+  private async notifyAgentOfNewTicket(ticket: any) {
+    try {
+      const EmailService = (await import('./emailService')).default;
+      const emailService = EmailService.getInstance();
+      const mockAgent = { email: 'agent@company.com' };
+      await emailService.sendNewTicketNotification(ticket, mockAgent);
+    } catch (error) {
+      console.error('Failed to send agent notification:', error);
+    }
+  }
+
+  private async notifyCustomerOfUpdate(ticket: any, status: string) {
+    try {
+      const EmailService = (await import('./emailService')).default;
+      const emailService = EmailService.getInstance();
+      const mockCustomer = { email: 'customer@example.com' };
+      const message = `Your ticket status has been updated to: ${status}`;
+      
+      if (status === 'resolved') {
+        await emailService.sendTicketResolutionNotification(ticket, mockCustomer, 'Your issue has been resolved.');
+      } else {
+        await emailService.sendTicketUpdateNotification(ticket, mockCustomer, message);
+      }
+    } catch (error) {
+      console.error('Failed to send customer notification:', error);
+    }
   }
 
   getTicketStats(): { total: number; open: number; inProgress: number; resolved: number; closed: number } {

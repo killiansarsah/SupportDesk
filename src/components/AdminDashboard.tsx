@@ -31,9 +31,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, tickets, onTicket
     setStats(ticketService.getTicketStats());
   };
 
-  const loadUsers = () => {
+  const loadUsers = async () => {
     const authService = AuthService.getInstance();
-    setUsers(authService.getAllUsers());
+    const usersList = await authService.getAllUsers();
+    setUsers(usersList);
   };
 
   const StatCard: React.FC<{

@@ -17,7 +17,7 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ user, tickets, on
   const [showCreateTicket, setShowCreateTicket] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
 
-  // Auto-select ticket from notification
+  // Auto-select ticket from notification and update selected ticket when tickets change
   React.useEffect(() => {
     if (selectedTicketId && tickets.length > 0) {
       const ticket = tickets.find(t => t.id === selectedTicketId);
@@ -25,7 +25,15 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ user, tickets, on
         setSelectedTicket(ticket);
       }
     }
-  }, [selectedTicketId, tickets]);
+    
+    // Update selected ticket with fresh data if it exists
+    if (selectedTicket && tickets.length > 0) {
+      const updatedTicket = tickets.find(t => t.id === selectedTicket.id);
+      if (updatedTicket) {
+        setSelectedTicket(updatedTicket);
+      }
+    }
+  }, [selectedTicketId, tickets, selectedTicket?.id]);
 
   // Listen for ticket open events
   useEffect(() => {
