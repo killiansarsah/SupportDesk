@@ -6,7 +6,8 @@
     "start": "node server.js",
     "dev": "node server.js",
     "reset-users": "node reset-users.js",
-    "hash-passwords": "node hash-passwords.js"
+    "hash-passwords": "node hash-passwords.js",
+    "remove-demo-users": "node remove-demo-users.js"
   },
   "dependencies": {
     "express": "^4.18.2",

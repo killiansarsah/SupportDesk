@@ -28,11 +28,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, isLoading, error }) 
     }
   };
 
-  const demoCredentials = [
-    { email: 'admin@company.com', password: 'password123', role: 'Administrator' },
-    { email: 'agent@company.com', password: 'password123', role: 'Support Agent' },
-    { email: 'customer@email.com', password: 'password123', role: 'Customer' },
-  ];
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-6 relative overflow-hidden">
@@ -59,30 +55,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, isLoading, error }) 
             </p>
           </div>
 
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Demo Credentials:</h3>
-            <div className="grid gap-3">
-              {demoCredentials.map((cred, index) => (
-                <div key={index} className="backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg p-4">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="text-white font-medium">{cred.role}</p>
-                      <p className="text-gray-300 text-sm">{cred.email}</p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setEmail(cred.email);
-                        setPassword(cred.password);
-                      }}
-                      className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg text-white text-sm transition-colors"
-                    >
-                      Use
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+
         </div>
 
         {/* Right Side - Login Form */}

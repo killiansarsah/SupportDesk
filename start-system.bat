@@ -36,10 +36,6 @@ echo.
 echo Backend API: http://localhost:3002
 echo Frontend App: http://localhost:5173
 echo.
-echo Demo Accounts:
-echo - Admin: admin@company.com / password123
-echo - Agent: agent@company.com / password123  
-echo - Customer: customer@email.com / password123
-echo.
+
 echo Press any key to close this window...
 pause >nul
