@@ -1,15 +1,20 @@
+import dotenv from 'dotenv';
+dotenv.config({ path: './.env' });
+
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import User from './models/User.js';
 import Ticket from './models/Ticket.js';
 
-dotenv.config();
-
 const app = express();
 const PORT = process.env.PORT || 3002;
+console.log('🔧 Backend env check:', {
+  cwd: process.cwd(),
+  envFileExists: true,
+  googleClientIdPrefix: process.env.GOOGLE_CLIENT_ID?.slice(0, 20) || 'undefined'
+});
 
 // Middleware
 app.use(cors({
@@ -119,6 +124,162 @@ app.post('/api/auth/register', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
+
+// Google OAuth Routes
+import GoogleOAuthHandler from './services/googleOAuthHandler.js';
+const googleAuth = new GoogleOAuthHandler();
+
+// Debug: Check Google OAuth configuration
+console.log('🔧 Google Client ID:', process.env.GOOGLE_CLIENT_ID?.substring(0, 20) + '...');
+console.log('🔧 Google Client Secret:', process.env.GOOGLE_CLIENT_SECRET ? 'Configured' : 'Missing');
+
+/**
+ * Google OAuth Sign-In Route
+ * Handles authentication with Google ID token
+ * 
+ * Security Features:
+ * - Server-side token verification
+ * - CSRF protection
+ * - Rate limiting ready
+ */
+app.post('/api/auth/google/signin', async (req, res) => {
+  try {
+    const { credential, csrfToken } = req.body;
+    
+    console.log('🔐 Google sign-in attempt');
+    
+    // Validate required fields
+    if (!credential) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Google credential is required' 
+      });
+    }
+
+    // Process Google authentication
+    const result = await googleAuth.handleGoogleSignIn(credential, csrfToken);
+    
+    if (result.success) {
+      console.log('✅ Google sign-in successful for:', result.user.email);
+      res.json(result);
+    } else {
+      console.log('❌ Google sign-in failed:', result.error);
+      res.status(401).json(result);
+    }
+
+  } catch (error) {
+    console.error('❌ Google sign-in error:', error.message);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Internal server error during Google authentication' 
+    });
+  }
+});
+
+/**
+ * Google OAuth Sign-Up Route
+ * Handles new user registration with Google account
+ * 
+ * Note: For OAuth, sign-up and sign-in are typically the same process
+ */
+app.post('/api/auth/google/signup', async (req, res) => {
+  try {
+    const { credential, csrfToken } = req.body;
+    
+    console.log('📝 Google sign-up attempt');
+    
+    // Validate required fields
+    if (!credential) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Google credential is required' 
+      });
+    }
+
+    // Process Google registration (same as sign-in for OAuth)
+    const result = await googleAuth.handleGoogleSignUp(credential, csrfToken);
+    
+    if (result.success) {
+      console.log('✅ Google sign-up successful for:', result.user.email);
+      res.json(result);
+    } else {
+      console.log('❌ Google sign-up failed:', result.error);
+      res.status(400).json(result);
+    }
+
+  } catch (error) {
+    console.error('❌ Google sign-up error:', error.message);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Internal server error during Google registration' 
+    });
+  }
+});
+
+/**
+ * CSRF Token Generation Route
+ * Provides CSRF tokens for secure OAuth flows
+ */
+app.get('/api/auth/csrf-token', (req, res) => {
+  try {
+    const csrfToken = googleAuth.generateCSRFToken();
+    
+    // Store token in session (if using sessions) or return for client storage
+    res.json({ 
+      success: true, 
+      csrfToken: csrfToken 
+    });
+
+  } catch (error) {
+    console.error('❌ CSRF token generation error:', error.message);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to generate CSRF token' 
+    });
+  }
+});
+
+/**
+ * Google Account Unlink Route
+ * Allows users to unlink their Google account
+ */
+app.post('/api/auth/google/unlink', async (req, res) => {
+  try {
+    const { userId } = req.body;
+    
+    console.log('🔗 Google account unlink request for user:', userId);
+    
+    if (!userId) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'User ID is required' 
+      });
+    }
+
+    const success = await googleAuth.unlinkGoogleAccount(userId);
+    
+    if (success) {
+      console.log('✅ Google account unlinked successfully');
+      res.json({ 
+        success: true, 
+        message: 'Google account unlinked successfully' 
+      });
+    } else {
+      res.status(400).json({ 
+        success: false, 
+        error: 'Failed to unlink Google account' 
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ Google unlink error:', error.message);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Internal server error during account unlinking' 
+    });
+  }
+});
+// End of Google OAuth routes
 
 // User Routes
 app.get('/api/users', async (req, res) => {

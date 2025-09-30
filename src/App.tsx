@@ -50,14 +50,14 @@ function App() {
       } else {
         setLoginError(result.error || 'Login failed');
       }
-    } catch (error) {
+    } catch {
       setLoginError('An unexpected error occurred');
     } finally {
       setIsLoginLoading(false);
     }
   };
 
-  const handleRegister = async (email: string, password: string, name: string, phone: string, role: 'customer' | 'support-agent' | 'administrator') => {
+  const handleRegister = async (email: string, password: string, name: string, phone: string, role: 'customer') => {
     setIsLoginLoading(true);
     setLoginError(null);
 
@@ -72,8 +72,76 @@ function App() {
       } else {
         setLoginError(result.error || 'Registration failed');
       }
-    } catch (error) {
+    } catch {
       setLoginError('An unexpected error occurred');
+    } finally {
+      setIsLoginLoading(false);
+    }
+  };
+
+  /**
+   * Google Sign-In Handler
+   * Processes Google OAuth authentication for existing users
+   * 
+   * @param googleCredential - JWT token from Google Sign-In
+   */
+  const handleGoogleSignIn = async (googleCredential: string) => {
+    setIsLoginLoading(true);
+    setLoginError(null);
+
+    try {
+      const authService = AuthService.getInstance();
+      
+      // Get CSRF token for security (optional but recommended)
+      const csrfResult = await authService.getCSRFToken();
+      const csrfToken = csrfResult.success ? csrfResult.csrfToken : undefined;
+      
+      // Process Google sign-in
+      const result = await authService.googleSignIn(googleCredential, csrfToken);
+      
+      if (result.success && result.user) {
+        setUser(result.user);
+        console.log('✅ Google sign-in successful:', result.user.name);
+      } else {
+        setLoginError(result.error || 'Google sign-in failed');
+      }
+    } catch (error) {
+      console.error('❌ Google sign-in error:', error);
+      setLoginError('Google authentication failed');
+    } finally {
+      setIsLoginLoading(false);
+    }
+  };
+
+  /**
+   * Google Sign-Up Handler
+   * Processes Google OAuth registration for new users
+   * 
+   * @param googleCredential - JWT token from Google Sign-In
+   */
+  const handleGoogleSignUp = async (googleCredential: string) => {
+    setIsLoginLoading(true);
+    setLoginError(null);
+
+    try {
+      const authService = AuthService.getInstance();
+      
+      // Get CSRF token for security (optional but recommended)
+      const csrfResult = await authService.getCSRFToken();
+      const csrfToken = csrfResult.success ? csrfResult.csrfToken : undefined;
+      
+      // Process Google sign-up
+      const result = await authService.googleSignUp(googleCredential, csrfToken);
+      
+      if (result.success && result.user) {
+        setUser(result.user);
+        console.log('✅ Google sign-up successful:', result.user.name);
+      } else {
+        setLoginError(result.error || 'Google registration failed');
+      }
+    } catch (error) {
+      console.error('❌ Google sign-up error:', error);
+      setLoginError('Google registration failed');
     } finally {
       setIsLoginLoading(false);
     }
@@ -175,6 +243,8 @@ function App() {
       <Login
         onLogin={handleLogin}
         onRegister={handleRegister}
+        onGoogleSignIn={handleGoogleSignIn}
+        onGoogleSignUp={handleGoogleSignUp}
         isLoading={isLoginLoading}
         error={loginError}
       />

@@ -99,6 +99,68 @@ class ApiService {
     });
   }
 
+  // Google OAuth API Methods
+  
+  /**
+   * Google Sign-In API
+   * Sends Google ID token to backend for verification and authentication
+   * 
+   * @param credential - Google ID token
+   * @param csrfToken - Optional CSRF protection token
+   * @returns Authentication result from backend
+   */
+  async googleSignIn(credential: string, csrfToken?: string) {
+    return this.request('/auth/google/signin', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        credential, 
+        csrfToken 
+      }),
+    });
+  }
+
+  /**
+   * Google Sign-Up API
+   * Registers new user with Google account information
+   * 
+   * @param credential - Google ID token
+   * @param csrfToken - Optional CSRF protection token
+   * @returns Registration result from backend
+   */
+  async googleSignUp(credential: string, csrfToken?: string) {
+    return this.request('/auth/google/signup', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        credential, 
+        csrfToken 
+      }),
+    });
+  }
+
+  /**
+   * Get CSRF Token API
+   * Retrieves CSRF protection token from backend
+   * 
+   * @returns CSRF token for secure OAuth flows
+   */
+  async getCSRFToken() {
+    return this.request('/auth/csrf-token');
+  }
+
+  /**
+   * Unlink Google Account API
+   * Removes Google OAuth linkage from user account
+   * 
+   * @param userId - User ID to unlink
+   * @returns Success status from backend
+   */
+  async unlinkGoogleAccount(userId: string) {
+    return this.request('/auth/google/unlink', {
+      method: 'POST',
+      body: JSON.stringify({ userId }),
+    });
+  }
+
   // Health check
   async healthCheck() {
     try {

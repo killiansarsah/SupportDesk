@@ -1,19 +1,22 @@
 import React, { useState } from 'react';
-import { Mail, Lock, Eye, EyeOff, LogIn, UserPlus, User, Shield, Headphones, Phone } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, LogIn, UserPlus, User, Phone } from 'lucide-react';
+import GoogleSignIn from './GoogleSignIn';
 
 interface LoginProps {
   onLogin: (email: string, password: string) => Promise<void>;
-  onRegister?: (email: string, password: string, name: string, phone: string, role: 'customer' | 'support-agent' | 'administrator') => Promise<void>;
+  onRegister?: (email: string, password: string, name: string, phone: string, role: 'customer') => Promise<void>;
+  onGoogleSignIn?: (googleCredential: string) => Promise<void>;
+  onGoogleSignUp?: (googleCredential: string) => Promise<void>;
   isLoading: boolean;
   error: string | null;
 }
 
-const Login: React.FC<LoginProps> = ({ onLogin, onRegister, isLoading, error }) => {
+const Login: React.FC<LoginProps> = ({ onLogin, onRegister, onGoogleSignIn, onGoogleSignUp, isLoading, error }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [role, setRole] = useState<'customer' | 'support-agent' | 'administrator'>('customer');
+  const [role] = useState<'customer'>('customer');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoginMode, setIsLoginMode] = useState(true);
 
@@ -65,7 +68,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, isLoading, error }) 
               {isLoginMode ? 'Welcome Back' : 'Create Account'}
             </h2>
             <p className="text-sm sm:text-base text-gray-300">
-              {isLoginMode ? 'Sign in to your account' : 'Sign up for a new account'}
+              {isLoginMode ? 'Sign in to your account' : 'Create a customer support account'}
             </p>
           </div>
 
@@ -157,42 +160,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, isLoading, error }) 
               </div>
             </div>
 
-            {!isLoginMode && (
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Account Type
-                </label>
-                <div className="grid grid-cols-1 gap-3">
-                  {[
-                    { value: 'customer', label: 'Customer', icon: User, desc: 'Create and manage support tickets' },
-                    { value: 'support-agent', label: 'Support Agent', icon: Headphones, desc: 'Handle customer support requests' },
-                    { value: 'administrator', label: 'Administrator', icon: Shield, desc: 'Full system access and management' }
-                  ].map((option) => {
-                    const Icon = option.icon;
-                    return (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => setRole(option.value as any)}
-                        className={`p-4 rounded-lg border transition-all text-left ${
-                          role === option.value
-                            ? 'bg-blue-500/20 border-blue-500/50 text-white'
-                            : 'bg-white/5 border-white/20 text-gray-300 hover:bg-white/10'
-                        }`}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <Icon className="w-5 h-5" />
-                          <div>
-                            <div className="font-medium">{option.label}</div>
-                            <div className="text-sm opacity-75">{option.desc}</div>
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+
 
             <button
               type="submit"
@@ -210,6 +178,58 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, isLoading, error }) 
             </button>
           </form>
 
+          {/* Divider */}
+          <div className="my-6 flex items-center">
+            <div className="flex-1 border-t border-white/20"></div>
+            <span className="px-4 text-sm text-gray-300 bg-transparent">or</span>
+            <div className="flex-1 border-t border-white/20"></div>
+          </div>
+
+          {/* Google Sign-In Section */}
+          <div className="space-y-3">
+            {isLoginMode ? (
+              // Google Sign-In Button
+              <GoogleSignIn
+                text="signin_with"
+                theme="outline"
+                size="large"
+                className="w-full"
+                disabled={isLoading}
+                onSuccess={async (_userInfo, credential) => {
+                  if (onGoogleSignIn) {
+                    await onGoogleSignIn(credential);
+                  }
+                }}
+                onError={(error) => {
+                  console.error('Google Sign-In Error:', error);
+                }}
+              />
+            ) : (
+              // Google Sign-Up Button
+              <GoogleSignIn
+                text="signup_with"
+                theme="outline"
+                size="large"
+                className="w-full"
+                disabled={isLoading}
+                onSuccess={async (_userInfo, credential) => {
+                  if (onGoogleSignUp) {
+                    await onGoogleSignUp(credential);
+                  }
+                }}
+                onError={(error) => {
+                  console.error('Google Sign-Up Error:', error);
+                }}
+              />
+            )}
+            
+            {/* Privacy Notice for Google OAuth */}
+            <p className="text-xs text-gray-400 text-center px-2">
+              By signing {isLoginMode ? 'in' : 'up'} with Google, you agree to our Terms of Service and Privacy Policy. 
+              We only access your basic profile information.
+            </p>
+          </div>
+
           <div className="mt-6 text-center">
             <button
               onClick={() => {
@@ -218,7 +238,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onRegister, isLoading, error }) 
                 setPassword('');
                 setName('');
                 setPhone('');
-                setRole('customer');
+                // Role is always 'customer' for new registrations
               }}
               className="text-blue-400 hover:text-blue-300 transition-colors"
             >
