@@ -54,9 +54,6 @@ const AgentDashboard: React.FC<AgentDashboardProps> = ({ user, tickets, onTicket
     const assignedId = ticket.assignedTo;
     const userId = user._id || user.id;
     
-    // Debug logging
-    console.log('Filtering tickets for user:', { userId, userEmail: user.email, assignedId, ticketTitle: ticket.title });
-    
     // Check multiple ID formats
     return assignedId === userId || 
            assignedId === user.id || 
@@ -168,7 +165,7 @@ const AgentDashboard: React.FC<AgentDashboardProps> = ({ user, tickets, onTicket
           </div>
 
           {/* Filters and Search */}
-          <div className="backdrop-blur-lg bg-white/10 border border-white/20 rounded-xl p-6">
+          <div className="relative z-50 backdrop-blur-lg bg-white/10 border border-white/20 rounded-xl p-6" style={{ zIndex: 9999 }}>
             <div className="flex flex-col lg:flex-row gap-4">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -181,11 +178,12 @@ const AgentDashboard: React.FC<AgentDashboardProps> = ({ user, tickets, onTicket
                 />
               </div>
               
-              <div className="flex gap-2">
+              <div className="relative flex gap-2">
                 <select
                   value={filters.status?.[0] || ''}
                   onChange={(e) => setFilters({ ...filters, status: e.target.value ? [e.target.value] : undefined })}
-                  className="px-4 py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="relative z-50 px-4 py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{ zIndex: 9999 }}
                 >
                   <option value="">All Status</option>
                   <option value="open">Open</option>
@@ -197,7 +195,8 @@ const AgentDashboard: React.FC<AgentDashboardProps> = ({ user, tickets, onTicket
                 <select
                   value={filters.priority?.[0] || ''}
                   onChange={(e) => setFilters({ ...filters, priority: e.target.value ? [e.target.value] : undefined })}
-                  className="px-4 py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="relative z-50 px-4 py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{ zIndex: 9999 }}
                 >
                   <option value="">All Priority</option>
                   <option value="urgent">Urgent</option>
@@ -210,7 +209,7 @@ const AgentDashboard: React.FC<AgentDashboardProps> = ({ user, tickets, onTicket
           </div>
 
           {/* Tickets List */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* My Assignments */}
             <div className="backdrop-blur-lg bg-white/10 border border-white/20 rounded-xl p-6">
               <div className="flex items-center justify-between mb-6">

@@ -65,18 +65,33 @@ const KnowledgeBase = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+  const [articles, setArticles] = useState<Article[]>(MOCK_ARTICLES);
 
-  const categories = ['All', ...Array.from(new Set(MOCK_ARTICLES.map(a => a.category)))];
+  const categories = ['All', ...Array.from(new Set(articles.map(a => a.category)))];
   
-  const filteredArticles = MOCK_ARTICLES.filter(article => {
+  const filteredArticles = articles.filter(article => {
     const matchesSearch = article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          article.content.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || article.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-  const handleFeedback = (articleId: string, helpful: boolean) => {
-    console.log(`Article ${articleId} marked as ${helpful ? 'helpful' : 'not helpful'}`);
+  const handleFeedback = (articleId: string, isHelpful: boolean) => {
+    const updatedArticles = articles.map(article => {
+      if (article.id === articleId) {
+        const newArticle = {
+          ...article,
+          helpful: isHelpful ? article.helpful + 1 : article.helpful,
+          notHelpful: !isHelpful ? article.notHelpful + 1 : article.notHelpful,
+        };
+        if (selectedArticle?.id === articleId) {
+          setSelectedArticle(newArticle);
+        }
+        return newArticle;
+      }
+      return article;
+    });
+    setArticles(updatedArticles);
   };
 
   if (selectedArticle) {

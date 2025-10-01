@@ -1,32 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, Send, X, Bot, User as UserIcon } from 'lucide-react';
-import { ChatMessage, ChatSession, BotResponse } from '../types';
-
-const MOCK_BOT_RESPONSES: Record<string, BotResponse> = {
-  'hello': {
-    message: 'Hello! I\'m here to help. What can I assist you with today?',
-    suggestions: ['Reset password', 'Create ticket', 'Check order status']
-  },
-  'password': {
-    message: 'I can help you reset your password. Would you like me to guide you through the process?',
-    suggestions: ['Yes, help me reset', 'I need to speak to an agent']
-  },
-  'ticket': {
-    message: 'I can help you create a support ticket. What issue are you experiencing?',
-    suggestions: ['Technical issue', 'Billing question', 'Feature request']
-  },
-  'agent': {
-    message: 'I\'ll connect you with a human agent. Please wait a moment...',
-    escalate: true
-  }
-};
+import { Send, X, Bot, User as UserIcon } from 'lucide-react';
+import { ChatMessage } from '../types';
+import { openaiService } from '../services/openaiService';
 
 const LiveChat = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
-      content: 'Hi! I\'m your AI assistant. How can I help you today?',
+      content: 'Hi! I\'m your AI assistant powered by ChatGPT. How can I help you today?',
       sender: 'bot',
       timestamp: new Date().toISOString()
     }
@@ -44,21 +26,6 @@ const LiveChat = () => {
     scrollToBottom();
   }, [messages]);
 
-  const getBotResponse = (userMessage: string): BotResponse => {
-    const message = userMessage.toLowerCase();
-    
-    for (const [key, response] of Object.entries(MOCK_BOT_RESPONSES)) {
-      if (message.includes(key)) {
-        return response;
-      }
-    }
-    
-    return {
-      message: 'COMMAND NOT RECOGNIZED. SELECT FROM AVAILABLE EVENT MANAGEMENT OPTIONS.',
-      suggestions: ['HUMAN_AGENT', 'HELP_ARTICLES', 'SYSTEM_STATUS']
-    };
-  };
-
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
 
@@ -70,25 +37,27 @@ const LiveChat = () => {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentMessage = inputMessage; // Store the message
     setInputMessage('');
     setIsTyping(true);
 
-    // Simulate bot thinking time
-    setTimeout(() => {
-      const botResponse = getBotResponse(inputMessage);
-      
-      const botMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        content: botResponse.message,
-        sender: isConnectedToAgent ? 'agent' : 'bot',
-        timestamp: new Date().toISOString()
-      };
+    try {
+      // Check if user wants to speak to an agent
+      if (currentMessage.toLowerCase().includes('agent') || 
+          currentMessage.toLowerCase().includes('human') ||
+          currentMessage.toLowerCase().includes('person')) {
+        
+        const botMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          content: 'I\'ll connect you with a human agent right away. Please wait a moment...',
+          sender: 'bot',
+          timestamp: new Date().toISOString()
+        };
 
-      setMessages(prev => [...prev, botMessage]);
-      setIsTyping(false);
-
-      if (botResponse.escalate) {
+        setMessages(prev => [...prev, botMessage]);
+        setIsTyping(false);
         setIsConnectedToAgent(true);
+
         setTimeout(() => {
           const agentMessage: ChatMessage = {
             id: (Date.now() + 2).toString(),
@@ -98,13 +67,54 @@ const LiveChat = () => {
           };
           setMessages(prev => [...prev, agentMessage]);
         }, 2000);
+        
+        return;
       }
-    }, 1000);
+
+      // Get ChatGPT response
+      const aiResponse = await openaiService.sendMessage(currentMessage);
+      
+      const botMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        content: aiResponse,
+        sender: isConnectedToAgent ? 'agent' : 'bot',
+        timestamp: new Date().toISOString()
+      };
+
+      setMessages(prev => [...prev, botMessage]);
+      
+    } catch (error) {
+      console.error('Error getting AI response:', error);
+      
+      const errorMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        content: 'I\'m sorry, I\'m having trouble connecting right now. Please try again in a moment or type "agent" to speak with a human.',
+        sender: 'bot',
+        timestamp: new Date().toISOString()
+      };
+
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   const handleSuggestionClick = (suggestion: string) => {
     setInputMessage(suggestion);
     setTimeout(() => handleSendMessage(), 100);
+  };
+
+  const clearConversation = () => {
+    setMessages([
+      {
+        id: '1',
+        content: 'Hi! I\'m your AI assistant powered by ChatGPT. How can I help you today?',
+        sender: 'bot',
+        timestamp: new Date().toISOString()
+      }
+    ]);
+    setIsConnectedToAgent(false);
+    openaiService.clearConversation();
   };
 
   const formatTime = (timestamp: string) => {
@@ -164,12 +174,27 @@ const LiveChat = () => {
             <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
               {isConnectedToAgent ? <UserIcon className="w-4 h-4 text-white" /> : <Bot className="w-4 h-4 text-white" />}
             </div>
-            <div>
+            <div className="flex-1">
               <h3 className="text-white font-medium">
-                {isConnectedToAgent ? 'Sarah - Support Agent' : 'AI Assistant'}
+                {isConnectedToAgent ? 'Sarah - Support Agent' : 'AI Assistant (ChatGPT)'}
               </h3>
               <p className="text-xs text-green-400">● Online</p>
             </div>
+            <button
+              onClick={clearConversation}
+              className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
+              title="Clear conversation"
+            >
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
+            >
+              <X className="w-4 h-4 text-white" />
+            </button>
           </div>
 
           {/* Messages */}

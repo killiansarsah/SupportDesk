@@ -55,7 +55,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
   };
 
   return (
-    <div ref={selectRef} className={`relative ${className}`} style={style}>
+    <div ref={selectRef} className={`relative ${className}`} style={{ ...style, zIndex: 9999 }}>
       {/* Select Button */}
       <button
         type="button"
@@ -79,7 +79,14 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
 
       {/* Dropdown Options */}
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+        <div 
+          className="absolute left-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl max-h-80 overflow-y-auto"
+          style={{ 
+            zIndex: 99999,
+            width: '97px',
+            minWidth: '100%'
+          }}
+        >
           {options.map((option) => (
             <button
               key={option.value}
@@ -91,7 +98,11 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
                   : 'text-gray-200'
               }`}
             >
-              <span className="block truncate" title={option.label}>
+              <span 
+                className="block overflow-hidden text-ellipsis whitespace-nowrap" 
+                title={option.label}
+                style={{ maxWidth: '260px' }}
+              >
                 {option.label}
               </span>
             </button>

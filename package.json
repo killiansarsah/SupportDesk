@@ -18,6 +18,7 @@
     "google-auth-library": "^10.3.1",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.344.0",
+    "openai": "^6.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

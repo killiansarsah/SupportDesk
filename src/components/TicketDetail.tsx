@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Send, Paperclip, Download, Clock, User, Tag, AlertCircle, Users, FileText } from 'lucide-react';
+import { ArrowLeft, Send, Paperclip, Download, Clock, User, Tag, AlertCircle, Users, FileText, X } from 'lucide-react';
 import { Ticket, User as UserType } from '../types';
 import TicketService from '../services/ticketService';
 import ApiService from '../services/apiService';
@@ -23,6 +23,9 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
   const [isUpdatingAssignment, setIsUpdatingAssignment] = useState(false);
   const [availableAgents, setAvailableAgents] = useState<UserType[]>([]);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [resolutionMessage, setResolutionMessage] = useState('');
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -135,6 +138,31 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
     }
   };
 
+  const handleSendResolutionEmail = async () => {
+    setIsSendingEmail(true);
+    try {
+      const apiService = ApiService.getInstance();
+      const result = await apiService.sendResolutionEmail(
+        ticket.id,
+        resolutionMessage || 'Your ticket has been resolved by our support team. If you need any further assistance, please don\'t hesitate to contact us.',
+        user.name
+      );
+      
+      if (result.success) {
+        ToastService.getInstance().success('Email Sent', 'Resolution email sent to customer successfully!');
+        setShowEmailModal(false);
+        setResolutionMessage('');
+      } else {
+        ToastService.getInstance().error('Email Failed', result.message || 'Failed to send resolution email');
+      }
+    } catch (error) {
+      console.error('Error sending resolution email:', error);
+      ToastService.getInstance().error('Email Failed', 'Failed to send resolution email. Please try again.');
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'open':
@@ -220,7 +248,7 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                   const agentId = (agent as any)._id || agent.id;
                   return {
                     value: agentId,
-                    label: `${agent.name} (${agent.role})`
+                    label: agent.name
                   };
                 })
               ]}
@@ -229,6 +257,18 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                 backgroundImage: 'linear-gradient(135deg, rgba(147, 51, 234, 0.8) 0%, rgba(79, 70, 229, 0.8) 100%)',
               }}
             />
+          )}
+          
+          {/* Email Resolution Button */}
+          {canChangeStatus && (ticketStatus === 'resolved' || ticketStatus === 'closed') && (
+            <button
+              onClick={() => setShowEmailModal(true)}
+              className="px-4 py-2 bg-gradient-to-r from-green-600/80 to-emerald-600/80 hover:from-green-700/80 hover:to-emerald-700/80 text-white rounded-lg transition-all duration-200 flex items-center gap-2 backdrop-blur-lg border border-green-400/30 hover:border-green-400/50"
+              title="Send resolution email to customer"
+            >
+              <Send className="w-4 h-4" />
+              Email Customer
+            </button>
           )}
         </div>
       </div>
@@ -403,6 +443,76 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                 </span>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Email Resolution Modal */}
+      {showEmailModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-gradient-to-br from-gray-900/95 to-gray-800/95 backdrop-blur-lg border border-white/20 rounded-xl p-6 w-full max-w-lg">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white">Send Resolution Email</h3>
+              <button
+                onClick={() => setShowEmailModal(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Customer Email
+                </label>
+                <div className="px-3 py-2 bg-gray-800/50 border border-gray-600 rounded-lg text-gray-300">
+                  {typeof ticket.customerId === 'object' && (ticket.customerId as any)?.email || 'No email available'}
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Resolution Message
+                </label>
+                <textarea
+                  value={resolutionMessage}
+                  onChange={(e) => setResolutionMessage(e.target.value)}
+                  placeholder="Enter a custom resolution message (optional)"
+                  className="w-full px-3 py-2 bg-gray-800/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400"
+                  rows={4}
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Leave empty to use the default resolution message.
+                </p>
+              </div>
+              
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => setShowEmailModal(false)}
+                  className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSendResolutionEmail}
+                  disabled={isSendingEmail}
+                  className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-600/50 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  {isSendingEmail ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4" />
+                      Send Email
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

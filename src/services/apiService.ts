@@ -189,6 +189,16 @@ class ApiService {
       };
     }
   }
+
+  async sendResolutionEmail(ticketId: string, message: string, resolvedBy: string) {
+    return this.request(`/tickets/${ticketId}/send-resolution-email`, {
+      method: 'POST',
+      body: JSON.stringify({
+        message,
+        resolvedBy
+      })
+    });
+  }
 }
 
 export default ApiService;

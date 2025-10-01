@@ -7,6 +7,7 @@ import cors from 'cors';
 import bcrypt from 'bcryptjs';
 import User from './models/User.js';
 import Ticket from './models/Ticket.js';
+import emailService from './emailService.js';
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -385,6 +386,46 @@ app.post('/api/tickets', async (req, res) => {
     await ticket.save();
     await ticket.populate('customerId', 'name email');
     
+    // Send email notifications
+    try {
+      // Get all support agents and administrators
+      const supportStaff = await User.find({
+        role: { $in: ['support-agent', 'administrator'] },
+        email: { $exists: true, $ne: '' }
+      }).select('name email role');
+
+      // Prepare ticket data for email
+      const ticketData = {
+        id: ticket._id.toString(),
+        title: ticket.title,
+        description: ticket.description,
+        category: ticket.category,
+        priority: ticket.priority,
+        status: ticket.status,
+        createdAt: ticket.createdAt
+      };
+
+      // Customer information
+      const customerInfo = {
+        name: ticket.customerId.name,
+        email: ticket.customerId.email
+      };
+
+      // Send email notifications (non-blocking)
+      emailService.notifyNewTicket(ticketData, customerInfo, supportStaff)
+        .then(results => {
+          console.log('✅ Email notifications sent for ticket #' + ticket._id);
+          console.log('📧 Email results:', results);
+        })
+        .catch(error => {
+          console.error('❌ Failed to send email notifications:', error);
+        });
+
+    } catch (emailError) {
+      console.error('❌ Email notification error:', emailError);
+      // Don't fail ticket creation if email fails
+    }
+    
     const response = {
       _id: ticket._id,
       id: ticket._id.toString(),
@@ -419,6 +460,9 @@ app.put('/api/tickets/:id', async (req, res) => {
       }
     }
     
+    // Get the original ticket to check for status changes
+    const originalTicket = await Ticket.findById(req.params.id);
+    
     const ticket = await Ticket.findByIdAndUpdate(
       req.params.id,
       updateData,
@@ -427,6 +471,52 @@ app.put('/api/tickets/:id', async (req, res) => {
     
     if (!ticket) {
       return res.status(404).json({ error: 'Ticket not found' });
+    }
+
+    // Check if ticket status changed to "resolved" or "closed"
+    if (originalTicket && 
+        ['open', 'in-progress'].includes(originalTicket.status) && 
+        ['resolved', 'closed'].includes(ticket.status)) {
+      
+      try {
+        // Get the agent who resolved the ticket
+        let resolvedByName = 'Support Team';
+        if (ticket.assignedTo && ticket.assignedTo.name) {
+          resolvedByName = ticket.assignedTo.name;
+        }
+
+        // Prepare resolution message
+        const resolutionMessage = req.body.resolutionMessage || 
+          'Your ticket has been resolved by our support team. If you need any further assistance, please don\'t hesitate to contact us.';
+
+        // Customer information
+        const customerInfo = {
+          name: ticket.customerId.name,
+          email: ticket.customerId.email
+        };
+
+        // Ticket data for email
+        const ticketData = {
+          id: ticket._id.toString(),
+          title: ticket.title,
+          category: ticket.category,
+          status: ticket.status
+        };
+
+        // Send resolution email (non-blocking)
+        emailService.notifyTicketResolution(ticketData, customerInfo, resolutionMessage, resolvedByName)
+          .then(result => {
+            console.log('✅ Resolution email sent for ticket #' + ticket._id);
+            console.log('📧 Email result:', result);
+          })
+          .catch(error => {
+            console.error('❌ Failed to send resolution email:', error);
+          });
+
+      } catch (emailError) {
+        console.error('❌ Resolution email error:', emailError);
+        // Don't fail the update if email fails
+      }
     }
     
     const response = {
@@ -460,6 +550,68 @@ app.get('/api/tickets/:id', async (req, res) => {
     };
     
     res.json(response);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Email Routes
+// Test email configuration
+app.get('/api/email/test', async (req, res) => {
+  try {
+    const result = await emailService.testEmailConfig();
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Manually send resolution email
+app.post('/api/tickets/:id/send-resolution-email', async (req, res) => {
+  try {
+    const ticket = await Ticket.findById(req.params.id)
+      .populate('customerId', 'name email')
+      .populate('assignedTo', 'name email');
+    
+    if (!ticket) {
+      return res.status(404).json({ error: 'Ticket not found' });
+    }
+
+    if (!ticket.customerId.email) {
+      return res.status(400).json({ error: 'Customer email not found' });
+    }
+
+    const resolutionMessage = req.body.message || 
+      'Your ticket has been resolved by our support team. If you need any further assistance, please don\'t hesitate to contact us.';
+
+    const resolvedBy = req.body.resolvedBy || 
+      (ticket.assignedTo ? ticket.assignedTo.name : 'Support Team');
+
+    const customerInfo = {
+      name: ticket.customerId.name,
+      email: ticket.customerId.email
+    };
+
+    const ticketData = {
+      id: ticket._id.toString(),
+      title: ticket.title,
+      category: ticket.category,
+      status: ticket.status
+    };
+
+    const result = await emailService.notifyTicketResolution(
+      ticketData, 
+      customerInfo, 
+      resolutionMessage, 
+      resolvedBy
+    );
+
+    res.json({ 
+      success: result.success, 
+      message: result.success ? 'Resolution email sent successfully' : 'Failed to send email',
+      details: result 
+    });
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
