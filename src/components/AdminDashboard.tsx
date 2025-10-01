@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, Users, Ticket as TicketIcon, TrendingUp, Clock, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
+import { BarChart3, Users, Ticket as TicketIcon, TrendingUp, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { User, Ticket } from '../types';
 import TicketService from '../services/ticketService';
 import AuthService from '../services/authService';
@@ -37,6 +37,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, tickets, onTicket
     setUsers(usersList);
   };
 
+
+
   const StatCard: React.FC<{
     title: string;
     value: number;
@@ -65,9 +67,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, tickets, onTicket
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="text-center space-y-2">
+      <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold text-white">Administrator Dashboard</h1>
         <p className="text-gray-300">Complete system overview and management</p>
+        
+
       </div>
 
       {/* Stats Grid */}

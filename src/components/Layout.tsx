@@ -101,6 +101,8 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, onNavigate, c
     setShowUserMenu(false);
   };
 
+
+
   const getButtonClass = (page: string) => 
     `p-2 rounded-lg transition-colors duration-200 ${
       currentPage === page
@@ -417,6 +419,8 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, onNavigate, c
                 </>
               )}
               
+
+
               <NotificationSystem 
                 user={user} 
                 onNavigateToTicket={(ticketId) => {

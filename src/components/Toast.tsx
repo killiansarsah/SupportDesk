@@ -53,7 +53,7 @@ const Toast: React.FC<ToastProps> = ({
 
   return (
     <div
-      className={`fixed top-4 right-4 z-50 backdrop-blur-lg border rounded-lg p-4 flex items-center gap-3 transition-all duration-300 ${
+      className={`relative backdrop-blur-lg border rounded-lg p-4 flex items-center gap-3 transition-all duration-300 ${
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
       } ${getColors()}`}
     >

@@ -1,28 +1,54 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TrendingUp, Clock, CheckCircle, Users, Target, Award } from 'lucide-react';
+import { performanceService, PerformanceOverview, AgentPerformance } from '../services/performanceService';
 
 export default function PerformanceDashboard() {
   const [selectedAgent, setSelectedAgent] = useState('all');
+  const [overview, setOverview] = useState<PerformanceOverview | null>(null);
+  const [agents, setAgents] = useState<AgentPerformance[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const getPerformanceData = () => {
-    return {
-      totalTickets: 156,
-      resolvedTickets: 142,
-      avgResponseTime: '2.3 hours',
-      avgResolutionTime: '8.5 hours',
-      customerSatisfaction: 4.6,
-      activeAgents: 8,
-      agents: [
-        { id: '1', name: 'John Smith', tickets: 45, resolved: 42, avgTime: '1.8h', rating: 4.8 },
-        { id: '2', name: 'Sarah Johnson', tickets: 38, resolved: 35, avgTime: '2.1h', rating: 4.7 },
-        { id: '3', name: 'Mike Wilson', tickets: 32, resolved: 30, avgTime: '2.5h', rating: 4.5 },
-        { id: '4', name: 'Lisa Brown', tickets: 41, resolved: 35, avgTime: '3.2h', rating: 4.4 }
-      ]
-    };
+  useEffect(() => {
+    loadPerformanceData();
+  }, []);
+
+  const loadPerformanceData = async () => {
+    try {
+      setLoading(true);
+      const [overviewData, agentsData] = await Promise.all([
+        performanceService.getOverview(),
+        performanceService.getAgentPerformance()
+      ]);
+      setOverview(overviewData);
+      setAgents(agentsData);
+    } catch (error) {
+      console.error('Failed to load performance data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const data = getPerformanceData();
-  const selectedAgentData = selectedAgent === 'all' ? null : data.agents.find(a => a.id === selectedAgent);
+  const selectedAgentData = selectedAgent === 'all' ? null : agents.find(a => a.id === selectedAgent);
+
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-white text-lg">Loading performance data...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!overview) {
+    return (
+      <div className="max-w-6xl mx-auto">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-white text-lg">Failed to load performance data</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -34,7 +60,7 @@ export default function PerformanceDashboard() {
           className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="all">All Agents</option>
-          {data.agents.map(agent => (
+          {agents.map(agent => (
             <option key={agent.id} value={agent.id}>{agent.name}</option>
           ))}
         </select>
@@ -47,7 +73,7 @@ export default function PerformanceDashboard() {
             <Target className="w-5 h-5 text-blue-400" />
             <p className="text-gray-400 text-sm">Total Tickets</p>
           </div>
-          <p className="text-2xl font-bold text-white">{selectedAgentData?.tickets || data.totalTickets}</p>
+          <p className="text-2xl font-bold text-white">{selectedAgentData?.tickets || overview.totalTickets}</p>
         </div>
         
         <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
@@ -55,7 +81,7 @@ export default function PerformanceDashboard() {
             <CheckCircle className="w-5 h-5 text-green-400" />
             <p className="text-gray-400 text-sm">Resolved</p>
           </div>
-          <p className="text-2xl font-bold text-white">{selectedAgentData?.resolved || data.resolvedTickets}</p>
+          <p className="text-2xl font-bold text-white">{selectedAgentData?.resolved || overview.resolvedTickets}</p>
         </div>
         
         <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
@@ -63,7 +89,7 @@ export default function PerformanceDashboard() {
             <Clock className="w-5 h-5 text-yellow-400" />
             <p className="text-gray-400 text-sm">Avg Response</p>
           </div>
-          <p className="text-2xl font-bold text-white">{selectedAgentData?.avgTime || data.avgResponseTime}</p>
+          <p className="text-2xl font-bold text-white">{selectedAgentData?.avgTime || overview.avgResponseTime}</p>
         </div>
         
         <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
@@ -71,7 +97,7 @@ export default function PerformanceDashboard() {
             <TrendingUp className="w-5 h-5 text-purple-400" />
             <p className="text-gray-400 text-sm">Resolution Time</p>
           </div>
-          <p className="text-2xl font-bold text-white">{data.avgResolutionTime}</p>
+          <p className="text-2xl font-bold text-white">{overview.avgResolutionTime}</p>
         </div>
         
         <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
@@ -79,7 +105,7 @@ export default function PerformanceDashboard() {
             <Award className="w-5 h-5 text-orange-400" />
             <p className="text-gray-400 text-sm">CSAT Rating</p>
           </div>
-          <p className="text-2xl font-bold text-white">{selectedAgentData?.rating || data.customerSatisfaction}</p>
+          <p className="text-2xl font-bold text-white">{selectedAgentData?.rating || overview.customerSatisfaction}</p>
         </div>
         
         <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
@@ -87,7 +113,7 @@ export default function PerformanceDashboard() {
             <Users className="w-5 h-5 text-cyan-400" />
             <p className="text-gray-400 text-sm">Active Agents</p>
           </div>
-          <p className="text-2xl font-bold text-white">{data.activeAgents}</p>
+          <p className="text-2xl font-bold text-white">{overview.activeAgents}</p>
         </div>
       </div>
 
@@ -108,8 +134,8 @@ export default function PerformanceDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {data.agents.map((agent) => {
-                  const resolutionRate = Math.round((agent.resolved / agent.tickets) * 100);
+                {agents.map((agent) => {
+                  const resolutionRate = agent.tickets > 0 ? Math.round((agent.resolved / agent.tickets) * 100) : 0;
                   return (
                     <tr key={agent.id} className="border-b border-white/10">
                       <td className="py-4 text-white">{agent.name}</td>

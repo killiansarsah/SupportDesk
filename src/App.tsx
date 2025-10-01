@@ -16,6 +16,8 @@ import CustomerSatisfaction from './components/CustomerSatisfaction';
 import PerformanceDashboard from './components/PerformanceDashboard';
 import EmailIntegration from './components/EmailIntegration';
 import DataMigration from './components/DataMigration';
+import ToastContainer from './components/ToastContainer';
+import ToastService from './services/toastService';
 
 
 function App() {
@@ -45,13 +47,20 @@ function App() {
       
       if (result.success && result.user) {
         setUser(result.user);
-        
+        const toastService = ToastService.getInstance();
+        toastService.success('Login Successful', `Welcome back, ${result.user.name}!`);
 
       } else {
-        setLoginError(result.error || 'Login failed');
+        const errorMessage = result.error || 'Login failed';
+        setLoginError(errorMessage);
+        const toastService = ToastService.getInstance();
+        toastService.error('Login Failed', errorMessage);
       }
     } catch {
-      setLoginError('An unexpected error occurred');
+      const errorMessage = 'An unexpected error occurred';
+      setLoginError(errorMessage);
+      const toastService = ToastService.getInstance();
+      toastService.error('Login Error', errorMessage);
     } finally {
       setIsLoginLoading(false);
     }
@@ -67,13 +76,20 @@ function App() {
       
       if (result.success && result.user) {
         setUser(result.user);
-        
+        const toastService = ToastService.getInstance();
+        toastService.success('Registration Successful', `Welcome to SupportDesk, ${result.user.name}!`);
 
       } else {
-        setLoginError(result.error || 'Registration failed');
+        const errorMessage = result.error || 'Registration failed';
+        setLoginError(errorMessage);
+        const toastService = ToastService.getInstance();
+        toastService.error('Registration Failed', errorMessage);
       }
     } catch {
-      setLoginError('An unexpected error occurred');
+      const errorMessage = 'An unexpected error occurred';
+      setLoginError(errorMessage);
+      const toastService = ToastService.getInstance();
+      toastService.error('Registration Error', errorMessage);
     } finally {
       setIsLoginLoading(false);
     }
@@ -101,13 +117,21 @@ function App() {
       
       if (result.success && result.user) {
         setUser(result.user);
+        const toastService = ToastService.getInstance();
+        toastService.success('Google Sign-In Successful', `Welcome back, ${result.user.name}!`);
         console.log('✅ Google sign-in successful:', result.user.name);
       } else {
-        setLoginError(result.error || 'Google sign-in failed');
+        const errorMessage = result.error || 'Google sign-in failed';
+        setLoginError(errorMessage);
+        const toastService = ToastService.getInstance();
+        toastService.error('Google Sign-In Failed', errorMessage);
       }
     } catch (error) {
       console.error('❌ Google sign-in error:', error);
-      setLoginError('Google authentication failed');
+      const errorMessage = 'Google authentication failed';
+      setLoginError(errorMessage);
+      const toastService = ToastService.getInstance();
+      toastService.error('Google Sign-In Error', errorMessage);
     } finally {
       setIsLoginLoading(false);
     }
@@ -135,13 +159,21 @@ function App() {
       
       if (result.success && result.user) {
         setUser(result.user);
+        const toastService = ToastService.getInstance();
+        toastService.success('Google Registration Successful', `Welcome to SupportDesk, ${result.user.name}!`);
         console.log('✅ Google sign-up successful:', result.user.name);
       } else {
-        setLoginError(result.error || 'Google registration failed');
+        const errorMessage = result.error || 'Google registration failed';
+        setLoginError(errorMessage);
+        const toastService = ToastService.getInstance();
+        toastService.error('Google Registration Failed', errorMessage);
       }
     } catch (error) {
       console.error('❌ Google sign-up error:', error);
-      setLoginError('Google registration failed');
+      const errorMessage = 'Google registration failed';
+      setLoginError(errorMessage);
+      const toastService = ToastService.getInstance();
+      toastService.error('Google Registration Error', errorMessage);
     } finally {
       setIsLoginLoading(false);
     }
@@ -154,9 +186,13 @@ function App() {
       authService.logout();
       setUser(null);
       setCurrentPage('dashboard');
+      const toastService = ToastService.getInstance();
+      toastService.info('Logged Out', 'You have been successfully logged out');
       console.log('Logout completed');
     } catch (error) {
       console.error('Logout error:', error);
+      const toastService = ToastService.getInstance();
+      toastService.error('Logout Error', 'An error occurred while logging out');
     }
   };
 
@@ -238,25 +274,23 @@ function App() {
     );
   }
 
-  if (!user) {
-    return (
-      <Login
-        onLogin={handleLogin}
-        onRegister={handleRegister}
-        onGoogleSignIn={handleGoogleSignIn}
-        onGoogleSignUp={handleGoogleSignUp}
-        isLoading={isLoginLoading}
-        error={loginError}
-      />
-    );
-  }
-
   return (
     <>
-      <Layout user={user} onLogout={handleLogout} onNavigate={handleNavigate} currentPage={currentPage}>
-        {renderCurrentPage()}
-      </Layout>
-
+      {!user ? (
+        <Login
+          onLogin={handleLogin}
+          onRegister={handleRegister}
+          onGoogleSignIn={handleGoogleSignIn}
+          onGoogleSignUp={handleGoogleSignUp}
+          isLoading={isLoginLoading}
+          error={loginError}
+        />
+      ) : (
+        <Layout user={user} onLogout={handleLogout} onNavigate={handleNavigate} currentPage={currentPage}>
+          {renderCurrentPage()}
+        </Layout>
+      )}
+      <ToastContainer />
     </>
   );
 }

@@ -556,15 +556,6 @@ app.get('/api/tickets/:id', async (req, res) => {
 });
 
 // Email Routes
-// Test email configuration
-app.get('/api/email/test', async (req, res) => {
-  try {
-    const result = await emailService.testEmailConfig();
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
 
 // Manually send resolution email
 app.post('/api/tickets/:id/send-resolution-email', async (req, res) => {
@@ -612,6 +603,104 @@ app.post('/api/tickets/:id/send-resolution-email', async (req, res) => {
       details: result 
     });
 
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Performance Analytics Routes
+app.get('/api/performance/overview', async (req, res) => {
+  try {
+    const totalTickets = await Ticket.countDocuments();
+    const resolvedTickets = await Ticket.countDocuments({ status: { $in: ['resolved', 'closed'] } });
+    const activeAgents = await User.countDocuments({ role: 'support-agent' });
+    
+    // Calculate average response and resolution times
+    const tickets = await Ticket.find({ status: { $in: ['resolved', 'closed'] } })
+      .select('createdAt updatedAt messages');
+    
+    let totalResponseTime = 0;
+    let totalResolutionTime = 0;
+    let ticketsWithResponse = 0;
+    
+    tickets.forEach(ticket => {
+      if (ticket.messages && ticket.messages.length > 0) {
+        const firstResponse = ticket.messages.find(m => !m.isInternal);
+        if (firstResponse) {
+          const responseTime = new Date(firstResponse.timestamp) - new Date(ticket.createdAt);
+          totalResponseTime += responseTime;
+          ticketsWithResponse++;
+        }
+      }
+      
+      const resolutionTime = new Date(ticket.updatedAt) - new Date(ticket.createdAt);
+      totalResolutionTime += resolutionTime;
+    });
+    
+    const avgResponseTime = ticketsWithResponse > 0 ? 
+      Math.round(totalResponseTime / ticketsWithResponse / (1000 * 60 * 60) * 100) / 100 : 0;
+    const avgResolutionTime = tickets.length > 0 ? 
+      Math.round(totalResolutionTime / tickets.length / (1000 * 60 * 60) * 100) / 100 : 0;
+    
+    res.json({
+      totalTickets,
+      resolvedTickets,
+      avgResponseTime: `${avgResponseTime}h`,
+      avgResolutionTime: `${avgResolutionTime}h`,
+      customerSatisfaction: 4.6, // Mock for now
+      activeAgents
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/performance/agents', async (req, res) => {
+  try {
+    const agents = await User.find({ role: 'support-agent' }).select('name email');
+    
+    const agentPerformance = await Promise.all(agents.map(async (agent) => {
+      const totalTickets = await Ticket.countDocuments({ assignedTo: agent._id });
+      const resolvedTickets = await Ticket.countDocuments({ 
+        assignedTo: agent._id, 
+        status: { $in: ['resolved', 'closed'] } 
+      });
+      
+      // Calculate average response time for this agent
+      const agentTickets = await Ticket.find({ 
+        assignedTo: agent._id,
+        status: { $in: ['resolved', 'closed'] }
+      }).select('createdAt messages');
+      
+      let totalResponseTime = 0;
+      let ticketsWithResponse = 0;
+      
+      agentTickets.forEach(ticket => {
+        if (ticket.messages && ticket.messages.length > 0) {
+          const firstResponse = ticket.messages.find(m => !m.isInternal);
+          if (firstResponse) {
+            const responseTime = new Date(firstResponse.timestamp) - new Date(ticket.createdAt);
+            totalResponseTime += responseTime;
+            ticketsWithResponse++;
+          }
+        }
+      });
+      
+      const avgTime = ticketsWithResponse > 0 ? 
+        Math.round(totalResponseTime / ticketsWithResponse / (1000 * 60 * 60) * 100) / 100 : 0;
+      
+      return {
+        id: agent._id.toString(),
+        name: agent.name,
+        email: agent.email,
+        tickets: totalTickets,
+        resolved: resolvedTickets,
+        avgTime: `${avgTime}h`,
+        rating: (4.2 + Math.random() * 0.8).toFixed(1) // Mock rating for now
+      };
+    }));
+    
+    res.json(agentPerformance);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

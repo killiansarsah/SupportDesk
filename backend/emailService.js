@@ -335,23 +335,7 @@ class EmailService {
     return await this.sendEmail(customerInfo.email, subject, html);
   }
 
-  // Test email configuration
-  async testEmailConfig() {
-    try {
-      if (!this.initialized) {
-        this.initTransporter();
-      }
 
-      if (!this.transporter) {
-        return { success: false, error: 'Email transporter not configured' };
-      }
-
-      await this.transporter.verify();
-      return { success: true, message: 'Email configuration is working!' };
-    } catch (error) {
-      return { success: false, error: error.message };
-    }
-  }
 }
 
 export default new EmailService();

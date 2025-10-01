@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Mail, Plus, CheckCircle, X, Send, Clock, AlertCircle } from 'lucide-react';
+import { Mail, Plus, CheckCircle, X, AlertCircle } from 'lucide-react';
 import EmailService from '../services/emailService';
 
 interface EmailTicket {
@@ -11,49 +11,45 @@ interface EmailTicket {
   converted: boolean;
 }
 
+interface EmailNotification {
+  id: string;
+  to: string;
+  subject: string;
+  status: 'sent' | 'failed';
+  timestamp: string;
+}
+
 export default function EmailIntegration() {
-  const [emails, setEmails] = useState<EmailTicket[]>([
-    {
-      id: '1',
-      from: 'customer@example.com',
-      subject: 'Login Issues',
-      body: 'I cannot access my account. Getting error message when trying to log in.',
-      timestamp: new Date().toISOString(),
-      converted: false
-    },
-    {
-      id: '2', 
-      from: 'user@company.com',
-      subject: 'Payment Problem',
-      body: 'My payment was declined but I was still charged. Please help resolve this.',
-      timestamp: new Date(Date.now() - 3600000).toISOString(),
-      converted: false
-    }
-  ]);
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [emails, setEmails] = useState<EmailTicket[]>([]);
+  const [notifications, setNotifications] = useState<EmailNotification[]>([]);
   const [activeTab, setActiveTab] = useState<'emails' | 'notifications'>('emails');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const emailService = EmailService.getInstance();
-    setNotifications(emailService.getNotificationHistory());
+    loadEmailData();
   }, []);
 
-  const sendTestNotification = async () => {
-    const emailService = EmailService.getInstance();
-    const mockTicket = {
-      id: 'TEST-001',
-      title: 'Test Notification',
-      description: 'This is a test notification',
-      priority: 'medium',
-      category: 'Test',
-      customerName: 'Test Customer',
-      customerEmail: 'customer@example.com'
-    };
-    const mockAgent = { email: 'agent@company.com' };
-    
-    await emailService.sendNewTicketNotification(mockTicket, mockAgent);
-    setNotifications(emailService.getNotificationHistory());
+  const loadEmailData = async () => {
+    try {
+      setLoading(true);
+      
+      // Load incoming emails from localStorage or API
+      const storedEmails = localStorage.getItem('incoming-emails');
+      if (storedEmails) {
+        setEmails(JSON.parse(storedEmails));
+      }
+      
+      // Load email notifications
+      const emailService = EmailService.getInstance();
+      setNotifications(emailService.getNotificationHistory());
+    } catch (error) {
+      console.error('Failed to load email data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+
 
 
 
@@ -83,13 +79,17 @@ export default function EmailIntegration() {
     localStorage.setItem('tickets', JSON.stringify(tickets));
 
     // Mark email as converted
-    setEmails(prev => prev.map(e => 
+    const updatedEmails = emails.map(e => 
       e.id === emailId ? { ...e, converted: true } : e
-    ));
+    );
+    setEmails(updatedEmails);
+    localStorage.setItem('incoming-emails', JSON.stringify(updatedEmails));
   };
 
   const deleteEmail = (emailId: string) => {
-    setEmails(prev => prev.filter(e => e.id !== emailId));
+    const updatedEmails = emails.filter(e => e.id !== emailId);
+    setEmails(updatedEmails);
+    localStorage.setItem('incoming-emails', JSON.stringify(updatedEmails));
   };
 
   return (
@@ -99,13 +99,7 @@ export default function EmailIntegration() {
           <h1 className="text-3xl font-bold text-white mb-2">Email Integration</h1>
           <p className="text-gray-300">Bidirectional email notifications and ticket conversion</p>
         </div>
-        <button
-          onClick={sendTestNotification}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-        >
-          <Send className="w-4 h-4" />
-          Send Test Email
-        </button>
+
       </div>
 
       {/* Tabs */}
@@ -160,7 +154,14 @@ export default function EmailIntegration() {
       </div>
 
       {/* Content */}
-      {activeTab === 'emails' ? (
+      {loading ? (
+        <div className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 p-12">
+          <div className="text-center">
+            <div className="animate-spin w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p className="text-gray-400">Loading email data...</p>
+          </div>
+        </div>
+      ) : activeTab === 'emails' ? (
         <div className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
         <div className="p-6 border-b border-white/20">
           <h2 className="text-xl font-bold text-white">Incoming Emails</h2>
@@ -262,7 +263,7 @@ export default function EmailIntegration() {
           
           {notifications.length === 0 && (
             <div className="p-12 text-center">
-              <Send className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <Mail className="w-16 h-16 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-400">No email notifications sent</p>
             </div>
           )}

@@ -199,6 +199,10 @@ class ApiService {
       })
     });
   }
+
+  async get(endpoint: string) {
+    return this.request(endpoint, { method: 'GET' });
+  }
 }
 
 export default ApiService;
