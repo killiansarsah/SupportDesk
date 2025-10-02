@@ -225,18 +225,18 @@ const CreateTicket: React.FC<CreateTicketProps> = ({ user, onBack, onTicketCreat
             )}
           </div>
 
-          <div className="flex justify-end space-x-4">
+          <div className="flex justify-center space-x-6 mt-8 mb-20">
             <button
               type="button"
               onClick={onBack}
-              className="px-6 py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-colors duration-200"
+              className="px-8 py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-colors duration-200 min-w-[120px]"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 text-white rounded-lg transition-colors duration-200 flex items-center space-x-2"
+              className="px-8 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 text-white rounded-lg transition-colors duration-200 flex items-center space-x-2 min-w-[140px] justify-center"
             >
               {isSubmitting ? (
                 <>
