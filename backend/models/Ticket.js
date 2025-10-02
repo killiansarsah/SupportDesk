@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 const ticketSchema = new mongoose.Schema({
+  ticketNumber: { type: String, unique: true, required: true }, // Short, readable ticket ID
   title: { type: String, required: true },
   description: { type: String, required: true },
   category: { type: String, required: true },

@@ -90,7 +90,7 @@ class EmailService {
       <body>
         <div class="container">
           <div class="header">
-            <h2>🎫 New Support Ticket Created</h2>
+            <h2>🎫New Support Ticket Created</h2>
             <p>A new support ticket has been submitted and needs your attention.</p>
           </div>
           
@@ -109,6 +109,8 @@ class EmailService {
               <h3>Customer Information</h3>
               <p><strong>Name:</strong> ${customerInfo.name || 'Not provided'}</p>
               <p><strong>Email:</strong> ${customerInfo.email || 'Not provided'}</p>
+              <p><strong>Phone:</strong> ${customerInfo.phone || 'Not provided'}</p>
+              
             </div>
 
             <div class="ticket-info">

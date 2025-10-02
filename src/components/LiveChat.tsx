@@ -125,43 +125,36 @@ const LiveChat = () => {
     <>
       {/* Chat Toggle Button */}
       <div className="fixed bottom-6 right-6 z-50">
-        {/* Animated Rings */}
-        <div className="absolute inset-0 w-14 h-14">
-          <div className="absolute inset-0 bg-cyan-500/30 rounded-full animate-ping"></div>
-          <div className="absolute inset-1 bg-cyan-400/20 rounded-full animate-pulse"></div>
+        {/* Animated Glow Effects */}
+        <div className="absolute inset-0 -m-2">
+          <div className="absolute inset-0 bg-cyan-400/20 rounded-full animate-ping blur-sm"></div>
+          <div className="absolute inset-2 bg-blue-400/15 rounded-full animate-pulse blur-sm"></div>
         </div>
         
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="relative w-14 h-14 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white rounded-full shadow-lg shadow-cyan-500/25 flex items-center justify-center transition-all duration-300 group"
+          className="relative bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 hover:from-gray-800 hover:to-gray-700 text-white px-6 py-3 rounded-full shadow-lg border border-cyan-400/50 flex items-center gap-3 transition-all duration-300 transform hover:scale-105 group backdrop-blur-sm"
         >
           {isOpen ? (
-            <X className="w-6 h-6 transition-transform group-hover:rotate-90" />
+            <>
+              <X className="w-5 h-5 transition-transform group-hover:rotate-90" />
+              <span className="text-sm font-medium">Close Chat</span>
+            </>
           ) : (
-            <div className="relative">
-              {/* Custom Robot Icon */}
-              <svg className="w-7 h-7 animate-bounce" viewBox="0 0 24 24" fill="currentColor">
-                {/* Robot Head */}
-                <rect x="6" y="4" width="12" height="10" rx="2" className="fill-white" />
-                {/* Robot Eyes */}
-                <circle cx="9" cy="8" r="1.5" className="fill-cyan-400 animate-pulse" />
-                <circle cx="15" cy="8" r="1.5" className="fill-cyan-400 animate-pulse" />
-                {/* Robot Mouth */}
-                <rect x="10" y="11" width="4" height="1" rx="0.5" className="fill-gray-400" />
-                {/* Robot Antenna */}
-                <circle cx="12" cy="2" r="1" className="fill-red-400 animate-ping" />
-                <line x1="12" y1="3" x2="12" y2="4" stroke="white" strokeWidth="1" />
-                {/* Robot Body */}
-                <rect x="8" y="14" width="8" height="6" rx="1" className="fill-white" />
-                {/* Robot Arms */}
-                <rect x="4" y="15" width="3" height="1" rx="0.5" className="fill-white" />
-                <rect x="17" y="15" width="3" height="1" rx="0.5" className="fill-white" />
-                {/* Robot Legs */}
-                <rect x="9" y="20" width="2" height="2" rx="0.5" className="fill-white" />
-                <rect x="13" y="20" width="2" height="2" rx="0.5" className="fill-white" />
-              </svg>
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-            </div>
+            <>
+              <div className="relative">
+                {/* Sparkle Icon */}
+                <svg className="w-5 h-5 text-cyan-400" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 0L13.09 8.26L22 9L13.09 9.74L12 18L10.91 9.74L2 9L10.91 8.26L12 0Z" className="animate-pulse"/>
+                  <path d="M19 4L19.5 6.5L22 7L19.5 7.5L19 10L18.5 7.5L16 7L18.5 6.5L19 4Z" className="animate-ping opacity-70"/>
+                  <path d="M5 14L5.5 16.5L8 17L5.5 17.5L5 20L4.5 17.5L2 17L4.5 16.5L5 14Z" className="animate-pulse opacity-60" style={{animationDelay: '0.5s'}}/>
+                </svg>
+              </div>
+              <span className="text-sm font-medium bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                AI Assistant
+              </span>
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-lg shadow-green-500/50"></div>
+            </>
           )}
         </button>
       </div>

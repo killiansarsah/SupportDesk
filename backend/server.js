@@ -8,6 +8,7 @@ import bcrypt from 'bcryptjs';
 import User from './models/User.js';
 import Ticket from './models/Ticket.js';
 import emailService from './emailService.js';
+import TicketIdGenerator from './utils/ticketIdGenerator.js';
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -335,7 +336,8 @@ app.get('/api/tickets', async (req, res) => {
       const ticketObj = ticket.toObject();
       return {
         _id: ticket._id,
-        id: ticket._id.toString(),
+        id: ticket.ticketNumber || ticket._id.toString(), // Use ticketNumber if available, fallback to _id
+        ticketNumber: ticket.ticketNumber,
         ...ticketObj,
         assignedTo: ticketObj.assignedTo ? ticketObj.assignedTo._id.toString() : null,
         messages: ticketObj.messages || [],
@@ -374,7 +376,11 @@ app.post('/api/tickets', async (req, res) => {
       }
     }
 
+    // Generate a short, readable ticket number
+    const ticketNumber = await TicketIdGenerator.generateShortId();
+
     const ticket = new Ticket({
+      ticketNumber,
       title: req.body.title,
       description: req.body.description,
       category: req.body.category,
@@ -396,7 +402,7 @@ app.post('/api/tickets', async (req, res) => {
 
       // Prepare ticket data for email
       const ticketData = {
-        id: ticket._id.toString(),
+        id: ticket.ticketNumber, // Use short ticket number instead of MongoDB ObjectId
         title: ticket.title,
         description: ticket.description,
         category: ticket.category,
@@ -428,7 +434,8 @@ app.post('/api/tickets', async (req, res) => {
     
     const response = {
       _id: ticket._id,
-      id: ticket._id.toString(),
+      id: ticket.ticketNumber, // Use short ticket number for frontend
+      ticketNumber: ticket.ticketNumber, // Also include as separate field
       ...ticket.toObject(),
       assignedTo: null,
       messages: [],
@@ -461,13 +468,27 @@ app.put('/api/tickets/:id', async (req, res) => {
     }
     
     // Get the original ticket to check for status changes
-    const originalTicket = await Ticket.findById(req.params.id);
+    let originalTicket;
+    if (req.params.id.startsWith('TKT-') || req.params.id.startsWith('T-')) {
+      originalTicket = await Ticket.findOne({ ticketNumber: req.params.id });
+    } else {
+      originalTicket = await Ticket.findById(req.params.id);
+    }
     
-    const ticket = await Ticket.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true }
-    ).populate('customerId', 'name email').populate('assignedTo', 'name email');
+    let ticket;
+    if (req.params.id.startsWith('TKT-') || req.params.id.startsWith('T-')) {
+      ticket = await Ticket.findOneAndUpdate(
+        { ticketNumber: req.params.id },
+        updateData,
+        { new: true }
+      ).populate('customerId', 'name email').populate('assignedTo', 'name email');
+    } else {
+      ticket = await Ticket.findByIdAndUpdate(
+        req.params.id,
+        updateData,
+        { new: true }
+      ).populate('customerId', 'name email').populate('assignedTo', 'name email');
+    }
     
     if (!ticket) {
       return res.status(404).json({ error: 'Ticket not found' });
@@ -497,7 +518,7 @@ app.put('/api/tickets/:id', async (req, res) => {
 
         // Ticket data for email
         const ticketData = {
-          id: ticket._id.toString(),
+          id: ticket.ticketNumber || ticket._id.toString(),
           title: ticket.title,
           category: ticket.category,
           status: ticket.status
@@ -506,7 +527,7 @@ app.put('/api/tickets/:id', async (req, res) => {
         // Send resolution email (non-blocking)
         emailService.notifyTicketResolution(ticketData, customerInfo, resolutionMessage, resolvedByName)
           .then(result => {
-            console.log('✅ Resolution email sent for ticket #' + ticket._id);
+            console.log('✅ Resolution email sent for ticket #' + (ticket.ticketNumber || ticket._id));
             console.log('📧 Email result:', result);
           })
           .catch(error => {
@@ -521,7 +542,8 @@ app.put('/api/tickets/:id', async (req, res) => {
     
     const response = {
       _id: ticket._id,
-      id: ticket._id.toString(),
+      id: ticket.ticketNumber || ticket._id.toString(),
+      ticketNumber: ticket.ticketNumber,
       ...ticket.toObject(),
       assignedTo: ticket.assignedTo ? ticket.assignedTo._id.toString() : null
     };
@@ -534,9 +556,17 @@ app.put('/api/tickets/:id', async (req, res) => {
 
 app.get('/api/tickets/:id', async (req, res) => {
   try {
-    const ticket = await Ticket.findById(req.params.id)
-      .populate('customerId', 'name email')
-      .populate('assignedTo', 'name email');
+    // Try to find by ticketNumber first, then by MongoDB ObjectId
+    let ticket;
+    if (req.params.id.startsWith('TKT-') || req.params.id.startsWith('T-')) {
+      ticket = await Ticket.findOne({ ticketNumber: req.params.id })
+        .populate('customerId', 'name email')
+        .populate('assignedTo', 'name email');
+    } else {
+      ticket = await Ticket.findById(req.params.id)
+        .populate('customerId', 'name email')
+        .populate('assignedTo', 'name email');
+    }
     
     if (!ticket) {
       return res.status(404).json({ error: 'Ticket not found' });
@@ -544,7 +574,8 @@ app.get('/api/tickets/:id', async (req, res) => {
     
     const response = {
       _id: ticket._id,
-      id: ticket._id.toString(),
+      id: ticket.ticketNumber || ticket._id.toString(),
+      ticketNumber: ticket.ticketNumber,
       ...ticket.toObject(),
       assignedTo: ticket.assignedTo ? ticket.assignedTo._id.toString() : null
     };
