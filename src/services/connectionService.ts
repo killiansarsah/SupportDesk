@@ -12,7 +12,7 @@ class ConnectionService {
 
   async checkBackendConnection(): Promise<boolean> {
     try {
-      const response = await fetch('http://localhost:3002/api/health', {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/health`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
       });

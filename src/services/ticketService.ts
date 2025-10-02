@@ -222,7 +222,7 @@ class TicketService {
 
   async addMessage(ticketId: string, content: string, userId: string, userName: string, isInternal: boolean = false): Promise<Message | null> {
     try {
-      const response = await fetch(`http://localhost:3002/api/tickets/${ticketId}/messages`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/tickets/${ticketId}/messages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

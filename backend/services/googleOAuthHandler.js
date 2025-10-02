@@ -153,10 +153,11 @@ class GoogleOAuthHandler {
       } else {
         // New user - create account with Google information
         console.log('🆕 Creating new user from Google account...');
+        console.log('🔍 Google user data:', JSON.stringify(googleUserData, null, 2));
         
         user = new User({
           email: googleUserData.email,
-          name: googleUserData.name,
+          name: googleUserData.name || googleUserData.givenName || googleUserData.email.split('@')[0] || 'Google User',
           phone: '', // Google basic scope doesn't include phone
           role: 'customer', // Default role for Google sign-ups
           avatar: googleUserData.picture,
