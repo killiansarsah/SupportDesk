@@ -68,6 +68,13 @@ class GoogleOAuthHandler {
 
       // Extract verified payload
       const payload = ticket.getPayload();
+      console.log('📋 Google payload received:', {
+        email: payload?.email,
+        name: payload?.name,
+        picture: payload?.picture,
+        sub: payload?.sub,
+        email_verified: payload?.email_verified
+      });
       
       // Additional security validations
       if (!payload) {
@@ -89,10 +96,19 @@ class GoogleOAuthHandler {
 
       console.log('✅ Google token verified successfully');
       
+      // Ensure we have a name field with fallback options
+      const userName = payload.name || 
+                      payload.given_name || 
+                      payload.family_name || 
+                      payload.email?.split('@')[0] || 
+                      'Google User';
+
+      console.log('👤 Processed user name:', userName);
+      
       return {
         googleId: payload.sub,
         email: payload.email,
-        name: payload.name,
+        name: userName,
         picture: payload.picture,
         givenName: payload.given_name,
         familyName: payload.family_name,

@@ -11,7 +11,13 @@ const userSchema = new mongoose.Schema({
     }
     // No default password - OAuth users shouldn't have passwords
   },
-  name: { type: String, required: true },
+  name: { 
+    type: String, 
+    required: true,
+    default: function() {
+      return this.email ? this.email.split('@')[0] : 'User';
+    }
+  },
   phone: { 
     type: String, 
     required: function() {
