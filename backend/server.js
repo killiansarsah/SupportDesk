@@ -817,6 +817,32 @@ app.use((err, req, res, next) => {
 app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found', path: req.originalUrl });
 });
+// Test email endpoint
+app.get('/api/email/test', async (req, res) => {
+  try {
+    console.log('🧪 Testing email configuration...');
+    
+    const result = await emailService.sendEmail(
+      'killian@gmail.com', // Your email
+      'SupportDesk Email Test',
+      '<h2>✅ Email Test Successful!</h2><p>Your email configuration is working correctly.</p>',
+      'Email Test Successful! Your email configuration is working correctly.'
+    );
+    
+    res.json({ 
+      success: true, 
+      message: 'Test email sent successfully',
+      result: result
+    });
+  } catch (error) {
+    console.error('❌ Email test failed:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      message: 'Email configuration needs to be set up'
+    });
+  }
+});
 
 // Start server
 app.listen(PORT, async () => {
@@ -827,6 +853,7 @@ app.listen(PORT, async () => {
   console.log(`🌐 API Base: http://localhost:${PORT}/api`);
   console.log(`🏥 Health: http://localhost:${PORT}/api/health`);
   console.log(`🔗 MongoDB: ${process.env.MONGODB_URI ? 'Configured' : 'Not configured'}`);
+  console.log(`📧 Email: ${process.env.EMAIL_USER && process.env.EMAIL_APP_PASSWORD ? 'Configured' : 'Not configured'}`);
   console.log('='.repeat(50) + '\n');
   
   console.log('✅ Backend server is ready for connections!');
