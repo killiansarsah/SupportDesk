@@ -1,10 +1,12 @@
 import OpenAI from 'openai';
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: import.meta.env.VITE_OPENAI_API_KEY,
-  dangerouslyAllowBrowser: true // Note: In production, API calls should go through your backend
-});
+// Initialize OpenAI client only if API key is provided
+const openai = import.meta.env.VITE_OPENAI_API_KEY 
+  ? new OpenAI({
+      apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+      dangerouslyAllowBrowser: true // Note: In production, API calls should go through your backend
+    })
+  : null;
 
 export interface ChatGPTMessage {
   role: 'system' | 'user' | 'assistant';
@@ -44,7 +46,7 @@ export class OpenAIService {
   public async sendMessage(message: string): Promise<string> {
     try {
       // Check if API key is configured
-      if (!import.meta.env.VITE_OPENAI_API_KEY) {
+      if (!import.meta.env.VITE_OPENAI_API_KEY || !openai) {
         return "I'm sorry, but the AI chat service is not configured yet. Please contact support for assistance.";
       }
 
