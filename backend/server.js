@@ -25,9 +25,11 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://127.0.0.1:5173',
   'http://127.0.0.1:5174',
-  // Add your actual frontend domains here when you deploy
-  // 'https://supportdesk-frontend.vercel.app',
-  // 'https://supportdesk-frontend.netlify.app',
+  // Production frontend domains
+  'https://singular-brigadeiros-f7651e.netlify.app',
+  'https://support-ticket-sigma.vercel.app',
+  'https://supportdesk-frontend.vercel.app',
+  'https://supportdesk-frontend.netlify.app',
   process.env.FRONTEND_URL,
   process.env.CORS_ORIGINS?.split(',')
 ].flat().filter(Boolean); // Flatten array and remove undefined values
