@@ -401,6 +401,7 @@ app.post('/api/tickets', async (req, res) => {
 
     // Generate a short, readable ticket number
     const ticketNumber = await TicketIdGenerator.generateShortId(Ticket);
+    console.log('🎫 Generated ticket number:', ticketNumber);
 
     const ticket = new Ticket({
       ticketNumber,
@@ -412,8 +413,19 @@ app.post('/api/tickets', async (req, res) => {
       language: req.body.language || 'en'
     });
     
-    await ticket.save();
+    console.log('💾 Attempting to save ticket to database...');
+    const savedTicket = await ticket.save();
+    console.log('✅ Ticket saved successfully! ID:', savedTicket._id, 'Number:', savedTicket.ticketNumber);
+    
     await ticket.populate('customerId', 'name email');
+    
+    // Verify ticket was actually saved by querying it back
+    const verifyTicket = await Ticket.findById(savedTicket._id);
+    if (verifyTicket) {
+      console.log('✅ Ticket verification successful - found in database');
+    } else {
+      console.error('❌ WARNING: Ticket not found in database after save!');
+    }
     
     // Send email notifications
     try {
