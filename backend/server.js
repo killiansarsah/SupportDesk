@@ -400,7 +400,7 @@ app.post('/api/tickets', async (req, res) => {
     }
 
     // Generate a short, readable ticket number
-    const ticketNumber = await TicketIdGenerator.generateShortId();
+    const ticketNumber = await TicketIdGenerator.generateShortId(Ticket);
 
     const ticket = new Ticket({
       ticketNumber,

@@ -1,13 +1,58 @@
 class TicketIdGenerator {
-  static counter = 10000; // Start from 10000 for 5-digit numbers
+  static counter = null; // Will be initialized from database
+  
+  /**
+   * Initialize counter from database
+   * @param {Model} TicketModel - The Ticket model to query
+   */
+  static async initializeCounter(TicketModel) {
+    if (this.counter !== null) return; // Already initialized
+    
+    try {
+      // Find the ticket with the highest ticket number
+      const lastTicket = await TicketModel.findOne({ ticketNumber: /^TKT-\d+$/ })
+        .sort({ ticketNumber: -1 })
+        .select('ticketNumber')
+        .lean();
+      
+      if (lastTicket && lastTicket.ticketNumber) {
+        // Extract the number part from "TKT-XXXXX"
+        const lastNumber = parseInt(lastTicket.ticketNumber.replace('TKT-', ''));
+        this.counter = isNaN(lastNumber) ? 10000 : lastNumber;
+        console.log('✅ Ticket counter initialized from database:', this.counter);
+      } else {
+        this.counter = 10000;
+        console.log('✅ Ticket counter initialized (no existing tickets):', this.counter);
+      }
+    } catch (error) {
+      console.error('❌ Error initializing ticket counter:', error);
+      this.counter = 10000; // Fallback to default
+    }
+  }
   
   /**
    * Generate a short, readable ticket ID in format TKT-XXXXX
+   * @param {Model} TicketModel - The Ticket model to query (for initialization)
    * @returns {Promise<string>} Short ticket ID like "TKT-10001"
    */
-  static async generateShortId() {
+  static async generateShortId(TicketModel) {
+    // Initialize counter if not already done
+    await this.initializeCounter(TicketModel);
+    
+    // Increment and generate ticket number
     this.counter++;
-    return `TKT-${this.counter.toString().padStart(5, '0')}`;
+    const ticketNumber = `TKT-${this.counter.toString().padStart(5, '0')}`;
+    
+    // Double-check this ticket number doesn't exist (in case of race conditions)
+    if (TicketModel) {
+      const exists = await TicketModel.findOne({ ticketNumber });
+      if (exists) {
+        console.warn('⚠️ Ticket number collision detected, regenerating...');
+        return this.generateShortId(TicketModel); // Recursive call to try next number
+      }
+    }
+    
+    return ticketNumber;
   }
   
   /**
