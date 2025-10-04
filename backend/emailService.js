@@ -10,31 +10,27 @@ class EmailService {
     if (this.initialized) return;
     this.initialized = true;
 
-    // Configuration for different email providers
-    const emailConfig = {
-      // Gmail configuration (you can switch to other providers)
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER, // Your email
-        pass: process.env.EMAIL_APP_PASSWORD // App-specific password
-      }
-    };
-
-    // Alternative SMTP configuration (for other providers)
+    // SendGrid SMTP configuration
     const smtpConfig = {
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: process.env.SMTP_PORT || 587,
-      secure: false, // true for 465, false for other ports
+      host: process.env.SMTP_HOST || 'smtp.sendgrid.net',
+      port: parseInt(process.env.SMTP_PORT) || 587,
+      secure: false, // true for 465, false for 587
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_APP_PASSWORD
+        user: process.env.SMTP_USER || 'apikey',
+        pass: process.env.SMTP_PASS || process.env.SENDGRID_API_KEY
+      },
+      // Additional SendGrid configuration
+      tls: {
+        rejectUnauthorized: false
       }
     };
 
-    // Use Gmail service or SMTP based on configuration
-    this.transporter = nodemailer.createTransport(
-      process.env.EMAIL_SERVICE === 'smtp' ? smtpConfig : emailConfig
-    );
+    console.log('📧 Initializing email service with SendGrid SMTP...');
+    console.log(`📧 SMTP Host: ${smtpConfig.host}`);
+    console.log(`📧 SMTP Port: ${smtpConfig.port}`);
+    console.log(`📧 SMTP User: ${smtpConfig.auth.user}`);
+    
+    this.transporter = nodemailer.createTransport(smtpConfig);
   }
 
   async sendEmail(to, subject, htmlContent, textContent = '') {
@@ -48,20 +44,27 @@ class EmailService {
         return { success: true, message: 'Email service not configured (demo mode)' };
       }
 
+      const fromName = process.env.EMAIL_FROM_NAME || process.env.COMPANY_NAME || 'Support Desk';
+      const fromEmail = process.env.EMAIL_FROM || process.env.EMAIL_USER;
+
       const mailOptions = {
-        from: `"${process.env.COMPANY_NAME || 'Support Desk'}" <${process.env.EMAIL_USER}>`,
+        from: `"${fromName}" <${fromEmail}>`,
         to: to,
         subject: subject,
         html: htmlContent,
         text: textContent || htmlContent.replace(/<[^>]*>/g, '') // Strip HTML for text version
       };
 
+      console.log(`📧 Sending email to: ${to}`);
+      console.log(`📧 From: ${mailOptions.from}`);
+      console.log(`📧 Subject: ${subject}`);
+
       const result = await this.transporter.sendMail(mailOptions);
-      console.log('Email sent successfully:', result.messageId);
+      console.log('✅ Email sent successfully:', result.messageId);
       return { success: true, messageId: result.messageId };
 
     } catch (error) {
-      console.error('Email sending failed:', error);
+      console.error('❌ Email sending failed:', error);
       return { success: false, error: error.message };
     }
   }
