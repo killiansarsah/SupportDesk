@@ -121,8 +121,13 @@ const GoogleSignIn: React.FC<GoogleSignInProps> = ({
    * Initialize Google OAuth service and render button
    */
   useEffect(() => {
+    let mounted = true;
+    let timeoutId: NodeJS.Timeout;
+
     const initializeGoogle = async () => {
       try {
+        if (!mounted) return;
+        
         setIsLoading(true);
         setError(null);
 
@@ -133,30 +138,47 @@ const GoogleSignIn: React.FC<GoogleSignInProps> = ({
           throw new Error('Failed to initialize Google authentication');
         }
 
+        if (!mounted) return;
         setIsInitialized(true);
 
-        // Render the Google Sign-In button
-        if (buttonContainerRef.current) {
-          googleService.renderSignInButton('google-signin-button', {
-            type: 'standard',
-            theme: theme,
-            size: size,
-            text: text,
-            shape: 'rectangular'
-          });
-        }
+        // Wait for DOM to be fully ready and then render the button
+        timeoutId = setTimeout(() => {
+          if (!mounted || !buttonContainerRef.current) return;
+          
+          const container = document.getElementById('google-signin-button');
+          if (container) {
+            googleService.renderSignInButton('google-signin-button', {
+              type: 'standard',
+              theme: theme,
+              size: size,
+              text: text,
+              shape: 'rectangular'
+            });
+          }
+        }, 100); // Small delay to ensure DOM is ready
 
       } catch (err) {
+        if (!mounted) return;
         const errorMessage = err instanceof Error ? err.message : 'Failed to initialize Google Sign-In';
         console.error('❌ Google Sign-In initialization error:', errorMessage);
         setError(errorMessage);
         onErrorRef.current?.(errorMessage);
       } finally {
-        setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     initializeGoogle();
+
+    // Cleanup function
+    return () => {
+      mounted = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, [googleService, theme, size, text]);
 
   /**
@@ -227,14 +249,20 @@ const GoogleSignIn: React.FC<GoogleSignInProps> = ({
         const initialized = await googleService.initialize();
         
         if (initialized && buttonContainerRef.current) {
-          googleService.renderSignInButton('google-signin-button', {
-            type: 'standard',
-            theme: theme,
-            size: size,
-            text: text,
-            shape: 'rectangular'
-          });
-          setIsInitialized(true);
+          // Wait for DOM to be ready before rendering
+          setTimeout(() => {
+            const container = document.getElementById('google-signin-button');
+            if (container) {
+              googleService.renderSignInButton('google-signin-button', {
+                type: 'standard',
+                theme: theme,
+                size: size,
+                text: text,
+                shape: 'rectangular'
+              });
+              setIsInitialized(true);
+            }
+          }, 100);
         }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Retry failed';
