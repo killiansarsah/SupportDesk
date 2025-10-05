@@ -110,7 +110,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({ user, onBack, onTicketCreat
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 backdrop-blur-lg bg-white/10 dark:bg-dark-900 border border-white/20 dark:border-dark-800 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Brief summary of your issue"
               required
             />
@@ -124,7 +124,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({ user, onBack, onTicketCreat
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-4 py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 backdrop-blur-lg bg-white/10 dark:bg-dark-900 border border-white/20 dark:border-dark-800 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               >
                 <option value="" className="bg-gray-800 text-white">Select a category</option>
@@ -141,7 +141,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({ user, onBack, onTicketCreat
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as any)}
-                className="w-full px-4 py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 backdrop-blur-lg bg-white/10 dark:bg-dark-900 border border-white/20 dark:border-dark-800 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="low" className="bg-gray-800 text-white">Low</option>
                 <option value="medium" className="bg-gray-800 text-white">Medium</option>
@@ -159,7 +159,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({ user, onBack, onTicketCreat
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={6}
-              className="w-full px-4 py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full px-4 py-3 backdrop-blur-lg bg-white/10 dark:bg-dark-900 border border-white/20 dark:border-dark-800 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               placeholder="Please provide detailed information about your issue..."
               required
             />

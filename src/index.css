@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Apply Inter font globally */
+@layer base {
+  body {
+    @apply font-sans antialiased;
+  }
+}
+
 /* Custom animations */
 @keyframes blob {
   0% {
@@ -29,8 +36,32 @@
   }
 }
 
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
 .animate-slide-in {
   animation: slide-in 0.3s ease-out;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out;
 }
 
 .animate-blob {
@@ -361,4 +392,116 @@ select option:hover {
   ring: 2px;
   ring-color: rgba(147, 51, 234, 0.5);
   border-color: rgba(147, 51, 234, 0.5);
+}
+
+/* Chatbot icon float and glow animations */
+@keyframes floatY {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes subtle-glow {
+  0% { box-shadow: 0 6px 20px rgba(0,240,223,0.06); }
+  50% { box-shadow: 0 12px 30px rgba(0,240,223,0.12); }
+  100% { box-shadow: 0 6px 20px rgba(0,240,223,0.06); }
+}
+
+.chatbot-float {
+  animation: floatY 3.6s ease-in-out infinite;
+}
+
+.chatbot-glow {
+  animation: subtle-glow 3.6s ease-in-out infinite;
+}
+
+/* Small pulsing online indicator for chat toggle */
+.chat-toggle-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  box-shadow: 0 6px 18px rgba(16,185,129,0.18);
+  animation: pulse-soft 2s infinite;
+}
+
+/* 3D effect utilities for chatbot */
+.chatbot-3d-enhance {
+  filter: drop-shadow(0 10px 18px rgba(2,6,23,0.6)) saturate(1.1);
+}
+
+.chatbot-float:hover {
+  transform: translateY(-4px) scale(1.03);
+  transition: transform 220ms cubic-bezier(.2,.9,.2,1);
+}
+
+/* Make the toggle button darker and remove gradient when in dark theme */
+.bg-dark-800 {
+  background: linear-gradient(180deg, #0b1220 0%, #0f1724 100%);
+}
+.bg-dark-700 {
+  background: linear-gradient(180deg, #0f1724 0%, #111827 100%);
+}
+
+/* breathing / tilt micro animation */
+@keyframes breath {
+  0% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-3px) rotate(-1deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+
+.chatbot-breathe {
+  animation: breath 4.2s ease-in-out infinite;
+}
+
+/* eye glow for subtle pulsing */
+.chatbot-eye-glow {
+  filter: drop-shadow(0 0 6px rgba(0,240,223,0.9));
+  animation: pulse-soft 2.2s infinite;
+}
+
+/* ---------- Light-mode readability fixes ---------- */
+/* When the page is in light mode (no .dark on <html>), many components
+   still use Tailwind utilities like `text-white`, `placeholder-*`, and
+   translucent `bg-white/10`. Those become unreadable on light backgrounds.
+   These overrides keep using the same utility classes but map them to
+   sensible colors for light mode so toggling themes stays readable. */
+
+html:not(.dark) .text-white {
+  /* map text-white to a dark text color in light mode */
+  color: #0f172a !important; /* tailwind gray-900 */
+}
+
+html:not(.dark) .placeholder-gray-400::placeholder,
+html:not(.dark) .placeholder-gray-500::placeholder {
+  color: #6b7280 !important; /* tailwind gray-500 */
+}
+
+/* Make translucent white backgrounds more subtle on light mode */
+html:not(.dark) .bg-white\/10 {
+  background-color: rgba(15,23,42,0.04) !important; /* very light tint */
+}
+
+/* Borders that relied on white tints should be toned down in light mode */
+html:not(.dark) .border-white\/20 {
+  border-color: rgba(15,23,42,0.06) !important;
+}
+
+/* Buttons and badges that used text-white should switch to dark text in light mode */
+html:not(.dark) .text-white.btn,
+html:not(.dark) .text-white .btn {
+  color: #0f172a !important;
+}
+
+/* Chat and panel text which used white with translucent backgrounds should invert in light mode */
+html:not(.dark) .bg-white\/20,
+html:not(.dark) .bg-white\/10 {
+  background-color: rgba(15,23,42,0.03) !important;
+  color: #0f172a !important;
+}
+
+/* Accessibility: ensure focus ring contrast in light mode */
+html:not(.dark) input:focus,
+html:not(.dark) textarea:focus,
+html:not(.dark) select:focus {
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.18) !important; /* softer blue ring */
 }

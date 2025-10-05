@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Shield, Users, Settings, Check, X } from 'lucide-react';
 import { Permission, RolePermissions } from '../types';
+import AdminCreateUser from './AdminCreateUser';
 
 const PERMISSIONS: Permission[] = [
   { id: 'view_tickets', name: 'View Tickets', description: 'View all support tickets', category: 'Tickets' },
@@ -65,6 +66,9 @@ const PermissionsManager = () => {
 
   return (
     <div className="max-w-6xl mx-auto">
+      <div className="mb-6 flex justify-end">
+        <AdminCreateUser />
+      </div>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white mb-2">Role Permissions</h1>
         <p className="text-gray-300">Manage access control for different user roles</p>

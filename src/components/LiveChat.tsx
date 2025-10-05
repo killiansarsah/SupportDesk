@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, X, Bot, User as UserIcon } from 'lucide-react';
+import { Send, X, User as UserIcon } from 'lucide-react';
+import ChatBotIcon from './ChatBotIcon';
 import { ChatMessage } from '../types';
 import { openaiService } from '../services/openaiService';
 
@@ -133,27 +134,17 @@ const LiveChat = () => {
         
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="relative bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 hover:from-gray-800 hover:to-gray-700 text-white px-6 py-3 rounded-full shadow-lg border border-cyan-400/50 flex items-center gap-3 transition-all duration-300 transform hover:scale-105 group backdrop-blur-sm"
+          className="relative bg-dark-800 hover:bg-dark-700 text-white w-14 h-14 rounded-full shadow-2xl border border-white/10 flex items-center justify-center transition-all duration-300 transform hover:scale-105 group"
+          aria-label={isOpen ? 'Close chat' : 'Open chat'}
         >
           {isOpen ? (
-            <>
-              <X className="w-5 h-5 transition-transform group-hover:rotate-90" />
-              <span className="text-sm font-medium">Close Chat</span>
-            </>
+            <X className="w-5 h-5 text-white transition-transform group-hover:rotate-90" />
           ) : (
             <>
-              <div className="relative">
-                {/* Sparkle Icon */}
-                <svg className="w-5 h-5 text-cyan-400" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 0L13.09 8.26L22 9L13.09 9.74L12 18L10.91 9.74L2 9L10.91 8.26L12 0Z" className="animate-pulse"/>
-                  <path d="M19 4L19.5 6.5L22 7L19.5 7.5L19 10L18.5 7.5L16 7L18.5 6.5L19 4Z" className="animate-ping opacity-70"/>
-                  <path d="M5 14L5.5 16.5L8 17L5.5 17.5L5 20L4.5 17.5L2 17L4.5 16.5L5 14Z" className="animate-pulse opacity-60" style={{animationDelay: '0.5s'}}/>
-                </svg>
+              <div className="relative w-10 h-10 flex items-center justify-center">
+                <ChatBotIcon className="w-10 h-10" />
               </div>
-              <span className="text-sm font-medium bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-                AI Assistant
-              </span>
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-lg shadow-green-500/50"></div>
+              <div className="absolute -top-2 -right-2 chat-toggle-indicator bg-green-500"></div>
             </>
           )}
         </button>
@@ -164,14 +155,25 @@ const LiveChat = () => {
         <div className="fixed bottom-24 right-6 w-96 h-[500px] bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-2xl flex flex-col z-40">
           {/* Header */}
           <div className="p-4 border-b border-white/20 flex items-center gap-3">
-            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-              {isConnectedToAgent ? <UserIcon className="w-4 h-4 text-white" /> : <Bot className="w-4 h-4 text-white" />}
-            </div>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center">
+                {isConnectedToAgent ? (
+                  <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+                    <UserIcon className="w-4 h-4 text-white" />
+                  </div>
+                ) : (
+                  <div className="w-12 h-12 rounded-[18px] bg-white p-1 flex items-center justify-center shadow-[0_8px_30px_rgba(2,6,23,0.6)]">
+                    <div className="relative w-10 h-10">
+                      {/* purple ear accents - pseudo decoration via absolute ellipses */}
+                      <ChatBotIcon className="w-10 h-10" />
+                    </div>
+                  </div>
+                )}
+              </div>
             <div className="flex-1">
-              <h3 className="text-white font-medium">
+              <h3 className="text-gray-900 dark:text-white font-medium">
                 {isConnectedToAgent ? 'Sarah - Support Agent' : 'AI Assistant (ChatGPT)'}
               </h3>
-              <p className="text-xs text-green-400">● Online</p>
+              <p className="text-xs text-green-600 dark:text-green-400">● Online</p>
             </div>
             <button
               onClick={clearConversation}

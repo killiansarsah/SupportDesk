@@ -127,7 +127,8 @@ class AuthService {
       const ApiService = (await import('./apiService')).default;
       const apiService = ApiService.getInstance();
       const result = await apiService.getUsers();
-      return result.users || [];
+      // Backend returns users array directly, not wrapped in an object
+      return Array.isArray(result) ? result : [];
     } catch (error) {
       console.error('Error fetching users:', error);
       return [];

@@ -318,6 +318,105 @@ app.get('/api/users', async (req, res) => {
   }
 });
 
+// Simple admin verification middleware
+const verifyAdmin = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization || req.headers.Authorization || '';
+    let token = authHeader;
+    if (authHeader.startsWith('Bearer ')) token = authHeader.slice(7);
+
+    // Expected token format from login: mock_token_<userId>
+    if (!token || !token.startsWith('mock_token_')) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const userId = token.replace('mock_token_', '');
+    if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(401).json({ success: false, error: 'Unauthorized' });
+
+    if (user.role !== 'administrator') {
+      return res.status(403).json({ success: false, error: 'Forbidden - admin only' });
+    }
+
+    // attach to request for downstream use
+    req.adminUser = user;
+    next();
+  } catch (err) {
+    console.error('Admin verification error:', err.message || err);
+    return res.status(500).json({ success: false, error: 'Server error during admin verification' });
+  }
+};
+
+/**
+ * Admin create user
+ * Protected route for administrators to create users with any role
+ */
+app.post('/api/users', verifyAdmin, async (req, res) => {
+  try {
+    const { email, name, phone, role, password } = req.body;
+    if (!email || !name || !role) {
+      return res.status(400).json({ success: false, error: 'Required fields: email, name, role' });
+    }
+
+    const allowedRoles = ['administrator', 'support-agent', 'customer'];
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({ success: false, error: 'Invalid role' });
+    }
+
+    const existing = await User.findOne({ email });
+    if (existing) return res.status(400).json({ success: false, error: 'User already exists' });
+
+    const user = new User({
+      email,
+      name,
+      phone: phone || '+1-555-0000',
+      role,
+      password: password || Math.random().toString(36).slice(-8),
+      isActive: true,
+      emailVerified: true,
+      authProvider: 'email',
+      lastLogin: new Date()
+    });
+
+    await user.save();
+
+    res.json({ success: true, user: { id: user._id, email: user.email, name: user.name, role: user.role } });
+  } catch (error) {
+    console.error('Create user error:', error.message || error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * Admin delete user
+ * Protected route for administrators to delete users
+ */
+app.delete('/api/users/:id', verifyAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Prevent admin from deleting themselves
+    if (id === req.adminUser._id.toString()) {
+      return res.status(400).json({ success: false, error: 'Cannot delete your own account' });
+    }
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    await User.findByIdAndDelete(id);
+    
+    console.log(`✅ Admin ${req.adminUser.email} deleted user: ${user.email} (${user.role})`);
+    res.json({ success: true, message: 'User deleted successfully' });
+  } catch (error) {
+    console.error('Delete user error:', error.message || error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Ticket Routes
 app.get('/api/tickets', async (req, res) => {
   try {
@@ -795,6 +894,64 @@ app.post('/api/tickets/:id/messages', async (req, res) => {
     ticket.messages.push(message);
     ticket.updatedAt = new Date();
     await ticket.save();
+    
+    console.log(`💬 New message added to ticket #${ticket._id}`);
+    console.log(`💬 From: ${message.userName} (${message.userId})`);
+    console.log(`💬 Content: ${message.content.substring(0, 50)}...`);
+    
+    // Send email notifications (non-blocking, only if not internal message)
+    if (!message.isInternal) {
+      try {
+        // Get sender user info
+        const senderUser = await User.findById(message.userId);
+        
+        // Determine recipient based on sender role
+        let recipientUser = null;
+        
+        if (senderUser) {
+          if (senderUser.role === 'customer') {
+            // Customer sent message - notify assigned agent or all agents
+            if (ticket.assignedTo) {
+              recipientUser = await User.findById(ticket.assignedTo);
+              console.log(`📧 Notifying assigned agent: ${recipientUser?.email}`);
+            } else {
+              // Notify all support agents and administrators
+              const supportStaff = await User.find({ 
+                role: { $in: ['support-agent', 'administrator'] } 
+              });
+              console.log(`📧 Notifying ${supportStaff.length} support staff members`);
+              
+              // Send to all support staff
+              for (const staff of supportStaff) {
+                emailService.notifyNewMessage(ticket, message, staff, senderUser)
+                  .then(() => console.log(`✅ Notification sent to ${staff.email}`))
+                  .catch(err => console.error(`❌ Failed to notify ${staff.email}:`, err));
+              }
+            }
+          } else if (senderUser.role === 'support-agent' || senderUser.role === 'administrator') {
+            // Agent/Admin sent message - notify customer
+            recipientUser = await User.findById(ticket.customerId);
+            console.log(`📧 Notifying customer: ${recipientUser?.email}`);
+          }
+          
+          // Send notification to single recipient (if applicable)
+          if (recipientUser) {
+            emailService.notifyNewMessage(ticket, message, recipientUser, senderUser)
+              .then(result => {
+                if (result.success) {
+                  console.log(`✅ Message notification sent to ${recipientUser.email}`);
+                } else {
+                  console.error(`❌ Failed to send notification: ${result.error}`);
+                }
+              })
+              .catch(err => console.error('❌ Email notification error:', err));
+          }
+        }
+      } catch (emailError) {
+        console.error('❌ Error processing email notifications:', emailError);
+        // Don't fail the message creation if email fails
+      }
+    }
     
     res.status(201).json(message);
   } catch (error) {

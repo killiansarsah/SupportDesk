@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { User } from './types';
 import AuthService from './services/authService';
 import Login from './components/Login';
-import Layout from './components/Layout';
+// import Layout from './components/Layout'; // Original gradient layout
+import Layout from './components/LayoutModern'; // New modern sidebar layout
 import Dashboard from './components/Dashboard';
 
 import KnowledgeBase from './components/KnowledgeBase';
@@ -16,6 +17,7 @@ import CustomerSatisfaction from './components/CustomerSatisfaction';
 import PerformanceDashboard from './components/PerformanceDashboard';
 import EmailIntegration from './components/EmailIntegration';
 import DataMigration from './components/DataMigration';
+import UserManagement from './components/UserManagement';
 import ToastContainer from './components/ToastContainer';
 import ToastService from './services/toastService';
 
@@ -222,37 +224,39 @@ function App() {
         return <EmailIntegration />;
       case 'data-migration':
         return <DataMigration />;
+      case 'user-management':
+        return <UserManagement />;
       case 'settings':
         return (
           <div className="max-w-4xl mx-auto">
-            <h1 className="text-3xl font-bold text-white mb-8">Settings</h1>
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 border border-white/20">
-              <h2 className="text-xl font-bold text-white mb-6">User Preferences</h2>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">Settings</h1>
+            <div className="bg-white/10 dark:bg-dark-900 backdrop-blur-sm rounded-lg p-8 border border-white/20 dark:border-dark-800">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">User Preferences</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-white mb-2">Display Name</label>
+                  <label className="block text-gray-900 dark:text-white mb-2">Display Name</label>
                   <input 
                     type="text" 
                     value={user!.name}
-                    className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 bg-white/10 dark:bg-dark-800 border border-white/20 dark:border-dark-800 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     readOnly
                   />
                 </div>
                 <div>
-                  <label className="block text-white mb-2">Email</label>
+                  <label className="block text-gray-900 dark:text-white mb-2">Email</label>
                   <input 
                     type="email" 
                     value={user!.email}
-                    className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 bg-white/10 dark:bg-dark-800 border border-white/20 dark:border-dark-800 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     readOnly
                   />
                 </div>
                 <div>
-                  <label className="block text-white mb-2">Role</label>
+                  <label className="block text-gray-900 dark:text-white mb-2">Role</label>
                   <input 
                     type="text" 
                     value={user!.role}
-                    className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 bg-white/10 dark:bg-dark-800 border border-white/20 dark:border-dark-800 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     readOnly
                   />
                 </div>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BarChart3, Users, Ticket as TicketIcon, TrendingUp, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { User, Ticket } from '../types';
 import TicketService from '../services/ticketService';
-import AuthService from '../services/authService';
+import ApiService from '../services/apiService';
 
 interface AdminDashboardProps {
   user: User;
@@ -20,6 +20,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, tickets, onTicket
     closed: 0,
   });
   const [users, setUsers] = useState<User[]>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(true);
 
   useEffect(() => {
     loadStats();
@@ -32,9 +33,18 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, tickets, onTicket
   };
 
   const loadUsers = async () => {
-    const authService = AuthService.getInstance();
-    const usersList = await authService.getAllUsers();
-    setUsers(usersList);
+    try {
+      setIsLoadingUsers(true);
+      const apiService = ApiService.getInstance();
+      const usersList = await apiService.getUsers();
+      console.log('📊 AdminDashboard - Loaded users:', usersList);
+      setUsers(Array.isArray(usersList) ? usersList : []);
+    } catch (error) {
+      console.error('❌ AdminDashboard - Error loading users:', error);
+      setUsers([]);
+    } finally {
+      setIsLoadingUsers(false);
+    }
   };
 
 
@@ -63,6 +73,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, tickets, onTicket
   const recentTickets = tickets.slice(0, 5);
   const agents = users.filter(u => u.role === 'support-agent');
   const customers = users.filter(u => u.role === 'customer');
+  const administrators = users.filter(u => u.role === 'administrator');
 
   return (
     <div className="space-y-8">
@@ -151,37 +162,57 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, tickets, onTicket
             <Users className="w-5 h-5 text-gray-400" />
           </div>
 
-          <div className="space-y-4">
-            <div className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-white font-medium">Support Agents</span>
-                <span className="text-2xl font-bold text-blue-400">{agents.length}</span>
-              </div>
-              <div className="text-sm text-gray-400">
-                Active agents handling tickets
-              </div>
+          {isLoadingUsers ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="w-8 h-8 border-2 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
             </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Total Users */}
+              <div className="backdrop-blur-lg bg-gradient-to-br from-primary-500/20 to-primary-600/20 border border-primary-400/30 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-white font-medium">Total Users</span>
+                  <span className="text-2xl font-bold text-primary-300">{users.length}</span>
+                </div>
+                <div className="text-sm text-gray-300">
+                  All registered users in the system
+                </div>
+              </div>
 
-            <div className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-white font-medium">Customers</span>
-                <span className="text-2xl font-bold text-green-400">{customers.length}</span>
+              {/* Administrators */}
+              <div className="backdrop-blur-lg bg-gradient-to-br from-purple-500/20 to-purple-600/20 border border-purple-400/30 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-white font-medium">Administrators</span>
+                  <span className="text-2xl font-bold text-purple-300">{administrators.length}</span>
+                </div>
+                <div className="text-sm text-gray-300">
+                  System administrators with full access
+                </div>
               </div>
-              <div className="text-sm text-gray-400">
-                Registered customers
-              </div>
-            </div>
 
-            <div className="backdrop-blur-lg bg-white/5 border border-white/10 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-white font-medium">Response Time</span>
-                <span className="text-2xl font-bold text-purple-400">2.5h</span>
+              {/* Support Agents */}
+              <div className="backdrop-blur-lg bg-gradient-to-br from-blue-500/20 to-blue-600/20 border border-blue-400/30 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-white font-medium">Support Agents</span>
+                  <span className="text-2xl font-bold text-blue-300">{agents.length}</span>
+                </div>
+                <div className="text-sm text-gray-300">
+                  Active agents handling tickets
+                </div>
               </div>
-              <div className="text-sm text-gray-400">
-                Average first response
+
+              {/* Customers */}
+              <div className="backdrop-blur-lg bg-gradient-to-br from-green-500/20 to-green-600/20 border border-green-400/30 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-white font-medium">Customers</span>
+                  <span className="text-2xl font-bold text-green-300">{customers.length}</span>
+                </div>
+                <div className="text-sm text-gray-300">
+                  Registered customers submitting tickets
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 

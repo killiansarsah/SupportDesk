@@ -10,6 +10,16 @@ class EmailService {
     if (this.initialized) return;
     this.initialized = true;
 
+    // Check if SendGrid API key is configured
+    const sendgridApiKey = process.env.SENDGRID_API_KEY || process.env.SMTP_PASS;
+    
+    if (!sendgridApiKey || !sendgridApiKey.startsWith('SG.')) {
+      console.warn('⚠️  SendGrid API key not configured properly');
+      console.warn('⚠️  Email notifications will be disabled');
+      this.transporter = null;
+      return;
+    }
+
     // SendGrid SMTP configuration
     const smtpConfig = {
       host: process.env.SMTP_HOST || 'smtp.sendgrid.net',
@@ -17,7 +27,7 @@ class EmailService {
       secure: false, // true for 465, false for 587
       auth: {
         user: process.env.SMTP_USER || 'apikey',
-        pass: process.env.SMTP_PASS || process.env.SENDGRID_API_KEY
+        pass: sendgridApiKey
       },
       // Additional SendGrid configuration
       tls: {
@@ -29,6 +39,7 @@ class EmailService {
     console.log(`📧 SMTP Host: ${smtpConfig.host}`);
     console.log(`📧 SMTP Port: ${smtpConfig.port}`);
     console.log(`📧 SMTP User: ${smtpConfig.auth.user}`);
+    console.log(`📧 FROM Email: ${process.env.EMAIL_FROM}`);
     
     this.transporter = nodemailer.createTransport(smtpConfig);
   }
@@ -340,6 +351,113 @@ class EmailService {
     return await this.sendEmail(customerInfo.email, subject, html);
   }
 
+  // Template for new message notification
+  generateNewMessageEmail(ticket, message, recipientInfo, senderInfo) {
+    const subject = `💬 New Message on Ticket #${ticket.id || ticket._id} - ${ticket.title}`;
+    
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0; }
+          .content { background: #f9f9f9; padding: 20px; border: 1px solid #ddd; }
+          .message-box { background: white; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #667eea; }
+          .sender-info { color: #667eea; font-weight: bold; margin-bottom: 5px; }
+          .message-content { margin: 10px 0; line-height: 1.8; }
+          .ticket-info { background: white; padding: 15px; border-radius: 5px; margin: 10px 0; }
+          .btn { display: inline-block; padding: 12px 24px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 10px 5px; }
+          .footer { background: #333; color: white; text-align: center; padding: 15px; border-radius: 0 0 8px 8px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h2>💬 New Message Received</h2>
+            <p>You have a new message on your support ticket.</p>
+          </div>
+          
+          <div class="content">
+            <p>Hi ${recipientInfo.name || 'there'},</p>
+            
+            <p>You've received a new message regarding your support ticket:</p>
+
+            <div class="ticket-info">
+              <p><strong>Ticket ID:</strong> #${ticket.id || ticket._id}</p>
+              <p><strong>Subject:</strong> ${ticket.title}</p>
+              <p><strong>Status:</strong> ${ticket.status}</p>
+            </div>
+
+            <div class="message-box">
+              <div class="sender-info">
+                From: ${senderInfo.name}
+                <span style="color: #999; font-weight: normal; margin-left: 10px;">
+                  ${new Date(message.timestamp).toLocaleString()}
+                </span>
+              </div>
+              <div class="message-content">
+                ${message.content.replace(/\n/g, '<br>')}
+              </div>
+            </div>
+
+            <p style="margin-top: 20px;">
+              <a href="${process.env.FRONTEND_URL || 'http://localhost:5174'}/tickets/${ticket.id || ticket._id}" class="btn">
+                📝 View & Reply to Ticket
+              </a>
+            </p>
+
+            <p style="color: #666; font-size: 14px; margin-top: 20px;">
+              💡 <strong>Tip:</strong> You can reply to this email directly, and your response will be added to the ticket.
+            </p>
+          </div>
+
+          <div class="footer">
+            <p><strong>Ticket #${ticket.id || ticket._id}</strong> - ${ticket.status}</p>
+            <p>Thank you for using ${process.env.COMPANY_NAME || 'Support Desk'}!</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    return { subject, html };
+  }
+
+  // Send new message notification
+  async notifyNewMessage(ticket, message, recipientUser, senderUser) {
+    try {
+      if (!recipientUser || !recipientUser.email) {
+        console.log('⚠️  No recipient email provided for message notification');
+        return { success: false, error: 'No recipient email provided' };
+      }
+
+      console.log(`📧 Sending new message notification to: ${recipientUser.email}`);
+      console.log(`📧 Message from: ${senderUser.name}`);
+      console.log(`📧 Ticket: #${ticket.id || ticket._id}`);
+
+      const { subject, html } = this.generateNewMessageEmail(
+        ticket,
+        message,
+        recipientUser,
+        senderUser
+      );
+
+      const result = await this.sendEmail(recipientUser.email, subject, html);
+      
+      if (result.success) {
+        console.log(`✅ Message notification sent to ${recipientUser.email}`);
+      } else {
+        console.error(`❌ Failed to send message notification to ${recipientUser.email}`);
+      }
+
+      return result;
+    } catch (error) {
+      console.error('❌ Error sending message notification:', error);
+      return { success: false, error: error.message };
+    }
+  }
 
 }
 

@@ -25,48 +25,6 @@ export default function NotificationSystem({ user, onNavigateToTicket }: Notific
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    const loadNotifications = () => {
-      const saved = localStorage.getItem('notifications');
-      if (saved) {
-        setNotifications(JSON.parse(saved));
-      }
-    };
-
-    loadNotifications();
-
-    // Check for new tickets every 2 seconds
-    const interval = setInterval(() => {
-      if (user.role !== 'customer') {
-        checkForNewTickets();
-      }
-    }, 2000);
-
-    // Close dropdown when clicking outside (check both wrapper and portal dropdown)
-    const handleClickOutside = (event: MouseEvent) => {
-      try {
-        const target = event.target as Node;
-        const insideWrapper = !!(wrapperRef.current && wrapperRef.current.contains(target));
-        const insideDropdown = !!(dropdownRef.current && dropdownRef.current.contains(target));
-        if (!insideWrapper && !insideDropdown) {
-          setShowDropdown(false);
-        }
-      } catch {
-        setShowDropdown(false);
-      }
-    };
-
-    if (showDropdown) {
-      // use 'click' so that pointer/mouse handlers on items run first
-      document.addEventListener('click', handleClickOutside);
-    }
-
-    return () => {
-      clearInterval(interval);
-      document.removeEventListener('click', handleClickOutside);
-    };
-  }, [user.role, showDropdown]);
-
   const checkForNewTickets = () => {
     const tickets = JSON.parse(localStorage.getItem('tickets') || '[]') as Ticket[];
     const lastCheck = localStorage.getItem('lastNotificationCheck');
@@ -100,6 +58,114 @@ export default function NotificationSystem({ user, onNavigateToTicket }: Notific
 
     localStorage.setItem('lastNotificationCheck', now);
   };
+
+  const checkForNewMessages = () => {
+    const tickets = JSON.parse(localStorage.getItem('tickets') || '[]') as Ticket[];
+    const lastMessageCheck = localStorage.getItem('lastMessageCheck');
+    const now = new Date().toISOString();
+    
+    if (!lastMessageCheck) {
+      localStorage.setItem('lastMessageCheck', now);
+      return;
+    }
+
+    // Find tickets with new messages from other users
+    const newMessageNotifications: Notification[] = [];
+    
+    tickets.forEach((ticket) => {
+      if (ticket.messages && ticket.messages.length > 0) {
+        const newMessages = ticket.messages.filter((msg) => {
+          const isNew = msg.timestamp > lastMessageCheck;
+          const isFromOtherUser = msg.userId !== user.id;
+          return isNew && isFromOtherUser;
+        });
+
+        if (newMessages.length > 0) {
+          // Get the latest message
+          const latestMessage = newMessages[newMessages.length - 1];
+          
+          newMessageNotifications.push({
+            id: `message-${latestMessage.id}-${Date.now()}`,
+            type: 'message',
+            title: 'New Message',
+            message: `${latestMessage.userName}: ${latestMessage.content.substring(0, 50)}${latestMessage.content.length > 50 ? '...' : ''}`,
+            ticketId: ticket.id,
+            timestamp: latestMessage.timestamp,
+            read: false
+          });
+        }
+      }
+    });
+
+    if (newMessageNotifications.length > 0) {
+      const current = JSON.parse(localStorage.getItem('notifications') || '[]');
+      const updated = [...current, ...newMessageNotifications];
+      localStorage.setItem('notifications', JSON.stringify(updated));
+      setNotifications(updated);
+      
+      // Show browser notification if permitted
+      if ('Notification' in window && Notification.permission === 'granted') {
+        newMessageNotifications.forEach(notif => {
+          new Notification(notif.title, {
+            body: notif.message,
+            icon: '/favicon.ico',
+            badge: '/favicon.ico',
+          });
+        });
+      }
+    }
+
+    localStorage.setItem('lastMessageCheck', now);
+  };
+
+  useEffect(() => {
+    const loadNotifications = () => {
+      const saved = localStorage.getItem('notifications');
+      if (saved) {
+        setNotifications(JSON.parse(saved));
+      }
+    };
+
+    loadNotifications();
+
+    // Request notification permission on first load
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
+    // Check for new tickets and messages every 5 seconds
+    const interval = setInterval(() => {
+      if (user.role !== 'customer') {
+        checkForNewTickets();
+      }
+      checkForNewMessages();
+    }, 5000);
+
+    // Close dropdown when clicking outside (check both wrapper and portal dropdown)
+    const handleClickOutside = (event: MouseEvent) => {
+      try {
+        const target = event.target as Node;
+        const insideWrapper = !!(wrapperRef.current && wrapperRef.current.contains(target));
+        const insideDropdown = !!(dropdownRef.current && dropdownRef.current.contains(target));
+        if (!insideWrapper && !insideDropdown) {
+          setShowDropdown(false);
+        }
+      } catch {
+        setShowDropdown(false);
+      }
+    };
+
+    if (showDropdown) {
+      // use 'click' so that pointer/mouse handlers on items run first
+      document.addEventListener('click', handleClickOutside);
+    }
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('click', handleClickOutside);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user.role, showDropdown]);
 
   const markAsRead = (notificationId: string) => {
     const updated = notifications.map(n => 

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Send, Paperclip, Download, Clock, User, Tag, AlertCircle, Users, FileText, X } from 'lucide-react';
+import { Send, Paperclip, Download, FileText, X } from 'lucide-react';
 import { Ticket, User as UserType } from '../types';
 import TicketService from '../services/ticketService';
 import ApiService from '../services/apiService';
@@ -163,289 +163,370 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'open':
-        return 'bg-blue-500/20 text-blue-300 border-blue-500/30';
-      case 'in-progress':
-        return 'bg-purple-500/20 text-purple-300 border-purple-500/30';
-      case 'resolved':
-        return 'bg-green-500/20 text-green-300 border-green-500/30';
-      case 'closed':
-        return 'bg-gray-500/20 text-gray-300 border-gray-500/30';
-      default:
-        return 'bg-gray-500/20 text-gray-300 border-gray-500/30';
-    }
-  };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'urgent':
-        return 'text-red-400';
-      case 'high':
-        return 'text-orange-400';
-      case 'medium':
-        return 'text-yellow-400';
-      default:
-        return 'text-green-400';
-    }
-  };
-
-  const formatTimestamp = (timestamp: string) => {
-    return new Date(timestamp).toLocaleString();
-  };
 
   const canChangeStatus = user.role === 'administrator' || user.role === 'support-agent';
   const canAssignTickets = user.role === 'administrator' || user.role === 'support-agent';
 
   return (
-    <div className="space-y-4 sm:space-y-6 max-w-full overflow-hidden">
-      {/* Header */}
-      <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
-        {/* Title Section */}
-        <div className="flex items-center space-x-4 min-w-0 flex-1">
-          <button
-            onClick={onBack}
-            className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors duration-200 flex-shrink-0"
-          >
-            <ArrowLeft className="w-5 h-5 text-white" />
-          </button>
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl font-bold text-white truncate">{ticket.title}</h1>
-            <p className="text-gray-300 text-sm">Ticket #{ticket.id}</p>
-          </div>
-        </div>
-
-        {/* Controls Section */}
-        <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 lg:flex-shrink-0 w-full sm:w-auto max-w-full overflow-visible">
-          {canChangeStatus && (
-            <CustomSelect
-              value={ticketStatus}
-              onChange={handleStatusChange}
-              disabled={isUpdatingStatus}
-              options={[
-                { value: 'open', label: 'Open' },
-                { value: 'in-progress', label: 'In Progress' },
-                { value: 'resolved', label: 'Resolved' },
-                { value: 'closed', label: 'Closed' }
-              ]}
-              className="w-full sm:w-auto backdrop-blur-lg bg-gradient-to-r from-blue-900/80 to-indigo-900/80 border border-blue-400/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400/50"
-              style={{
-                backgroundImage: 'linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(79, 70, 229, 0.8) 100%)',
-              }}
-            />
-          )}
-          
-          {canAssignTickets && (
-            <CustomSelect
-              value={assignedTo}
-              onChange={handleAssignmentChange}
-              disabled={isUpdatingAssignment}
-              placeholder="Unassigned"
-              options={[
-                { value: '', label: 'Unassigned' },
-                ...availableAgents.map((agent) => {
-                  const agentId = (agent as any)._id || agent.id;
-                  return {
-                    value: agentId,
-                    label: agent.name
-                  };
-                })
-              ]}
-              className="w-full sm:w-auto backdrop-blur-lg bg-gradient-to-r from-purple-900/80 to-indigo-900/80 border border-purple-400/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-400/50"
-              style={{
-                backgroundImage: 'linear-gradient(135deg, rgba(147, 51, 234, 0.8) 0%, rgba(79, 70, 229, 0.8) 100%)',
-              }}
-            />
-          )}
-          
-          {/* Email Resolution Button */}
-          {canChangeStatus && (ticketStatus === 'resolved' || ticketStatus === 'closed') && (
-            <button
-              onClick={() => setShowEmailModal(true)}
-              className="px-4 py-2 bg-gradient-to-r from-green-600/80 to-emerald-600/80 hover:from-green-700/80 hover:to-emerald-700/80 text-white rounded-lg transition-all duration-200 flex items-center gap-2 backdrop-blur-lg border border-green-400/30 hover:border-green-400/50"
-              title="Send resolution email to customer"
-            >
-              <Send className="w-4 h-4" />
-              Email Customer
-            </button>
-          )}
-        </div>
+    <div className="space-y-6">
+      {/* Breadcrumb Navigation */}
+      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+        <button 
+          onClick={onBack}
+          className="hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+        >
+          Tickets
+        </button>
+        <span>/</span>
+        <span>{ticketStatus === 'open' ? 'Open' : ticketStatus === 'closed' ? 'Closed' : 'Open'}</span>
+        <span>/</span>
+        <span className="text-gray-900 dark:text-white font-medium">#{ticket.id}</span>
       </div>
 
-      {/* Ticket Info */}
-      <div className="backdrop-blur-lg bg-white/10 border border-white/20 rounded-xl p-4 sm:p-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 mb-4">
-          <div className="flex items-center space-x-2 min-w-0">
-            <Tag className="w-4 h-4 text-gray-400 flex-shrink-0" />
-            <span className="text-gray-300 text-sm flex-shrink-0">Status:</span>
-            <span className={`px-2 py-1 rounded-full text-xs font-medium border truncate ${getStatusColor(ticketStatus)}`}>
-              {ticketStatus.replace('-', ' ')}
-            </span>
+      {/* Main Layout - Two Column */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column - Conversation */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Title */}
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              {ticket.title}
+            </h1>
           </div>
-          
-          <div className="flex items-center space-x-2 min-w-0">
-            <AlertCircle className={`w-4 h-4 flex-shrink-0 ${getPriorityColor(ticket.priority)}`} />
-            <span className="text-gray-300 text-sm flex-shrink-0">Priority:</span>
-            <span className={`font-medium capitalize truncate ${getPriorityColor(ticket.priority)}`}>
-              {ticket.priority}
-            </span>
-          </div>
-          
-          <div className="flex items-center space-x-2 min-w-0">
-            <User className="w-4 h-4 text-gray-400 flex-shrink-0" />
-            <span className="text-gray-300 text-sm flex-shrink-0">Category:</span>
-            <span className="text-white truncate">{ticket.category}</span>
-          </div>
-          
-          <div className="flex items-center space-x-2 min-w-0">
-            <Users className="w-4 h-4 text-gray-400 flex-shrink-0" />
-            <span className="text-gray-300 text-sm flex-shrink-0">Assigned:</span>
-            <span className="text-white truncate">
-              {assignedTo ? 
-                availableAgents.find(a => (a._id || a.id) === assignedTo)?.name || 'Loading...' : 
-                'Unassigned'
-              }
-            </span>
-          </div>
-          
-          <div className="flex items-center space-x-2 min-w-0 sm:col-span-2 lg:col-span-1">
-            <Clock className="w-4 h-4 text-gray-400 flex-shrink-0" />
-            <span className="text-gray-300 text-sm flex-shrink-0">Created:</span>
-            <span className="text-white truncate">{new Date(ticket.createdAt).toLocaleDateString()}</span>
-          </div>
-        </div>
 
-        <div className="border-t border-white/10 pt-4">
-          <h3 className="text-white font-medium mb-2">Description</h3>
-          <p className="text-gray-300">{ticket.description}</p>
-        </div>
 
-        {/* Attachments */}
-        {ticket.attachments.length > 0 && (
-          <div className="border-t border-white/10 pt-4 mt-4">
-            <h3 className="text-white font-medium mb-2">Attachments</h3>
-            <div className="space-y-2">
-              {ticket.attachments.map((attachment) => (
-                <div key={attachment.id} className="flex items-center justify-between p-2 bg-white/5 rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    <Paperclip className="w-4 h-4 text-gray-400" />
-                    <span className="text-white text-sm">{attachment.name}</span>
+
+          {/* Conversation Card */}
+          <div className="bg-white dark:bg-dark-900 rounded-xl border border-gray-200 dark:border-dark-800 overflow-hidden">
+            <div className="p-6 border-b border-gray-200 dark:border-dark-800">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Conversation</h2>
+            </div>
+
+            <div className="p-6 space-y-6 max-h-[600px] overflow-y-auto">
+              {ticket.messages.map((message) => {
+                const isAgent = message.userName.includes('Agent') || message.userName.includes('Agent');
+                
+                return (
+                  <div key={message.id} className="flex gap-4">
+                    {/* Avatar */}
+                    <div className="flex-shrink-0">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${
+                        isAgent 
+                          ? 'bg-gradient-to-br from-orange-400 to-orange-500' 
+                          : 'bg-gradient-to-br from-blue-400 to-blue-500'
+                      }`}>
+                        {message.userName.charAt(0).toUpperCase()}
+                      </div>
+                    </div>
+
+                    {/* Message Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline gap-2 mb-1">
+                        <span className="font-semibold text-gray-900 dark:text-white">
+                          {message.userName}
+                        </span>
+                        {isAgent && (
+                          <span className="text-xs text-gray-500 dark:text-gray-400">(Agent)</span>
+                        )}
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {new Date(message.timestamp).toLocaleString('en-US', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true
+                          })}
+                        </span>
+                      </div>
+                      <div className={`rounded-lg p-4 ${
+                        isAgent
+                          ? 'bg-gray-50 dark:bg-dark-800/50'
+                          : 'bg-white dark:bg-dark-800'
+                      } ${!isAgent && 'border border-gray-200 dark:border-dark-700'}`}>
+                        <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                          {message.content}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <button className="p-1 rounded hover:bg-white/10 transition-colors">
-                    <Download className="w-4 h-4 text-gray-400" />
+                );
+              })}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Reply Section */}
+            <div className="p-6 border-t border-gray-200 dark:border-dark-800">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">Reply</h3>
+              
+              {/* Template Selector */}
+              {(user.role === 'support-agent' || user.role === 'administrator') && (
+                <div className="mb-4">
+                  <button
+                    onClick={() => setShowTemplates(!showTemplates)}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-100 hover:bg-green-200 dark:bg-green-900/20 dark:hover:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg border border-green-300 dark:border-green-700 transition-colors text-sm"
+                  >
+                    <FileText className="w-4 h-4" />
+                    {showTemplates ? 'Hide Templates' : 'Use Template'}
+                  </button>
+                  
+                  {showTemplates && (
+                    <div className="mt-4 max-h-96 overflow-y-auto">
+                      <TemplateManager 
+                        type="response" 
+                        onTemplateSelect={(template) => {
+                          setNewMessage(template.content);
+                          setShowTemplates(false);
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              <form onSubmit={handleSendMessage} className="space-y-3">
+                <textarea
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="Type your reply here..."
+                  rows={4}
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                />
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting || !newMessage.trim()}
+                    className="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 dark:disabled:bg-dark-700 text-white font-medium rounded-lg transition-colors disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        <span>Sending...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        <span>Send Reply</span>
+                      </>
+                    )}
                   </button>
                 </div>
-              ))}
+              </form>
             </div>
           </div>
-        )}
-      </div>
 
-      {/* Messages */}
-      <div className="backdrop-blur-lg bg-white/10 border border-white/20 rounded-xl overflow-hidden">
-        <div className="p-4 border-b border-white/10">
-          <h2 className="text-lg font-semibold text-white">Conversation</h2>
         </div>
 
-        <div className="h-96 overflow-y-auto p-4 space-y-4">
-          {ticket.messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${message.userId === user.id ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-xs lg:max-w-md px-4 py-3 rounded-lg ${
-                  message.userId === user.id
-                    ? 'bg-blue-500/20 text-white'
-                    : 'bg-white/5 text-gray-300'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-medium">{message.userName}</span>
-                  <span className="text-xs opacity-70">
-                    {formatTimestamp(message.timestamp)}
-                  </span>
-                </div>
-                <p className="text-sm">{message.content}</p>
-              </div>
+        {/* Right Column - Ticket Details */}
+        <div className="space-y-6">
+          {/* Ticket Details Card */}
+          <div className="bg-white dark:bg-dark-900 rounded-xl border border-gray-200 dark:border-dark-800 overflow-hidden">
+            <div className="p-6 border-b border-gray-200 dark:border-dark-800">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Ticket Details</h2>
             </div>
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
+            
+            <div className="p-6 space-y-4">
+              {/* Status */}
+              <div>
+                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+                  Status
+                </label>
+                {canChangeStatus ? (
+                  <CustomSelect
+                    value={ticketStatus}
+                    onChange={handleStatusChange}
+                    disabled={isUpdatingStatus}
+                    options={[
+                      { value: 'open', label: 'Open' },
+                      { value: 'in-progress', label: 'In Progress' },
+                      { value: 'resolved', label: 'Resolved' },
+                      { value: 'closed', label: 'Closed' }
+                    ]}
+                    className="w-full bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  />
+                ) : (
+                  <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
+                    ticketStatus === 'open' 
+                      ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400'
+                      : ticketStatus === 'closed'
+                      ? 'bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400'
+                      : 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
+                  }`}>
+                    {ticketStatus.charAt(0).toUpperCase() + ticketStatus.slice(1)}
+                  </span>
+                )}
+              </div>
 
-        {/* Message Input */}
-        <div className="p-4 border-t border-white/10">
-          {/* Template Selector */}
-          {(user.role === 'support-agent' || user.role === 'administrator') && (
-            <div className="mb-4">
-              <button
-                onClick={() => setShowTemplates(!showTemplates)}
-                className="flex items-center gap-2 px-4 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-300 rounded-lg border border-green-400/30 transition-colors text-sm"
-              >
-                <FileText className="w-4 h-4" />
-                {showTemplates ? 'Hide Templates' : 'Use Template'}
-              </button>
-              
-              {showTemplates && (
-                <div className="mt-4 max-h-96 overflow-y-auto">
-                  <TemplateManager 
-                    type="response" 
-                    onTemplateSelect={(template) => {
-                      setNewMessage(template.content);
-                      setShowTemplates(false);
-                    }}
+              {/* Assignee */}
+              {canAssignTickets && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+                    Assignee
+                  </label>
+                  <CustomSelect
+                    value={assignedTo}
+                    onChange={handleAssignmentChange}
+                    disabled={isUpdatingAssignment}
+                    placeholder="Unassigned"
+                    options={[
+                      { value: '', label: 'Unassigned' },
+                      ...availableAgents.map((agent) => {
+                        const agentId = (agent as UserType)._id || agent.id;
+                        return {
+                          value: agentId,
+                          label: agent.name
+                        };
+                      })
+                    ]}
+                    className="w-full bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-lg focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
               )}
+
+              {/* Customer */}
+              <div>
+                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+                  Customer
+                </label>
+                <div className="text-gray-900 dark:text-white font-medium">
+                  {typeof ticket.customerId === 'object' ? (ticket.customerId as UserType).name : 'Unknown'}
+                </div>
+              </div>
+
+              {/* Created */}
+              <div>
+                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+                  Created
+                </label>
+                <div className="text-gray-900 dark:text-white">
+                  {new Date(ticket.createdAt).toLocaleString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour12: false
+                  })}
+                </div>
+              </div>
+
+              {/* Last Update */}
+              <div>
+                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+                  Last Update
+                </label>
+                <div className="text-gray-900 dark:text-white">
+                  {new Date(ticket.updatedAt).toLocaleString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour12: false
+                  })}
+                </div>
+              </div>
+
+              {/* Priority */}
+              <div>
+                <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+                  Priority
+                </label>
+                <div className="text-gray-900 dark:text-white font-medium capitalize">
+                  {ticket.priority}
+                </div>
+              </div>
+
+              {/* Related Order */}
+              {ticket.description.includes('#') && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+                    Related Order
+                  </label>
+                  <a href="#" className="text-primary-600 hover:text-primary-700 font-medium">
+                    #{ticket.description.match(/#(\d+)/)?.[1] || '5678'}
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Actions Card */}
+          {canChangeStatus && (
+            <div className="bg-white dark:bg-dark-900 rounded-xl border border-gray-200 dark:border-dark-800 overflow-hidden">
+              <div className="p-6 border-b border-gray-200 dark:border-dark-800">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Actions</h2>
+              </div>
+              
+              <div className="p-6 space-y-3">
+                {canChangeStatus && (
+                  <CustomSelect
+                    value={ticketStatus}
+                    onChange={handleStatusChange}
+                    disabled={isUpdatingStatus}
+                    options={[
+                      { value: 'open', label: 'Change Status' },
+                      { value: 'in-progress', label: 'In Progress' },
+                      { value: 'resolved', label: 'Resolved' },
+                      { value: 'closed', label: 'Closed' }
+                    ]}
+                    className="w-full bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  />
+                )}
+                
+                {canAssignTickets && (
+                  <CustomSelect
+                    value={assignedTo}
+                    onChange={handleAssignmentChange}
+                    disabled={isUpdatingAssignment}
+                    placeholder="Change Assignee"
+                    options={[
+                      { value: '', label: 'Change Assignee' },
+                      ...availableAgents.map((agent) => {
+                        const agentId = (agent as UserType)._id || agent.id;
+                        return {
+                          value: agentId,
+                          label: agent.name
+                        };
+                      })
+                    ]}
+                    className="w-full bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  />
+                )}
+                
+                {(ticketStatus === 'resolved' || ticketStatus === 'closed') && (
+                  <button
+                    onClick={() => setShowEmailModal(true)}
+                    className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Send className="w-4 h-4" />
+                    Email Customer
+                  </button>
+                )}
+              </div>
             </div>
           )}
-          
-          <form onSubmit={handleSendMessage} className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3">
-            <textarea
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Type your message..."
-              rows={3}
-              className="flex-1 px-3 sm:px-4 py-2 sm:py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-sm sm:text-base"
-            />
-            <button
-              type="submit"
-              disabled={isSubmitting || !newMessage.trim()}
-              className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 sm:self-end"
-            >
-              {isSubmitting ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              ) : (
-                <>
-                  <Send className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span className="sm:hidden">Send</span>
-                </>
-              )}
-            </button>
-          </form>
+
+          {/* Attachments */}
+          {ticket.attachments && ticket.attachments.length > 0 && (
+            <div className="bg-white dark:bg-dark-900 rounded-xl border border-gray-200 dark:border-dark-800 overflow-hidden">
+              <div className="p-6 border-b border-gray-200 dark:border-dark-800">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Attachments</h2>
+              </div>
+              <div className="p-6 space-y-2">
+                {ticket.attachments.map((attachment) => (
+                  <div key={attachment.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-dark-800 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Paperclip className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm text-gray-900 dark:text-white">{attachment.name}</span>
+                    </div>
+                    <button className="p-1 rounded hover:bg-gray-200 dark:hover:bg-dark-700 transition-colors">
+                      <Download className="w-4 h-4 text-gray-400" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* History */}
-      {ticket.history.length > 0 && (
-        <div className="backdrop-blur-lg bg-white/10 border border-white/20 rounded-xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">Ticket History</h2>
-          <div className="space-y-3">
-            {ticket.history.map((entry) => (
-              <div key={entry.id} className="flex items-center space-x-3 text-sm">
-                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                <span className="text-gray-300">
-                  {formatTimestamp(entry.timestamp)}
-                </span>
-                <span className="text-white">
-                  {entry.userName} {entry.details}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Email Resolution Modal */}
       {showEmailModal && (
