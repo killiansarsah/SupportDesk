@@ -86,45 +86,45 @@ const CreateTicket: React.FC<CreateTicketProps> = ({ user, onBack, onTicketCreat
   };
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center space-x-4">
+    <div className="space-y-4 sm:space-y-6 md:space-y-8 px-2 sm:px-0">
+      <div className="flex items-center gap-3 sm:gap-4">
         <button
           onClick={onBack}
-          className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors duration-200"
+          className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors duration-200 flex-shrink-0"
         >
-          <ArrowLeft className="w-5 h-5 text-white" />
+          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
         </button>
-        <div>
-          <h1 className="text-3xl font-bold text-white">Create Support Ticket</h1>
-          <p className="text-gray-300">Describe your issue and we'll help you resolve it</p>
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white truncate">Create Support Ticket</h1>
+          <p className="text-gray-300 text-sm sm:text-base">Describe your issue and we'll help you resolve it</p>
         </div>
       </div>
 
-      <div className="backdrop-blur-lg bg-white/10 border border-white/20 rounded-xl p-8">
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="backdrop-blur-lg bg-white/10 border border-white/20 rounded-xl p-4 sm:p-6 md:p-8">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           <div>
-            <label className="block text-sm font-medium text-white mb-2">
+            <label className="block text-xs sm:text-sm font-medium text-white mb-2">
               Subject <span className="text-red-400">*</span>
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-3 backdrop-blur-lg bg-white/10 dark:bg-dark-900 border border-white/20 dark:border-dark-800 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 backdrop-blur-lg bg-white/10 dark:bg-dark-900 border border-white/20 dark:border-dark-800 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
               placeholder="Brief summary of your issue"
               required
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <div>
-              <label className="block text-sm font-medium text-white mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-white mb-2">
                 Category <span className="text-red-400">*</span>
               </label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-4 py-3 backdrop-blur-lg bg-white/10 dark:bg-dark-900 border border-white/20 dark:border-dark-800 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 backdrop-blur-lg bg-white/10 dark:bg-dark-900 border border-white/20 dark:border-dark-800 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
                 required
               >
                 <option value="" className="bg-gray-800 text-white">Select a category</option>
@@ -135,13 +135,13 @@ const CreateTicket: React.FC<CreateTicketProps> = ({ user, onBack, onTicketCreat
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-white mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-white mb-2">
                 Priority
               </label>
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as any)}
-                className="w-full px-4 py-3 backdrop-blur-lg bg-white/10 dark:bg-dark-900 border border-white/20 dark:border-dark-800 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 backdrop-blur-lg bg-white/10 dark:bg-dark-900 border border-white/20 dark:border-dark-800 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
               >
                 <option value="low" className="bg-gray-800 text-white">Low</option>
                 <option value="medium" className="bg-gray-800 text-white">Medium</option>
@@ -152,25 +152,25 @@ const CreateTicket: React.FC<CreateTicketProps> = ({ user, onBack, onTicketCreat
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-white mb-2">
+            <label className="block text-xs sm:text-sm font-medium text-white mb-2">
               Description <span className="text-red-400">*</span>
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={6}
-              className="w-full px-4 py-3 backdrop-blur-lg bg-white/10 dark:bg-dark-900 border border-white/20 dark:border-dark-800 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 backdrop-blur-lg bg-white/10 dark:bg-dark-900 border border-white/20 dark:border-dark-800 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-sm sm:text-base"
               placeholder="Please provide detailed information about your issue..."
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-white mb-2">
+            <label className="block text-xs sm:text-sm font-medium text-white mb-2">
               Attachments
             </label>
             <div
-              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+              className={`border-2 border-dashed rounded-lg p-4 sm:p-6 md:p-8 text-center transition-colors ${
                 dragOver ? 'border-blue-400 bg-blue-500/10' : 'border-white/20 bg-white/5'
               }`}
               onDrop={handleDrop}
@@ -180,8 +180,8 @@ const CreateTicket: React.FC<CreateTicketProps> = ({ user, onBack, onTicketCreat
               }}
               onDragLeave={() => setDragOver(false)}
             >
-              <Upload className="w-8 h-8 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-300 mb-2">
+              <Upload className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mx-auto mb-3 sm:mb-4" />
+              <p className="text-gray-300 mb-2 text-sm sm:text-base">
                 Drag and drop files here, or{' '}
                 <label className="text-blue-400 hover:text-blue-300 cursor-pointer">
                   browse
@@ -193,7 +193,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({ user, onBack, onTicketCreat
                   />
                 </label>
               </p>
-              <p className="text-sm text-gray-400">Maximum file size: 10MB</p>
+              <p className="text-xs sm:text-sm text-gray-400">Maximum file size: 10MB</p>
             </div>
 
             {attachments.length > 0 && (

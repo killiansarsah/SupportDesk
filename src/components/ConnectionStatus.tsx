@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Wifi, WifiOff, Database, AlertCircle } from 'lucide-react';
+import { Wifi, WifiOff, AlertCircle } from 'lucide-react';
 import ApiService from '../services/apiService';
 
 interface ConnectionStatusProps {
@@ -10,7 +10,6 @@ const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ className = '' }) =
   const [isConnected, setIsConnected] = useState(false);
   const [isDatabaseConnected, setIsDatabaseConnected] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
-  const [lastCheck, setLastCheck] = useState<Date | null>(null);
 
   const checkConnection = async () => {
     setIsChecking(true);
@@ -20,8 +19,7 @@ const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ className = '' }) =
       
       setIsConnected(result.connected);
       setIsDatabaseConnected(result.database);
-      setLastCheck(new Date());
-    } catch (error) {
+    } catch {
       setIsConnected(false);
       setIsDatabaseConnected(false);
     } finally {
@@ -42,15 +40,8 @@ const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ className = '' }) =
   const getStatusColor = () => {
     if (isChecking) return 'text-yellow-400';
     if (isConnected && isDatabaseConnected) return 'text-green-400';
-    if (isConnected && !isDatabaseConnected) return 'text-yellow-400';
+    if (isConnected && !isDatabaseConnected) return 'text-orange-400';
     return 'text-red-400';
-  };
-
-  const getStatusText = () => {
-    if (isChecking) return 'Checking...';
-    if (isConnected && isDatabaseConnected) return 'Connected';
-    if (isConnected && !isDatabaseConnected) return 'DB Issue';
-    return 'Offline';
   };
 
   const getStatusIcon = () => {
@@ -60,25 +51,18 @@ const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ className = '' }) =
     return <WifiOff className="w-4 h-4" />;
   };
 
+  const getTooltipText = () => {
+    if (isChecking) return 'Checking connection...';
+    if (isConnected && isDatabaseConnected) return 'Connected to server';
+    if (isConnected && !isDatabaseConnected) return 'Database connection issue';
+    return 'Server offline';
+  };
+
   return (
-    <div className={`flex items-center space-x-2 ${className}`}>
-      <div className={`flex items-center space-x-1 ${getStatusColor()}`}>
+    <div className={`flex items-center ${className}`} title={getTooltipText()}>
+      <div className={`${getStatusColor()}`}>
         {getStatusIcon()}
-        <span className="text-sm font-medium">{getStatusText()}</span>
       </div>
-      
-      {!isConnected && !isChecking && (
-        <div className="flex items-center space-x-1 text-red-400">
-          <Database className="w-4 h-4" />
-          <span className="text-xs">Backend Offline</span>
-        </div>
-      )}
-      
-      {lastCheck && (
-        <span className="text-xs text-white/60">
-          {lastCheck.toLocaleTimeString()}
-        </span>
-      )}
     </div>
   );
 };

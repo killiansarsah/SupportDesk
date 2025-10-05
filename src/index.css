@@ -7,6 +7,128 @@
   body {
     @apply font-sans antialiased;
   }
+
+  /* Light mode background - clean white/gray */
+  html:not(.dark) {
+    background: #f8f9fa;
+  }
+
+  html:not(.dark) body {
+    background: #f8f9fa;
+    color: #1e293b;
+  }
+
+  /* Light mode text colors - ensure visibility */
+  html:not(.dark) .text-white {
+    color: #1e293b !important;
+  }
+
+  html:not(.dark) .text-gray-300 {
+    color: #64748b !important;
+  }
+
+  html:not(.dark) .text-gray-400 {
+    color: #475569 !important;
+  }
+
+  html:not(.dark) .text-gray-500 {
+    color: #334155 !important;
+  }
+
+  html:not(.dark) .text-gray-600 {
+    color: #1e293b !important;
+  }
+
+  /* Light mode backgrounds - clean cards */
+  html:not(.dark) .bg-dark-950 {
+    background: #f8f9fa !important;
+  }
+
+  html:not(.dark) .bg-dark-900 {
+    background: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  html:not(.dark) .bg-dark-800 {
+    background: #f1f5f9 !important;
+  }
+
+  html:not(.dark) .bg-dark-700 {
+    background: #e2e8f0 !important;
+  }
+
+  /* Light mode borders */
+  html:not(.dark) .border-dark-800 {
+    border-color: #e2e8f0 !important;
+  }
+
+  html:not(.dark) .border-dark-700 {
+    border-color: #cbd5e1 !important;
+  }
+
+  html:not(.dark) .border-white\/20 {
+    border-color: #e2e8f0 !important;
+  }
+
+  /* Gradient backgrounds for headers - matching the screenshot */
+  html:not(.dark) .gradient-header {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #a855f7 100%);
+    color: white !important;
+  }
+
+  html:not(.dark) .gradient-header * {
+    color: white !important;
+  }
+
+  /* Backdrop blur effects in light mode */
+  html:not(.dark) .backdrop-blur-lg {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(12px);
+  }
+
+  html:not(.dark) .bg-white\/10 {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid #e2e8f0;
+  }
+
+  /* Input fields in light mode */
+  html:not(.dark) input,
+  html:not(.dark) textarea,
+  html:not(.dark) select {
+    background: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    color: #1e293b !important;
+  }
+
+  html:not(.dark) input:focus,
+  html:not(.dark) textarea:focus,
+  html:not(.dark) select:focus {
+    border-color: #4f46e5 !important;
+    ring-color: #4f46e5 !important;
+  }
+
+  html:not(.dark) input::placeholder,
+  html:not(.dark) textarea::placeholder {
+    color: #94a3b8 !important;
+  }
+
+  /* Button styles in light mode */
+  html:not(.dark) button {
+    transition: all 0.2s ease;
+  }
+
+  html:not(.dark) .hover\:bg-dark-800:hover {
+    background: #f1f5f9 !important;
+  }
+
+  html:not(.dark) .hover\:bg-dark-700:hover {
+    background: #e2e8f0 !important;
+  }
+
+  /* Card hover effects in light mode */
+  html:not(.dark) .hover\:bg-white\/15:hover {
+    background: #f8f9fa !important;
+  }
 }
 
 /* Custom animations */
@@ -504,4 +626,53 @@ html:not(.dark) input:focus,
 html:not(.dark) textarea:focus,
 html:not(.dark) select:focus {
   box-shadow: 0 0 0 3px rgba(37,99,235,0.18) !important; /* softer blue ring */
+}
+
+/* ===== BEAUTIFUL GRADIENT HEADER ANIMATIONS ===== */
+
+/* Animated Blob Movement */
+@keyframes blob {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+}
+
+/* Floating Animation */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite ease-in-out;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animation-delay-1000 {
+  animation-delay: 1s;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-3000 {
+  animation-delay: 3s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
 }
