@@ -9,6 +9,7 @@ import User from './models/User.js';
 import Ticket from './models/Ticket.js';
 import emailService from './emailService.js';
 import TicketIdGenerator from './utils/ticketIdGenerator.js';
+import { getUserAvatar } from './utils/avatarGenerator.js';
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -142,6 +143,10 @@ app.post('/api/auth/register', async (req, res) => {
       lastLogin: new Date()
     });
     
+    await user.save();
+    
+    // Generate and assign avatar after user is saved (so we have the _id)
+    user.avatar = getUserAvatar(user);
     await user.save();
     
     console.log('✅ Registration successful for:', user.name);
@@ -381,8 +386,12 @@ app.post('/api/users', verifyAdmin, async (req, res) => {
     });
 
     await user.save();
+    
+    // Generate and assign avatar
+    user.avatar = getUserAvatar(user);
+    await user.save();
 
-    res.json({ success: true, user: { id: user._id, email: user.email, name: user.name, role: user.role } });
+    res.json({ success: true, user: { id: user._id, email: user.email, name: user.name, role: user.role, avatar: user.avatar } });
   } catch (error) {
     console.error('Create user error:', error.message || error);
     res.status(500).json({ success: false, error: error.message });
@@ -888,11 +897,15 @@ app.post('/api/tickets/:id/messages', async (req, res) => {
       return res.status(404).json({ error: 'Ticket not found' });
     }
     
+    // Get sender user info for avatar
+    const senderUser = await User.findById(req.body.senderId);
+    
     const message = {
       id: new mongoose.Types.ObjectId().toString(),
       ticketId: req.params.id,
       userId: req.body.senderId,
       userName: req.body.senderName,
+      userAvatar: senderUser?.avatar || null,
       content: req.body.content,
       timestamp: new Date().toISOString(),
       isInternal: req.body.isInternal || false
@@ -909,8 +922,7 @@ app.post('/api/tickets/:id/messages', async (req, res) => {
     // Send email notifications (non-blocking, only if not internal message)
     if (!message.isInternal) {
       try {
-        // Get sender user info
-        const senderUser = await User.findById(message.userId);
+        // Use already fetched sender user info
         
         // Determine recipient based on sender role
         let recipientUser = null;

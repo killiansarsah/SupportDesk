@@ -212,13 +212,21 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                   <div key={message.id} className="flex gap-4">
                     {/* Avatar */}
                     <div className="flex-shrink-0">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${
-                        isAgent 
-                          ? 'bg-gradient-to-br from-orange-400 to-orange-500' 
-                          : 'bg-gradient-to-br from-blue-400 to-blue-500'
-                      }`}>
-                        {message.userName.charAt(0).toUpperCase()}
-                      </div>
+                      {message.userAvatar ? (
+                        <img 
+                          src={message.userAvatar} 
+                          alt={message.userName}
+                          className="w-10 h-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
+                        />
+                      ) : (
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${
+                          isAgent 
+                            ? 'bg-gradient-to-br from-orange-400 to-orange-500' 
+                            : 'bg-gradient-to-br from-blue-400 to-blue-500'
+                        }`}>
+                          {message.userName.charAt(0).toUpperCase()}
+                        </div>
+                      )}
                     </div>
 
                     {/* Message Content */}

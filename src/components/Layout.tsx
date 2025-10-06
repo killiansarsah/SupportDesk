@@ -83,11 +83,22 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, onNavigate, c
     return roleMap[role as keyof typeof roleMap] || 'User';
   };
 
-  const renderUserAvatar = () => (
-    <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center">
-      <User className="w-4 h-4 text-white" />
-    </div>
-  );
+  const renderUserAvatar = () => {
+    if (user.avatar) {
+      return (
+        <img 
+          src={user.avatar} 
+          alt={user.name}
+          className="w-8 h-8 rounded-full object-cover border-2 border-white/20"
+        />
+      );
+    }
+    return (
+      <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center">
+        <User className="w-4 h-4 text-white" />
+      </div>
+    );
+  };
 
   const renderUserInfo = () => (
     <div className="text-left">

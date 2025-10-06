@@ -15,6 +15,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import User from '../models/User.js';
 import GOOGLE_CONFIG from '../config/google-oauth.js';
+import { getUserAvatar } from '../utils/avatarGenerator.js';
 
 /**
  * Google OAuth Service Class
@@ -156,7 +157,8 @@ class GoogleOAuthHandler {
         // Existing user - update Google information and last login
         console.log('👤 Existing user found, updating information...');
         
-        user.avatar = googleUserData.picture; // Update profile picture
+        // Use Google picture if available, otherwise generate a custom avatar
+        user.avatar = googleUserData.picture || getUserAvatar(user);
         user.lastLogin = new Date().toISOString();
         
         // Add Google ID if not already linked
@@ -176,7 +178,6 @@ class GoogleOAuthHandler {
           name: googleUserData.name || googleUserData.givenName || googleUserData.email.split('@')[0] || 'Google User',
           phone: '', // Google basic scope doesn't include phone
           role: 'customer', // Default role for Google sign-ups
-          avatar: googleUserData.picture,
           googleId: googleUserData.googleId,
           createdAt: new Date().toISOString(),
           lastLogin: new Date().toISOString(),
@@ -185,6 +186,11 @@ class GoogleOAuthHandler {
           authProvider: 'google' // Track authentication method
         });
 
+        await user.save();
+        
+        // Generate avatar after saving (so we have the user _id)
+        // Use Google picture if available, otherwise generate custom avatar
+        user.avatar = googleUserData.picture || getUserAvatar(user);
         await user.save();
       }
 

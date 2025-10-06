@@ -31,6 +31,7 @@ const ticketSchema = new mongoose.Schema({
     id: String,
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     userName: String,
+    userAvatar: String,
     content: String,
     timestamp: Date,
     isInternal: { type: Boolean, default: false },

@@ -34,6 +34,7 @@ export interface Message {
   ticketId: string;
   userId: string;
   userName: string;
+  userAvatar?: string;
   content: string;
   timestamp: string;
   isInternal: boolean;
