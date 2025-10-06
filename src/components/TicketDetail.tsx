@@ -334,6 +334,34 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
 
         {/* Right Column - Ticket Details */}
         <div className="space-y-6">
+          {/* Actions Card - Email Customer (Top Priority) */}
+          {(user.role === 'support-agent' || user.role === 'administrator') && (
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border-2 border-green-200 dark:border-green-800 overflow-hidden shadow-lg">
+              <div className="p-6 border-b border-green-200 dark:border-green-800 bg-white/50 dark:bg-dark-900/50">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Send className="w-5 h-5 text-green-600 dark:text-green-400" />
+                  Quick Actions
+                </h2>
+              </div>
+              
+              <div className="p-6">
+                {/* Email Customer Button with Animation */}
+                <button
+                  onClick={() => setShowEmailModal(true)}
+                  className="relative w-full px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-lg transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 overflow-hidden group"
+                  title="Send email notification to customer"
+                >
+                  {/* Animated background shine effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
+                  
+                  {/* Button content */}
+                  <Send className="w-5 h-5 relative z-10 animate-pulse" />
+                  <span className="relative z-10">Send Email to Customer</span>
+                </button>
+              </div>
+            </div>
+          )}
+          
           {/* Ticket Details Card */}
           <div className="bg-white dark:bg-dark-900 rounded-xl border border-gray-200 dark:border-dark-800 overflow-hidden">
             <div className="p-6 border-b border-gray-200 dark:border-dark-800">
@@ -461,61 +489,6 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
             </div>
           </div>
 
-          {/* Actions Card */}
-          {canChangeStatus && (
-            <div className="bg-white dark:bg-dark-900 rounded-xl border border-gray-200 dark:border-dark-800 overflow-hidden">
-              <div className="p-6 border-b border-gray-200 dark:border-dark-800">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Actions</h2>
-              </div>
-              
-              <div className="p-6 space-y-3">
-                {canChangeStatus && (
-                  <CustomSelect
-                    value={ticketStatus}
-                    onChange={handleStatusChange}
-                    disabled={isUpdatingStatus}
-                    options={[
-                      { value: 'open', label: 'Change Status' },
-                      { value: 'in-progress', label: 'In Progress' },
-                      { value: 'resolved', label: 'Resolved' },
-                      { value: 'closed', label: 'Closed' }
-                    ]}
-                    className="w-full bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-lg focus:ring-2 focus:ring-primary-500"
-                  />
-                )}
-                
-                {canAssignTickets && (
-                  <CustomSelect
-                    value={assignedTo}
-                    onChange={handleAssignmentChange}
-                    disabled={isUpdatingAssignment}
-                    placeholder="Change Assignee"
-                    options={[
-                      { value: '', label: 'Change Assignee' },
-                      ...availableAgents.map((agent) => {
-                        return {
-                          value: agent.id,
-                          label: agent.name
-                        };
-                      })
-                    ]}
-                    className="w-full bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-lg focus:ring-2 focus:ring-primary-500"
-                  />
-                )}
-                
-                {(ticketStatus === 'resolved' || ticketStatus === 'closed') && (
-                  <button
-                    onClick={() => setShowEmailModal(true)}
-                    className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Send className="w-4 h-4" />
-                    Email Customer
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-
           {/* Attachments */}
           {ticket.attachments && ticket.attachments.length > 0 && (
             <div className="bg-white dark:bg-dark-900 rounded-xl border border-gray-200 dark:border-dark-800 overflow-hidden">
@@ -540,12 +513,15 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
         </div>
       </div>
 
-      {/* Email Resolution Modal */}
+      {/* Email Customer Modal */}
       {showEmailModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-gradient-to-br from-gray-900/95 to-gray-800/95 backdrop-blur-lg border border-white/20 rounded-xl p-6 w-full max-w-lg">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">Send Resolution Email</h3>
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <Send className="w-5 h-5" />
+                Send Email to Customer
+              </h3>
               <button
                 onClick={() => setShowEmailModal(false)}
                 className="text-gray-400 hover:text-white transition-colors"
