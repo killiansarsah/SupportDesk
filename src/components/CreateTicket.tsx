@@ -68,6 +68,10 @@ const CreateTicket: React.FC<CreateTicketProps> = ({ user, onBack, onTicketCreat
         category,
         priority,
         customerId: user.id,
+        status: 'open' as const,
+        attachments: [],
+        internalNotes: [],
+        language: 'en',
       };
       
       const newTicket = await ticketService.createTicket(ticketData);
@@ -140,7 +144,7 @@ const CreateTicket: React.FC<CreateTicketProps> = ({ user, onBack, onTicketCreat
               </label>
               <select
                 value={priority}
-                onChange={(e) => setPriority(e.target.value as any)}
+                onChange={(e) => setPriority(e.target.value as 'low' | 'medium' | 'high' | 'urgent')}
                 className="w-full px-3 sm:px-4 py-2.5 sm:py-3 backdrop-blur-lg bg-white/10 dark:bg-dark-900 border border-white/20 dark:border-dark-800 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
               >
                 <option value="low" className="bg-gray-800 text-white">Low</option>

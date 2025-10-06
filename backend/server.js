@@ -727,9 +727,16 @@ app.get('/api/tickets/:id', async (req, res) => {
 // Manually send resolution email
 app.post('/api/tickets/:id/send-resolution-email', async (req, res) => {
   try {
-    const ticket = await Ticket.findById(req.params.id)
-      .populate('customerId', 'name email')
-      .populate('assignedTo', 'name email');
+    let ticket;
+    if (req.params.id.startsWith('TKT-') || req.params.id.startsWith('T-')) {
+      ticket = await Ticket.findOne({ ticketNumber: req.params.id })
+        .populate('customerId', 'name email')
+        .populate('assignedTo', 'name email');
+    } else {
+      ticket = await Ticket.findById(req.params.id)
+        .populate('customerId', 'name email')
+        .populate('assignedTo', 'name email');
+    }
     
     if (!ticket) {
       return res.status(404).json({ error: 'Ticket not found' });
@@ -876,7 +883,7 @@ app.get('/api/performance/agents', async (req, res) => {
 // Message Routes
 app.post('/api/tickets/:id/messages', async (req, res) => {
   try {
-    const ticket = await Ticket.findById(req.params.id);
+    const ticket = await Ticket.findOne({ ticketNumber: req.params.id });
     if (!ticket) {
       return res.status(404).json({ error: 'Ticket not found' });
     }

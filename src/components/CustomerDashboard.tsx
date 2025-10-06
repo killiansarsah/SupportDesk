@@ -50,7 +50,6 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ user, tickets, on
   const openTickets = tickets.filter(ticket => ticket.status === 'open');
   const inProgressTickets = tickets.filter(ticket => ticket.status === 'in-progress');
   const resolvedTickets = tickets.filter(ticket => ticket.status === 'resolved');
-  const closedTickets = tickets.filter(ticket => ticket.status === 'closed');
 
   const StatCard: React.FC<{
     title: string;

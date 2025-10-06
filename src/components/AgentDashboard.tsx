@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, AlertCircle, CheckCircle, MessageSquare, Filter, Search, Plus, FileText, Clipboard } from 'lucide-react';
+import { Clock, AlertCircle, CheckCircle, MessageSquare, Search, Clipboard } from 'lucide-react';
 import { User, Ticket, TicketFilters } from '../types';
 import TicketList from './TicketList';
 import TicketDetail from './TicketDetail';
@@ -52,18 +52,14 @@ const AgentDashboard: React.FC<AgentDashboardProps> = ({ user, tickets, onTicket
   // Handle both MongoDB ObjectId and old string ID system
   const myTickets = tickets.filter(ticket => {
     const assignedId = ticket.assignedTo;
-    const userId = user._id || user.id;
+    const userId = user.id;
     
     // Check multiple ID formats
     return assignedId === userId || 
-           assignedId === user.id || 
-           assignedId === user._id ||
-           (typeof assignedId === 'object' && assignedId && assignedId._id === userId) ||
-           (typeof assignedId === 'object' && assignedId && assignedId.toString() === userId);
+           assignedId === user.id;
   });
   
   const unassignedTickets = tickets.filter(ticket => !ticket.assignedTo);
-  const openTickets = myTickets.filter(ticket => ticket.status === 'open');
   const inProgressTickets = myTickets.filter(ticket => ticket.status === 'in-progress');
   const resolvedTickets = myTickets.filter(ticket => ticket.status === 'resolved');
 
@@ -301,7 +297,7 @@ const AgentDashboard: React.FC<AgentDashboardProps> = ({ user, tickets, onTicket
                   onSelectTicket={setSelectedTicket}
                   filters={filters}
                   showAssignOption={true}
-                  currentUserId={user._id || user.id}
+                  currentUserId={user.id}
                   onTicketUpdate={onTicketUpdate}
                 />
               )}

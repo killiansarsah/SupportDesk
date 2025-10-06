@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, User, AlertTriangle, CheckCircle, MessageSquare } from 'lucide-react';
+import { Clock, User, AlertTriangle, MessageSquare } from 'lucide-react';
 import { Ticket, TicketFilters } from '../types';
 import TicketService from '../services/ticketService';
 
@@ -15,7 +15,6 @@ interface TicketListProps {
 const TicketList: React.FC<TicketListProps> = ({ 
   tickets, 
   onSelectTicket, 
-  filters,
   showAssignOption = false,
   currentUserId,
   onTicketUpdate

@@ -11,7 +11,7 @@ interface AdminDashboardProps {
   selectedTicketId?: string | null;
 }
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, tickets, onTicketUpdate, selectedTicketId }) => {
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ tickets }) => {
   const [stats, setStats] = useState({
     total: 0,
     open: 0,

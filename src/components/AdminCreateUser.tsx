@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import ApiService from '../services/apiService';
 
 const AdminCreateUser: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -9,8 +8,6 @@ const AdminCreateUser: React.FC = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-
-  const api = ApiService.getInstance();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,8 +30,9 @@ const AdminCreateUser: React.FC = () => {
       if (!res.ok) throw new Error(data.error || data.message || 'Failed');
       setMessage('User created successfully');
       setEmail(''); setName(''); setPhone(''); setPassword(''); setRole('customer');
-    } catch (err: any) {
-      setMessage(err.message || 'Failed to create user');
+    } catch (err) {
+      const error = err as Error;
+      setMessage(error.message || 'Failed to create user');
     } finally {
       setLoading(false);
     }
@@ -48,7 +46,7 @@ const AdminCreateUser: React.FC = () => {
         <input className="w-full px-3 py-2 bg-white/10 dark:bg-dark-800 border border-white/20 dark:border-dark-700 rounded text-gray-900 dark:text-white" placeholder="Full name" value={name} onChange={e => setName(e.target.value)} required />
         <input className="w-full px-3 py-2 bg-white/10 dark:bg-dark-800 border border-white/20 dark:border-dark-700 rounded text-gray-900 dark:text-white" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} type="email" required />
         <input className="w-full px-3 py-2 bg-white/10 dark:bg-dark-800 border border-white/20 dark:border-dark-700 rounded text-gray-900 dark:text-white" placeholder="Phone" value={phone} onChange={e => setPhone(e.target.value)} />
-        <select className="w-full px-3 py-2 bg-white/10 dark:bg-dark-800 border border-white/20 dark:border-dark-700 rounded text-gray-900 dark:text-white" value={role} onChange={e => setRole(e.target.value as any)}>
+        <select className="w-full px-3 py-2 bg-white/10 dark:bg-dark-800 border border-white/20 dark:border-dark-700 rounded text-gray-900 dark:text-white" value={role} onChange={e => setRole(e.target.value as 'administrator' | 'support-agent' | 'customer')}>
           <option value="customer">Customer</option>
           <option value="support-agent">Support Agent</option>
           <option value="administrator">Administrator</option>

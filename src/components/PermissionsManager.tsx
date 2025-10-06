@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Shield, Users, Settings, Check, X } from 'lucide-react';
+import { Shield, Users, Settings, Check } from 'lucide-react';
 import { Permission, RolePermissions } from '../types';
 import AdminCreateUser from './AdminCreateUser';
 

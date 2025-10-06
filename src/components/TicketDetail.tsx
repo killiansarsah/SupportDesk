@@ -40,7 +40,7 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
     try {
       const apiService = ApiService.getInstance();
       const users = await apiService.getUsers();
-      const agents = users.filter(u => u.role === 'support-agent' || u.role === 'administrator');
+      const agents = users.filter((u: UserType) => u.role === 'support-agent' || u.role === 'administrator');
       setAvailableAgents(agents);
     } catch (error) {
       console.error('Error loading agents:', error);
@@ -61,7 +61,7 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
       const message = await ticketService.addMessage(
         ticket.id,
         newMessage.trim(),
-        user._id || user.id,
+        user.id,
         user.name,
         false
       );
@@ -84,11 +84,11 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
       const ticketService = TicketService.getInstance();
       await ticketService.updateTicket(
         ticket.id,
-        { status: newStatus as any },
+        { status: newStatus as 'open' | 'in-progress' | 'resolved' | 'closed' },
         user.id,
         user.name
       );
-      setTicketStatus(newStatus as any);
+      setTicketStatus(newStatus as 'open' | 'in-progress' | 'resolved' | 'closed');
       onUpdate();
     } catch (error) {
       console.error('Error updating status:', error);
@@ -105,8 +105,8 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
       const ticketService = TicketService.getInstance();
       const updatedTicket = await ticketService.updateTicket(
         ticket.id,
-        { assignedTo: newAssignedTo || null },
-        user._id || user.id,
+        { assignedTo: newAssignedTo || undefined },
+        user.id,
         user.name
       );
       
@@ -118,7 +118,7 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
         // Show success toast
         const toastService = ToastService.getInstance();
         if (newAssignedTo) {
-          const agentName = availableAgents.find(a => (a._id || a.id) === newAssignedTo)?.name || 'Agent';
+          const agentName = availableAgents.find(a => a.id === newAssignedTo)?.name || 'Agent';
           toastService.success('Ticket Assigned', `Ticket assigned to ${agentName} successfully`);
         } else {
           toastService.success('Ticket Unassigned', 'Ticket has been unassigned successfully');
@@ -204,7 +204,8 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
             </div>
 
             <div className="p-6 space-y-6 max-h-[600px] overflow-y-auto">
-              {ticket.messages.map((message) => {
+              {ticket.messages && ticket.messages.length > 0 ? (
+                ticket.messages.map((message) => {
                 const isAgent = message.userName.includes('Agent') || message.userName.includes('Agent');
                 
                 return (
@@ -252,7 +253,12 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                     </div>
                   </div>
                 );
-              })}
+              })
+              ) : (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  No messages yet. Start the conversation below.
+                </div>
+              )}
               <div ref={messagesEndRef} />
             </div>
 
@@ -372,9 +378,8 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                     options={[
                       { value: '', label: 'Unassigned' },
                       ...availableAgents.map((agent) => {
-                        const agentId = (agent as UserType)._id || agent.id;
                         return {
-                          value: agentId,
+                          value: agent.id,
                           label: agent.name
                         };
                       })
@@ -390,7 +395,7 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                   Customer
                 </label>
                 <div className="text-gray-900 dark:text-white font-medium">
-                  {typeof ticket.customerId === 'object' ? (ticket.customerId as UserType).name : 'Unknown'}
+                  {typeof ticket.customerId === 'object' && ticket.customerId ? (ticket.customerId as UserType).name : 'Unknown'}
                 </div>
               </div>
 
@@ -480,9 +485,8 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                     options={[
                       { value: '', label: 'Change Assignee' },
                       ...availableAgents.map((agent) => {
-                        const agentId = (agent as UserType)._id || agent.id;
                         return {
-                          value: agentId,
+                          value: agent.id,
                           label: agent.name
                         };
                       })
@@ -548,7 +552,7 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                   Customer Email
                 </label>
                 <div className="px-3 py-2 bg-gray-800/50 border border-gray-600 rounded-lg text-gray-300">
-                  {typeof ticket.customerId === 'object' && (ticket.customerId as any)?.email || 'No email available'}
+                  {typeof ticket.customerId === 'object' && (ticket.customerId as UserType)?.email || 'No email available'}
                 </div>
               </div>
               
