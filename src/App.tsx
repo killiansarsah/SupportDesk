@@ -5,6 +5,7 @@ import Login from './components/Login';
 // import Layout from './components/Layout'; // Original gradient layout
 import Layout from './components/LayoutModern'; // New modern sidebar layout
 import Dashboard from './components/Dashboard';
+import ChatInterface from './components/ChatInterface';
 
 import KnowledgeBase from './components/KnowledgeBase';
 import TicketTemplates from './components/TicketTemplates';
@@ -28,6 +29,7 @@ function App() {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isLoginLoading, setIsLoginLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState('dashboard');
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
     // Try to restore session from localStorage
@@ -290,9 +292,15 @@ function App() {
           error={loginError}
         />
       ) : (
-        <Layout user={user} onLogout={handleLogout} onNavigate={handleNavigate} currentPage={currentPage}>
-          {renderCurrentPage()}
-        </Layout>
+        <>
+          <Layout user={user} onLogout={handleLogout} onNavigate={handleNavigate} currentPage={currentPage}>
+            {renderCurrentPage()}
+          </Layout>
+          <ChatInterface 
+            isOpen={isChatOpen} 
+            onToggle={() => setIsChatOpen(!isChatOpen)} 
+          />
+        </>
       )}
       <ToastContainer />
     </>

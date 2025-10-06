@@ -1,13 +1,3 @@
-import OpenAI from 'openai';
-
-// Initialize OpenAI client only if API key is provided
-const openai = import.meta.env.VITE_OPENAI_API_KEY 
-  ? new OpenAI({
-      apiKey: import.meta.env.VITE_OPENAI_API_KEY,
-      dangerouslyAllowBrowser: true // Note: In production, API calls should go through your backend
-    })
-  : null;
-
 export interface ChatGPTMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;
@@ -16,9 +6,10 @@ export interface ChatGPTMessage {
 export class OpenAIService {
   private static instance: OpenAIService;
   private conversationHistory: ChatGPTMessage[] = [];
+  private apiKey: string | null = null;
 
   private constructor() {
-    // Initialize with system prompt for support context
+    this.apiKey = import.meta.env.VITE_OPENAI_API_KEY || null;
     this.conversationHistory = [
       {
         role: 'system',
@@ -45,39 +36,47 @@ export class OpenAIService {
 
   public async sendMessage(message: string): Promise<string> {
     try {
-      // Check if API key is configured
-      if (!import.meta.env.VITE_OPENAI_API_KEY || !openai) {
-        return "I'm sorry, but the AI chat service is not configured yet. Please contact support for assistance.";
+      if (!this.apiKey) {
+        return "AI chat service is not configured. Please add your OpenAI API key to the environment variables.";
       }
 
-      // Add user message to conversation history
       this.conversationHistory.push({
         role: 'user',
         content: message
       });
 
-      // Get response from ChatGPT
-      const completion = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: this.conversationHistory,
-        max_tokens: 300,
-        temperature: 0.7,
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-3.5-turbo',
+          messages: this.conversationHistory,
+          max_tokens: 300,
+          temperature: 0.7,
+        })
       });
 
-      const responseMessage = completion.choices[0]?.message?.content || 
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`API Error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+      }
+
+      const data = await response.json();
+      const responseMessage = data.choices[0]?.message?.content || 
         "I'm sorry, I didn't understand that. Could you please rephrase your question?";
 
-      // Add assistant response to conversation history
       this.conversationHistory.push({
         role: 'assistant',
         content: responseMessage
       });
 
-      // Keep conversation history manageable (last 10 messages)
-      if (this.conversationHistory.length > 11) { // 1 system + 10 messages
+      if (this.conversationHistory.length > 11) {
         this.conversationHistory = [
-          this.conversationHistory[0], // Keep system message
-          ...this.conversationHistory.slice(-10) // Keep last 10 messages
+          this.conversationHistory[0],
+          ...this.conversationHistory.slice(-10)
         ];
       }
 
@@ -86,25 +85,24 @@ export class OpenAIService {
     } catch (error: unknown) {
       console.error('OpenAI API Error:', error);
       
-      // Handle specific error types
       const errorMessage = error instanceof Error ? error.message : String(error);
       
       if (errorMessage.includes('insufficient_quota') || errorMessage.includes('quota')) {
-        return "I'm sorry, the AI service has reached its usage limit. Please contact support for assistance.";
+        return "AI service has reached its usage limit. Please contact support for assistance.";
       } else if (errorMessage.includes('invalid_api_key') || errorMessage.includes('unauthorized')) {
-        return "I'm sorry, there's an issue with the AI service configuration. Please contact support.";
+        return "AI service configuration issue. Please contact support.";
       } else {
-        return "I'm sorry, I'm having trouble connecting right now. Please try again in a moment or contact support if the issue persists.";
+        return "I'm having trouble connecting right now. Please try again in a moment or contact support if the issue persists.";
       }
     }
   }
 
   public clearConversation(): void {
-    this.conversationHistory = [this.conversationHistory[0]]; // Keep only system message
+    this.conversationHistory = [this.conversationHistory[0]];
   }
 
   public getConversationLength(): number {
-    return this.conversationHistory.length - 1; // Exclude system message
+    return this.conversationHistory.length - 1;
   }
 }
 
