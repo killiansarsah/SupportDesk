@@ -330,26 +330,58 @@ const verifyAdmin = async (req, res, next) => {
     let token = authHeader;
     if (authHeader.startsWith('Bearer ')) token = authHeader.slice(7);
 
-    // Expected token format from login: mock_token_<userId>
-    if (!token || !token.startsWith('mock_token_')) {
+    if (!token) {
+      console.log('❌ verifyAdmin - No token provided');
+      return res.status(401).json({ success: false, error: 'Unauthorized - No token provided' });
+    }
+
+    let userId;
+
+    // Handle mock token format: mock_token_<userId> (from email/password login)
+    if (token.startsWith('mock_token_')) {
+      userId = token.replace('mock_token_', '');
+      console.log('✅ verifyAdmin - Using mock token, userId:', userId);
+    } 
+    // Handle JWT token format (from Google OAuth login)
+    else if (token.includes('.')) {
+      try {
+        const jwt = await import('jsonwebtoken');
+        const jwtSecret = process.env.JWT_SECRET || 'your-super-secret-jwt-key-here-change-in-production';
+        const decoded = jwt.default.verify(token, jwtSecret);
+        userId = decoded.userId;
+        console.log('✅ verifyAdmin - JWT verified, userId:', userId);
+      } catch (jwtError) {
+        console.error('❌ JWT verification error:', jwtError.message);
+        return res.status(401).json({ success: false, error: 'Invalid or expired token' });
+      }
+    } 
+    else {
+      console.log('❌ verifyAdmin - Invalid token format');
+      return res.status(401).json({ success: false, error: 'Invalid token format' });
+    }
+
+    if (!userId) {
+      console.log('❌ verifyAdmin - No userId extracted');
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
 
-    const userId = token.replace('mock_token_', '');
-    if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
-
     const user = await User.findById(userId);
-    if (!user) return res.status(401).json({ success: false, error: 'Unauthorized' });
+    if (!user) {
+      console.log('❌ verifyAdmin - User not found:', userId);
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
 
     if (user.role !== 'administrator') {
+      console.log('❌ verifyAdmin - User is not admin:', user.email, user.role);
       return res.status(403).json({ success: false, error: 'Forbidden - admin only' });
     }
 
+    console.log('✅ verifyAdmin - Admin verified:', user.email);
     // attach to request for downstream use
     req.adminUser = user;
     next();
   } catch (err) {
-    console.error('Admin verification error:', err.message || err);
+    console.error('❌ Admin verification error:', err.message || err);
     return res.status(500).json({ success: false, error: 'Server error during admin verification' });
   }
 };
