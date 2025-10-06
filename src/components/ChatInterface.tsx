@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, User, Minimize2, Maximize2 } from 'lucide-react';
+import { Send, User, Minimize2 } from 'lucide-react';
 import { openaiService, ChatGPTMessage } from '../services/openaiService';
 import ChatBotIcon from './ChatBotIcon';
 
@@ -43,7 +43,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isOpen, onToggle }) => {
     try {
       const response = await openaiService.sendMessage(userMessage);
       setMessages(prev => [...prev, { role: 'assistant', content: response }]);
-    } catch (error) {
+    } catch {
       setMessages(prev => [...prev, { 
         role: 'assistant', 
         content: 'Sorry, I encountered an error. Please try again or contact support.' 
