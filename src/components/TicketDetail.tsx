@@ -15,6 +15,7 @@ interface TicketDetailProps {
 }
 
 const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpdate }) => {
+  const [currentTicket, setCurrentTicket] = useState(ticket);
   const [newMessage, setNewMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [ticketStatus, setTicketStatus] = useState(ticket.status);
@@ -27,6 +28,11 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
   const [resolutionMessage, setResolutionMessage] = useState('');
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Update local ticket when prop changes
+  useEffect(() => {
+    setCurrentTicket(ticket);
+  }, [ticket]);
 
   useEffect(() => {
     scrollToBottom();
@@ -53,13 +59,15 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('📨 TicketDetail - handleSendMessage called');
     if (!newMessage.trim()) return;
 
     setIsSubmitting(true);
     try {
+      console.log('📨 TicketDetail - Sending message to ticket:', currentTicket.id);
       const ticketService = TicketService.getInstance();
       const message = await ticketService.addMessage(
-        ticket.id,
+        currentTicket.id,
         newMessage.trim(),
         user.id,
         user.name,
@@ -67,14 +75,20 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
       );
       
       if (message) {
+        console.log('✅ TicketDetail - Message sent successfully, updating local state');
         setNewMessage('');
-        // Force refresh of ticket data
-        onUpdate();
+        // Update local ticket state with new message instead of reloading everything
+        setCurrentTicket(prev => ({
+          ...prev,
+          messages: [...(prev.messages || []), message]
+        }));
+        console.log('✅ TicketDetail - Local state updated, NOT calling onUpdate()');
       }
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('❌ TicketDetail - Error sending message:', error);
     } finally {
       setIsSubmitting(false);
+      console.log('✅ TicketDetail - handleSendMessage finished');
     }
   };
 
@@ -83,7 +97,7 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
     try {
       const ticketService = TicketService.getInstance();
       await ticketService.updateTicket(
-        ticket.id,
+        currentTicket.id,
         { status: newStatus as 'open' | 'in-progress' | 'resolved' | 'closed' },
         user.id,
         user.name
@@ -98,13 +112,13 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
   };
 
   const handleAssignmentChange = async (newAssignedTo: string) => {
-    console.log('Assignment change requested:', { ticketId: ticket.id, newAssignedTo, currentUser: user });
+    console.log('Assignment change requested:', { ticketId: currentTicket.id, newAssignedTo, currentUser: user });
     
     setIsUpdatingAssignment(true);
     try {
       const ticketService = TicketService.getInstance();
       const updatedTicket = await ticketService.updateTicket(
-        ticket.id,
+        currentTicket.id,
         { assignedTo: newAssignedTo || undefined },
         user.id,
         user.name
@@ -143,7 +157,7 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
     try {
       const apiService = ApiService.getInstance();
       const result = await apiService.sendResolutionEmail(
-        ticket.id,
+        currentTicket.id,
         resolutionMessage || 'Your ticket has been resolved by our support team. If you need any further assistance, please don\'t hesitate to contact us.',
         user.name
       );
@@ -181,7 +195,7 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
         <span>/</span>
         <span>{ticketStatus === 'open' ? 'Open' : ticketStatus === 'closed' ? 'Closed' : 'Open'}</span>
         <span>/</span>
-        <span className="text-gray-900 dark:text-white font-medium">#{ticket.id}</span>
+        <span className="text-gray-900 dark:text-white font-medium">#{currentTicket.id}</span>
       </div>
 
       {/* Main Layout - Two Column */}
@@ -191,7 +205,7 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
           {/* Title */}
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              {ticket.title}
+              {currentTicket.title}
             </h1>
           </div>
 
@@ -203,62 +217,106 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Conversation</h2>
             </div>
 
-            <div className="p-6 space-y-6 max-h-[600px] overflow-y-auto">
-              {ticket.messages && ticket.messages.length > 0 ? (
-                ticket.messages.map((message) => {
-                const isAgent = message.userName.includes('Agent') || message.userName.includes('Agent');
+            <div className="p-4 sm:p-6 space-y-3 max-h-[600px] overflow-y-auto bg-gray-50 dark:bg-dark-950/50">
+              {currentTicket.messages && currentTicket.messages.length > 0 ? (
+                currentTicket.messages.map((message, index) => {
+                const isCurrentUser = message.userId === user.id;
+                const isAgent = message.userName.includes('Agent') || user.role === 'support-agent' || user.role === 'administrator';
+                const showAvatar = index === 0 || currentTicket.messages[index - 1]?.userId !== message.userId;
                 
                 return (
-                  <div key={message.id} className="flex gap-4">
-                    {/* Avatar */}
-                    <div className="flex-shrink-0">
-                      {message.userAvatar ? (
-                        <img 
-                          src={message.userAvatar} 
-                          alt={message.userName}
-                          className="w-10 h-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
-                        />
-                      ) : (
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${
-                          isAgent 
-                            ? 'bg-gradient-to-br from-orange-400 to-orange-500' 
-                            : 'bg-gradient-to-br from-blue-400 to-blue-500'
-                        }`}>
-                          {message.userName.charAt(0).toUpperCase()}
+                  <div key={message.id} className={`flex gap-2 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
+                    {/* Left Avatar (for received messages) */}
+                    {!isCurrentUser && (
+                      <div className="flex-shrink-0 self-end">
+                        {showAvatar ? (
+                          message.userAvatar ? (
+                            <img 
+                              src={message.userAvatar} 
+                              alt={message.userName}
+                              className="w-8 h-8 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-medium text-sm bg-gradient-to-br from-blue-500 to-blue-600">
+                              {message.userName.charAt(0).toUpperCase()}
+                            </div>
+                          )
+                        ) : (
+                          <div className="w-8 h-8"></div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Message Bubble */}
+                    <div className={`flex flex-col max-w-[75%] sm:max-w-[65%] ${isCurrentUser ? 'items-end' : 'items-start'}`}>
+                      {/* Sender name (only show if different from previous message or first message) */}
+                      {showAvatar && !isCurrentUser && (
+                        <div className="flex items-center gap-2 mb-1 px-2">
+                          <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">
+                            {message.userName}
+                          </span>
+                          {isAgent && (
+                            <span className="text-[10px] px-1.5 py-0.5 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-full font-medium">
+                              Agent
+                            </span>
+                          )}
                         </div>
                       )}
-                    </div>
-
-                    {/* Message Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-baseline gap-2 mb-1">
-                        <span className="font-semibold text-gray-900 dark:text-white">
-                          {message.userName}
-                        </span>
-                        {isAgent && (
-                          <span className="text-xs text-gray-500 dark:text-gray-400">(Agent)</span>
-                        )}
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {new Date(message.timestamp).toLocaleString('en-US', {
-                            year: 'numeric',
-                            month: '2-digit',
-                            day: '2-digit',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: true
-                          })}
-                        </span>
-                      </div>
-                      <div className={`rounded-lg p-4 ${
-                        isAgent
-                          ? 'bg-gray-50 dark:bg-dark-800/50'
-                          : 'bg-white dark:bg-dark-800'
-                      } ${!isAgent && 'border border-gray-200 dark:border-dark-700'}`}>
-                        <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                      
+                      {/* Message Content */}
+                      <div className={`rounded-2xl px-4 py-2.5 shadow-sm ${
+                        isCurrentUser
+                          ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-br-sm'
+                          : 'bg-white dark:bg-dark-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-dark-700 rounded-bl-sm'
+                      }`}>
+                        <p className="text-[15px] leading-relaxed break-words whitespace-pre-wrap">
                           {message.content}
                         </p>
+                        
+                        {/* Timestamp */}
+                        <div className={`flex items-center gap-1 mt-1 ${
+                          isCurrentUser ? 'justify-end' : 'justify-start'
+                        }`}>
+                          <span className={`text-[11px] ${
+                            isCurrentUser 
+                              ? 'text-blue-100' 
+                              : 'text-gray-500 dark:text-gray-500'
+                          }`}>
+                            {new Date(message.timestamp).toLocaleTimeString('en-US', {
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              hour12: true
+                            })}
+                          </span>
+                          {isCurrentUser && (
+                            <svg className="w-4 h-4 text-blue-100" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+                            </svg>
+                          )}
+                        </div>
                       </div>
                     </div>
+
+                    {/* Right Avatar (for sent messages) */}
+                    {isCurrentUser && (
+                      <div className="flex-shrink-0 self-end">
+                        {showAvatar ? (
+                          message.userAvatar ? (
+                            <img 
+                              src={message.userAvatar} 
+                              alt={message.userName}
+                              className="w-8 h-8 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-medium text-sm bg-gradient-to-br from-green-500 to-green-600">
+                              {message.userName.charAt(0).toUpperCase()}
+                            </div>
+                          )
+                        ) : (
+                          <div className="w-8 h-8"></div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })
@@ -299,33 +357,40 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                 </div>
               )}
               
-              <form onSubmit={handleSendMessage} className="space-y-3">
-                <textarea
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Type your reply here..."
-                  rows={4}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
-                />
-                <div className="flex justify-end">
+              <form onSubmit={handleSendMessage} className="flex items-end gap-3">
+                <div className="flex-1 relative">
+                  <textarea
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage(e);
+                      }
+                    }}
+                    placeholder="Type a message..."
+                    rows={1}
+                    className="w-full px-4 py-3 pr-12 bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-full text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none max-h-32"
+                    style={{ minHeight: '48px' }}
+                  />
                   <button
-                    type="submit"
-                    disabled={isSubmitting || !newMessage.trim()}
-                    className="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 dark:disabled:bg-dark-700 text-white font-medium rounded-lg transition-colors disabled:cursor-not-allowed flex items-center gap-2"
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                   >
-                    {isSubmitting ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                        <span>Sending...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Send className="w-4 h-4" />
-                        <span>Send Reply</span>
-                      </>
-                    )}
+                    <Paperclip className="w-5 h-5" />
                   </button>
                 </div>
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !newMessage.trim()}
+                  className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-gray-400 disabled:to-gray-400 dark:disabled:from-dark-700 dark:disabled:to-dark-700 text-white rounded-full transition-all disabled:cursor-not-allowed flex items-center justify-center shadow-lg hover:shadow-xl disabled:shadow-none"
+                >
+                  {isSubmitting ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  ) : (
+                    <Send className="w-5 h-5" />
+                  )}
+                </button>
               </form>
             </div>
           </div>
@@ -476,13 +541,13 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
               </div>
 
               {/* Related Order */}
-              {ticket.description.includes('#') && (
+              {currentTicket.description.includes('#') && (
                 <div>
                   <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
                     Related Order
                   </label>
                   <a href="#" className="text-primary-600 hover:text-primary-700 font-medium">
-                    #{ticket.description.match(/#(\d+)/)?.[1] || '5678'}
+                    #{currentTicket.description.match(/#(\d+)/)?.[1] || '5678'}
                   </a>
                 </div>
               )}
@@ -490,7 +555,7 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
           </div>
 
           {/* Attachments */}
-          {ticket.attachments && ticket.attachments.length > 0 && (
+          {currentTicket.attachments && currentTicket.attachments.length > 0 && (
             <div className="bg-white dark:bg-dark-900 rounded-xl border border-gray-200 dark:border-dark-800 overflow-hidden">
               <div className="p-6 border-b border-gray-200 dark:border-dark-800">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Attachments</h2>

@@ -38,7 +38,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   };
 
   const handleTicketUpdate = async () => {
+    console.log('🔄 Dashboard - handleTicketUpdate called, reloading tickets...');
     await loadTickets();
+    console.log('✅ Dashboard - Tickets reloaded');
   };
 
   if (isLoading) {

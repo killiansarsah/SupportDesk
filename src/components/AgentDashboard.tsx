@@ -19,7 +19,7 @@ const AgentDashboard: React.FC<AgentDashboardProps> = ({ user, tickets, onTicket
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'tickets' | 'templates'>('tickets');
 
-  // Auto-select ticket from notification and update selected ticket when tickets change
+  // Auto-select ticket from notification
   React.useEffect(() => {
     if (selectedTicketId && tickets.length > 0) {
       const ticket = tickets.find(t => t.id === selectedTicketId);
@@ -27,15 +27,32 @@ const AgentDashboard: React.FC<AgentDashboardProps> = ({ user, tickets, onTicket
         setSelectedTicket(ticket);
       }
     }
-    
-    // Update selected ticket with fresh data if it exists
-    if (selectedTicket && tickets.length > 0) {
-      const updatedTicket = tickets.find(t => t.id === selectedTicket.id);
-      if (updatedTicket) {
-        setSelectedTicket(updatedTicket);
+  }, [selectedTicketId, tickets]);
+  
+  // Update selected ticket with fresh data when tickets array changes
+  React.useEffect(() => {
+    setSelectedTicket(current => {
+      if (current && tickets.length > 0) {
+        const updatedTicket = tickets.find(t => t.id === current.id);
+        console.log('🔄 AgentDashboard - Updating selected ticket:', {
+          selectedTicketId: current.id,
+          foundUpdatedTicket: !!updatedTicket,
+          ticketsCount: tickets.length
+        });
+        if (updatedTicket) {
+          // Always update to get the latest ticket data (messages, status, etc.)
+          console.log('✅ AgentDashboard - Setting updated ticket');
+          return updatedTicket;
+        } else {
+          console.log('❌ AgentDashboard - Updated ticket not found! Keeping current selection');
+          return current;
+        }
+      } else if (current) {
+        console.log('⚠️ AgentDashboard - No tickets available but selectedTicket exists');
       }
-    }
-  }, [selectedTicketId, tickets, selectedTicket?.id]);
+      return current;
+    });
+  }, [tickets]);
 
   // Listen for ticket open events
   useEffect(() => {

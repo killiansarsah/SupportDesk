@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { User as UserType } from '../types';
 import LiveChat from './LiveChat';
-import NotificationSystem from './NotificationSystem';
+import NotificationBell from './NotificationBell';
 import ConnectionStatus from './ConnectionStatus';
 import AppState from '../services/appState';
 import ApiService from '../services/apiService';
@@ -349,7 +349,7 @@ const LayoutModern: React.FC<LayoutModernProps> = ({
                   {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                 </button>
 
-                <NotificationSystem 
+                <NotificationBell 
                   user={user} 
                   onNavigateToTicket={(ticketId) => {
                     onNavigate?.('dashboard');

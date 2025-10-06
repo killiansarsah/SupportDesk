@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { User, LogOut, Settings, BookOpen, FileText, MessageSquare, Home, Star, BarChart3, Mail, Menu, X } from 'lucide-react';
 import { User as UserType } from '../types';
 import LiveChat from './LiveChat';
-import NotificationSystem from './NotificationSystem';
+import NotificationBell from './NotificationBell';
 import ConnectionStatus from './ConnectionStatus';
 import AppState from '../services/appState';
 
@@ -432,7 +432,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, onNavigate, c
               
 
 
-              <NotificationSystem 
+              <NotificationBell 
                 user={user} 
                 onNavigateToTicket={(ticketId) => {
                   onNavigate?.('dashboard');
@@ -487,7 +487,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, onNavigate, c
 
             {/* Mobile Right Side - Just Notifications */}
             <div className="flex lg:hidden items-center gap-2">
-              <NotificationSystem 
+              <NotificationBell 
                 user={user} 
                 onNavigateToTicket={(ticketId) => {
                   onNavigate?.('dashboard');
