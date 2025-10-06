@@ -1,11 +1,11 @@
 import React from 'react';
 
-interface ChatbotIconProps {
+interface ChatBotIconProps {
   className?: string;
   size?: number;
 }
 
-const ChatbotIcon: React.FC<ChatbotIconProps> = ({ className = "", size = 24 }) => {
+const ChatBotIcon: React.FC<ChatBotIconProps> = ({ className = "", size = 24 }) => {
   return (
     <div className="relative">
       {/* Spinning Circle Background */}
@@ -78,4 +78,4 @@ const ChatbotIcon: React.FC<ChatbotIconProps> = ({ className = "", size = 24 }) 
   );
 };
 
-export default ChatbotIcon;
+export default ChatBotIcon;
