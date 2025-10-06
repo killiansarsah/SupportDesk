@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, User, Minimize2, Maximize2 } from 'lucide-react';
 import { openaiService, ChatGPTMessage } from '../services/openaiService';
-import ChatbotIcon from './ChatbotIcon';
+import ChatBotIcon from './ChatBotIcon';
 
 interface ChatInterfaceProps {
   isOpen: boolean;
@@ -66,7 +66,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isOpen, onToggle }) => {
         onClick={onToggle}
         className="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 flex items-center justify-center z-50 hover:scale-110 border-2 border-white/20 backdrop-blur-sm"
       >
-        <ChatbotIcon size={28} className="text-white drop-shadow-lg" />
+        <ChatBotIcon size={28} className="text-white drop-shadow-lg" />
       </button>
     );
   }
@@ -77,7 +77,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isOpen, onToggle }) => {
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30">
-            <ChatbotIcon size={20} className="text-white drop-shadow-lg" />
+            <ChatBotIcon size={20} className="text-white drop-shadow-lg" />
           </div>
           <div>
             <h3 className="text-white font-semibold">AI Support</h3>
@@ -101,7 +101,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isOpen, onToggle }) => {
           >
             {message.role === 'assistant' && (
               <div className="w-8 h-8 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0 border border-white/20 shadow-lg">
-                <ChatbotIcon size={16} className="text-white drop-shadow-sm" />
+                <ChatBotIcon size={16} className="text-white drop-shadow-sm" />
               </div>
             )}
             <div
@@ -123,7 +123,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ isOpen, onToggle }) => {
         {isLoading && (
           <div className="flex gap-3 justify-start">
             <div className="w-8 h-8 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0 border border-white/20 shadow-lg">
-              <ChatbotIcon size={16} className="text-white drop-shadow-sm" />
+              <ChatBotIcon size={16} className="text-white drop-shadow-sm" />
             </div>
             <div className="bg-gray-100 p-3 rounded-2xl">
               <div className="flex space-x-1">
