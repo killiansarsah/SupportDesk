@@ -1010,6 +1010,33 @@ app.post('/api/tickets/:id/messages', async (req, res) => {
   }
 });
 
+// Test email endpoint
+app.get('/api/email/test', async (req, res) => {
+  try {
+    console.log('🧪 Testing email configuration...');
+
+    const result = await emailService.sendEmail(
+      'killian@gmail.com', // Your email
+      'SupportDesk Email Test',
+      '<h2>✅ Email Test Successful!</h2><p>Your email configuration is working correctly.</p>',
+      'Email Test Successful! Your email configuration is working correctly.'
+    );
+
+    res.json({ 
+      success: true, 
+      message: 'Test email sent successfully',
+      result: result
+    });
+  } catch (error) {
+    console.error('❌ Email test failed:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      message: 'Email configuration needs to be set up'
+    });
+  }
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   const dbStatus = mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected';
@@ -1038,32 +1065,6 @@ app.use((err, req, res, next) => {
 // 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found', path: req.originalUrl });
-});
-// Test email endpoint
-app.get('/api/email/test', async (req, res) => {
-  try {
-    console.log('🧪 Testing email configuration...');
-    
-    const result = await emailService.sendEmail(
-      'killian@gmail.com', // Your email
-      'SupportDesk Email Test',
-      '<h2>✅ Email Test Successful!</h2><p>Your email configuration is working correctly.</p>',
-      'Email Test Successful! Your email configuration is working correctly.'
-    );
-    
-    res.json({ 
-      success: true, 
-      message: 'Test email sent successfully',
-      result: result
-    });
-  } catch (error) {
-    console.error('❌ Email test failed:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error.message,
-      message: 'Email configuration needs to be set up'
-    });
-  }
 });
 
 // Start server
