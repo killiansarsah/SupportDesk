@@ -4,59 +4,105 @@ class EmailService {
   constructor() {
     this.transporter = null;
     this.initialized = false;
+    this.demoMode = false;
+    this.allowDemo = process.env.EMAIL_ALLOW_DEMO === 'true' || process.env.NODE_ENV !== 'production';
+    this.smtpConfig = null;
+    this.fromEmail = process.env.EMAIL_FROM || process.env.EMAIL_USER || null;
+    this.fromName = process.env.EMAIL_FROM_NAME || process.env.COMPANY_NAME || 'Support Desk';
   }
 
-  initTransporter() {
+  async initTransporter() {
     if (this.initialized) return;
     this.initialized = true;
 
-    // Check if SendGrid API key is configured
-    const sendgridApiKey = process.env.SENDGRID_API_KEY || process.env.SMTP_PASS;
-    
-    if (!sendgridApiKey || !sendgridApiKey.startsWith('SG.')) {
-      console.warn('⚠️  SendGrid API key not configured properly');
-      console.warn('⚠️  Email notifications will be disabled');
-      this.transporter = null;
+    const provider = (process.env.EMAIL_SERVICE || '').toLowerCase();
+    const sendgridApiKey = (process.env.SENDGRID_API_KEY || process.env.SMTP_PASS || '').trim();
+    const requiresSendgrid = provider === 'sendgrid' || (process.env.SMTP_HOST || '').includes('sendgrid');
+
+    if (!this.fromEmail) {
+      console.warn('⚠️  EMAIL_FROM (or EMAIL_USER) is not set. Emails will fail to send.');
+    }
+
+    if (!sendgridApiKey) {
+      this.demoMode = this.allowDemo;
+      console.warn('⚠️  SENDGRID_API_KEY / SMTP_PASS not provided. Email service is disabled.');
+      if (!this.allowDemo) {
+        throw new Error('Email service not configured – set SENDGRID_API_KEY in your environment variables.');
+      }
       return;
     }
 
-    // SendGrid SMTP configuration
+    if (requiresSendgrid && !sendgridApiKey.startsWith('SG.')) {
+      console.warn('⚠️  SendGrid API keys typically start with "SG." – double-check your credentials.');
+    }
+
     const smtpConfig = {
       host: process.env.SMTP_HOST || 'smtp.sendgrid.net',
-      port: parseInt(process.env.SMTP_PORT) || 587,
-      secure: false, // true for 465, false for 587
+      port: parseInt(process.env.SMTP_PORT, 10) || 587,
+      secure: process.env.SMTP_SECURE === 'true' || false,
       auth: {
         user: process.env.SMTP_USER || 'apikey',
         pass: sendgridApiKey
       },
-      // Additional SendGrid configuration
       tls: {
-        rejectUnauthorized: false
+        rejectUnauthorized: process.env.SMTP_REJECT_UNAUTHORIZED !== 'false'
       }
     };
 
-    console.log('📧 Initializing email service with SendGrid SMTP...');
+    this.smtpConfig = smtpConfig;
+
+    console.log('📧 Initializing email service...');
     console.log(`📧 SMTP Host: ${smtpConfig.host}`);
     console.log(`📧 SMTP Port: ${smtpConfig.port}`);
     console.log(`📧 SMTP User: ${smtpConfig.auth.user}`);
-    console.log(`📧 FROM Email: ${process.env.EMAIL_FROM}`);
-    
-    this.transporter = nodemailer.createTransport(smtpConfig);
+    console.log(`📧 FROM Email: ${this.fromEmail || 'not set'}`);
+
+    try {
+      this.transporter = nodemailer.createTransport(smtpConfig);
+      await this.transporter.verify();
+      this.demoMode = false;
+      console.log('✅ Email transporter verified and ready.');
+    } catch (error) {
+      this.transporter = null;
+      this.demoMode = this.allowDemo;
+      console.error('❌ Failed to verify email transporter:', error.message || error);
+      if (!this.allowDemo) {
+        throw new Error('Failed to verify email transporter – emails will not be sent.');
+      }
+    }
   }
 
   async sendEmail(to, subject, htmlContent, textContent = '') {
     try {
       if (!this.initialized) {
-        this.initTransporter();
+        await this.initTransporter();
       }
 
       if (!this.transporter) {
-        console.log('Email service not configured - email would be sent to:', to);
-        return { success: true, message: 'Email service not configured (demo mode)' };
+        const message = 'Email service is not configured. No email was sent.';
+        const payload = {
+          success: false,
+          error: message,
+          demoMode: this.demoMode,
+          to,
+          subject
+        };
+
+        if (this.demoMode) {
+          console.warn('📭 Email service running in demo mode – skipping send:', { to, subject });
+        } else {
+          console.error('❌ Email transporter unavailable. Check SendGrid/SMTP configuration.');
+        }
+
+        return payload;
       }
 
-      const fromName = process.env.EMAIL_FROM_NAME || process.env.COMPANY_NAME || 'Support Desk';
-      const fromEmail = process.env.EMAIL_FROM || process.env.EMAIL_USER;
+      if (!this.fromEmail) {
+        throw new Error('EMAIL_FROM (or EMAIL_USER) must be configured to send emails.');
+      }
+
+      const fromName = this.fromName;
+      const fromEmail = this.fromEmail;
 
       const mailOptions = {
         from: `"${fromName}" <${fromEmail}>`,
@@ -457,6 +503,19 @@ class EmailService {
       console.error('❌ Error sending message notification:', error);
       return { success: false, error: error.message };
     }
+  }
+
+  getStatus() {
+    return {
+      initialized: this.initialized,
+      ready: !!this.transporter,
+      demoMode: this.demoMode,
+      allowDemo: this.allowDemo,
+      host: this.smtpConfig?.host || process.env.SMTP_HOST || 'smtp.sendgrid.net',
+      port: this.smtpConfig?.port || (process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587),
+      fromEmail: this.fromEmail,
+      provider: process.env.EMAIL_SERVICE || 'smtp'
+    };
   }
 
 }

@@ -4,6 +4,41 @@ Your support ticket system now includes comprehensive email notifications! Here'
 
 ## 🔧 Email Configuration
 
+### Production Setup with SendGrid (Railway + Vercel)
+
+1. **Create & verify your sender in SendGrid**
+   - Add a *Single Sender* or authenticate your domain inside the SendGrid dashboard.
+   - The email you verify here must match the `EMAIL_FROM` you configure below.
+
+2. **Generate an API key**
+   - Create a key with "Mail Send" permission.
+   - Copy it once; you will paste it into Railway.
+
+3. **Configure environment variables in Railway (backend)**
+   ```text
+   SENDGRID_API_KEY=SG.xxxxxxxx
+   EMAIL_SERVICE=sendgrid
+   SMTP_HOST=smtp.sendgrid.net
+   SMTP_PORT=587
+   SMTP_SECURE=false
+   SMTP_USER=apikey
+   EMAIL_FROM=support@yourdomain.com
+   EMAIL_FROM_NAME=Your Support Team
+   COMPANY_NAME=Your Company
+   FRONTEND_URL=https://your-vercel-app.vercel.app
+   EMAIL_ALLOW_DEMO=false
+   ```
+   > Tip: set these under *Variables → Add Variable* in your Railway project so redeploys pick them up automatically.
+
+4. **Point the frontend at the deployed API**
+   - In Vercel, set `VITE_API_BASE_URL=https://your-railway-service.up.railway.app`.
+   - Redeploy the frontend so it uses the live backend.
+
+5. **Redeploy & verify**
+   - Restart the Railway service after saving variables.
+   - Watch the backend logs on boot – you should see `📧 Email: Configured` along with the host and from address.
+   - Hit `https://your-railway-service.up.railway.app/api/email/test` to trigger a test message.
+
 ### Backend Setup (Required)
 
 1. **Configure Gmail App Password** (Recommended):
@@ -36,6 +71,21 @@ SMTP_PORT=587
 EMAIL_USER=support@yourdomain.com
 EMAIL_APP_PASSWORD=your-password
 ```
+
+#### Using SendGrid via SMTP:
+
+```env
+EMAIL_SERVICE=sendgrid
+SMTP_HOST=smtp.sendgrid.net
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=apikey
+SENDGRID_API_KEY=SG.xxxxxxxx
+EMAIL_FROM=support@yourdomain.com
+EMAIL_FROM_NAME=Your Support Team
+```
+
+> Verify `support@yourdomain.com` inside SendGrid before sending, otherwise emails will be dropped.
 
 #### Using Outlook/Hotmail:
 

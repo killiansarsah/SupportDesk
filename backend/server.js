@@ -1075,7 +1075,28 @@ app.listen(PORT, async () => {
   console.log(`🌐 API Base: http://localhost:${PORT}/api`);
   console.log(`🏥 Health: http://localhost:${PORT}/api/health`);
   console.log(`🔗 MongoDB: ${process.env.MONGODB_URI ? 'Configured' : 'Not configured'}`);
-  console.log(`📧 Email: ${process.env.EMAIL_USER && process.env.EMAIL_APP_PASSWORD ? 'Configured' : 'Not configured'}`);
+
+  try {
+    await emailService.initTransporter();
+  } catch (error) {
+    console.error('❌ Email service initialization error:', error.message || error);
+  }
+
+  const emailStatus = emailService.getStatus();
+  const emailMode = emailStatus.ready
+    ? 'Configured'
+    : emailStatus.demoMode
+      ? 'Demo mode (emails will not send)'
+      : 'Not configured';
+
+  console.log(`📧 Email: ${emailMode}`);
+  if (emailStatus.fromEmail) {
+    console.log(`📧 Email From: ${emailStatus.fromEmail}`);
+  }
+  console.log(`📧 Email Host: ${emailStatus.host}:${emailStatus.port}`);
+  if (!emailStatus.ready && !emailStatus.demoMode) {
+    console.log('⚠️ Configure SENDGRID_API_KEY (and verify your sender) to enable production email delivery.');
+  }
   console.log('='.repeat(50) + '\n');
   
   console.log('✅ Backend server is ready for connections!');
