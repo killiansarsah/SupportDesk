@@ -1015,8 +1015,13 @@ app.get('/api/email/test', async (req, res) => {
   try {
     console.log('🧪 Testing email configuration...');
 
+    const testRecipient = process.env.EMAIL_TEST_RECIPIENT || process.env.EMAIL_FROM || process.env.EMAIL_USER;
+    if (!testRecipient) {
+      throw new Error('Set EMAIL_TEST_RECIPIENT (or EMAIL_FROM/EMAIL_USER) so the test email has a destination.');
+    }
+
     const result = await emailService.sendEmail(
-      'killian@gmail.com', // Your email
+      testRecipient,
       'SupportDesk Email Test',
       '<h2>✅ Email Test Successful!</h2><p>Your email configuration is working correctly.</p>',
       'Email Test Successful! Your email configuration is working correctly.'
@@ -1093,6 +1098,9 @@ app.listen(PORT, async () => {
   console.log(`📧 Email: ${emailMode}`);
   if (emailStatus.fromEmail) {
     console.log(`📧 Email From: ${emailStatus.fromEmail}`);
+  }
+  if (emailStatus.provider) {
+    console.log(`📧 Email Provider: ${emailStatus.provider}`);
   }
   console.log(`📧 Email Host: ${emailStatus.host}:${emailStatus.port}`);
   if (!emailStatus.ready && !emailStatus.demoMode) {

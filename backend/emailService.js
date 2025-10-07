@@ -1,14 +1,15 @@
-import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 
 class EmailService {
   constructor() {
-    this.transporter = null;
     this.initialized = false;
     this.demoMode = false;
     this.allowDemo = process.env.EMAIL_ALLOW_DEMO === 'true' || process.env.NODE_ENV !== 'production';
-    this.smtpConfig = null;
     this.fromEmail = process.env.EMAIL_FROM || process.env.EMAIL_USER || null;
     this.fromName = process.env.EMAIL_FROM_NAME || process.env.COMPANY_NAME || 'Support Desk';
+    this.provider = 'sendgrid-web-api';
+    this.sendgridReady = false;
+    this.apiKeyConfigured = false;
   }
 
   async initTransporter() {
@@ -16,8 +17,11 @@ class EmailService {
     this.initialized = true;
 
     const provider = (process.env.EMAIL_SERVICE || '').toLowerCase();
-    const sendgridApiKey = (process.env.SENDGRID_API_KEY || process.env.SMTP_PASS || '').trim();
-    const requiresSendgrid = provider === 'sendgrid' || (process.env.SMTP_HOST || '').includes('sendgrid');
+    const sendgridApiKey = (process.env.SENDGRID_API_KEY || '').trim();
+    this.apiKeyConfigured = sendgridApiKey.length > 0;
+    if (provider && provider !== 'sendgrid') {
+      this.provider = provider;
+    }
 
     if (!this.fromEmail) {
       console.warn('⚠️  EMAIL_FROM (or EMAIL_USER) is not set. Emails will fail to send.');
@@ -25,71 +29,43 @@ class EmailService {
 
     if (!sendgridApiKey) {
       this.demoMode = this.allowDemo;
-      console.warn('⚠️  SENDGRID_API_KEY / SMTP_PASS not provided. Email service is disabled.');
+      console.warn('⚠️  SENDGRID_API_KEY not provided. Email service is disabled.');
       if (!this.allowDemo) {
         throw new Error('Email service not configured – set SENDGRID_API_KEY in your environment variables.');
       }
       return;
     }
 
-    if (requiresSendgrid && !sendgridApiKey.startsWith('SG.')) {
+    if (!sendgridApiKey.startsWith('SG.')) {
       console.warn('⚠️  SendGrid API keys typically start with "SG." – double-check your credentials.');
     }
 
-    const smtpConfig = {
-      host: process.env.SMTP_HOST || 'smtp.sendgrid.net',
-      port: parseInt(process.env.SMTP_PORT, 10) || 587,
-      secure: process.env.SMTP_SECURE === 'true' || false,
-      auth: {
-        user: process.env.SMTP_USER || 'apikey',
-        pass: sendgridApiKey
-      },
-      tls: {
-        rejectUnauthorized: process.env.SMTP_REJECT_UNAUTHORIZED !== 'false'
-      }
-    };
-
-    this.smtpConfig = smtpConfig;
-
-    console.log('📧 Initializing email service...');
-    console.log(`📧 SMTP Host: ${smtpConfig.host}`);
-    console.log(`📧 SMTP Port: ${smtpConfig.port}`);
-    console.log(`📧 SMTP User: ${smtpConfig.auth.user}`);
+    console.log('📧 Initializing email service using the SendGrid Web API...');
+    console.log('📧 API Endpoint: https://api.sendgrid.com/v3');
     console.log(`📧 FROM Email: ${this.fromEmail || 'not set'}`);
 
     try {
-      this.transporter = nodemailer.createTransport(smtpConfig);
-      await this.transporter.verify();
-      this.demoMode = false;
-      console.log('✅ Email transporter verified and ready.');
-    } catch (error) {
-      console.error('❌ Failed to verify email transporter:', error.message || error);
+      sgMail.setApiKey(sendgridApiKey);
+      const [response] = await sgMail.client.request({
+        method: 'GET',
+        url: '/v3/user/account'
+      });
 
-      if (!smtpConfig.secure) {
-        const fallbackPort = parseInt(process.env.SMTP_FALLBACK_PORT, 10) || 465;
-        const fallbackConfig = {
-          ...smtpConfig,
-          port: fallbackPort,
-          secure: true
-        };
-
-        console.log(`🔄 Retrying email transporter verification using TLS on port ${fallbackConfig.port}...`);
-        try {
-          this.transporter = nodemailer.createTransport(fallbackConfig);
-          await this.transporter.verify();
-          this.smtpConfig = fallbackConfig;
-          this.demoMode = false;
-          console.log('✅ Email transporter verified using fallback TLS configuration.');
-          return;
-        } catch (fallbackError) {
-          console.error('❌ Fallback verification failed:', fallbackError.message || fallbackError);
-        }
+      const statusCode = response?.statusCode ?? 0;
+      if (statusCode >= 200 && statusCode < 300) {
+        this.demoMode = false;
+        this.sendgridReady = true;
+        console.log('✅ SendGrid Web API authenticated and ready.');
+      } else {
+        throw new Error(`Unexpected status code from SendGrid: ${statusCode}`);
       }
-
-      this.transporter = null;
+    } catch (error) {
+      const errorMessage = error?.response?.body?.errors?.map((err) => err.message).join('; ') || error.message || error;
+      console.error('❌ Failed to initialize SendGrid Web API:', errorMessage);
+      this.sendgridReady = false;
       this.demoMode = this.allowDemo;
       if (!this.allowDemo) {
-        throw new Error('Failed to verify email transporter – emails will not be sent.');
+        throw new Error('Failed to initialize SendGrid Web API – emails will not be sent.');
       }
     }
   }
@@ -100,7 +76,7 @@ class EmailService {
         await this.initTransporter();
       }
 
-      if (!this.transporter) {
+      if (!this.sendgridReady) {
         const message = 'Email service is not configured. No email was sent.';
         const payload = {
           success: false,
@@ -113,7 +89,7 @@ class EmailService {
         if (this.demoMode) {
           console.warn('📭 Email service running in demo mode – skipping send:', { to, subject });
         } else {
-          console.error('❌ Email transporter unavailable. Check SendGrid/SMTP configuration.');
+          console.error('❌ SendGrid client unavailable. Check SENDGRID_API_KEY configuration.');
         }
 
         return payload;
@@ -126,25 +102,40 @@ class EmailService {
       const fromName = this.fromName;
       const fromEmail = this.fromEmail;
 
-      const mailOptions = {
-        from: `"${fromName}" <${fromEmail}>`,
-        to: to,
-        subject: subject,
+      const message = {
+        to,
+        from: {
+          email: fromEmail,
+          name: fromName
+        },
+        subject,
         html: htmlContent,
-        text: textContent || htmlContent.replace(/<[^>]*>/g, '') // Strip HTML for text version
+        text: textContent || htmlContent.replace(/<[^>]*>/g, '')
       };
 
       console.log(`📧 Sending email to: ${to}`);
-      console.log(`📧 From: ${mailOptions.from}`);
+      console.log(`📧 From: "${fromName}" <${fromEmail}>`);
       console.log(`📧 Subject: ${subject}`);
 
-      const result = await this.transporter.sendMail(mailOptions);
-      console.log('✅ Email sent successfully:', result.messageId);
-      return { success: true, messageId: result.messageId };
+  const [response] = await sgMail.send(message);
+  const statusCode = response?.statusCode ?? 0;
+  const headers = response?.headers || {};
+  const messageId = headers['x-message-id'] || headers['X-Message-Id'] || null;
+
+      if (statusCode >= 200 && statusCode < 300) {
+        console.log(`✅ Email accepted by SendGrid with status ${statusCode}`);
+        if (messageId) {
+          console.log(`✅ SendGrid Message ID: ${messageId}`);
+        }
+        return { success: true, messageId: messageId || `status-${statusCode}` };
+      }
+
+      throw new Error(`Unexpected SendGrid response status: ${statusCode}`);
 
     } catch (error) {
-      console.error('❌ Email sending failed:', error);
-      return { success: false, error: error.message };
+      const errorMessage = error?.response?.body?.errors?.map((err) => err.message).join('; ') || error.message || 'Unknown SendGrid error';
+      console.error('❌ Email sending failed via SendGrid:', errorMessage);
+      return { success: false, error: errorMessage };
     }
   }
 
@@ -528,15 +519,17 @@ class EmailService {
   }
 
   getStatus() {
+    const host = 'api.sendgrid.com';
     return {
       initialized: this.initialized,
-      ready: !!this.transporter,
+      ready: this.sendgridReady,
       demoMode: this.demoMode,
       allowDemo: this.allowDemo,
-      host: this.smtpConfig?.host || process.env.SMTP_HOST || 'smtp.sendgrid.net',
-      port: this.smtpConfig?.port || (process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587),
+      host,
+      port: 443,
       fromEmail: this.fromEmail,
-      provider: process.env.EMAIL_SERVICE || 'smtp'
+      provider: this.provider,
+      apiKeyConfigured: this.apiKeyConfigured
     };
   }
 

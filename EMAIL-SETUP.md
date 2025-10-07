@@ -4,7 +4,7 @@ Your support ticket system now includes comprehensive email notifications! Here'
 
 ## 🔧 Email Configuration
 
-### Production Setup with SendGrid (Railway + Vercel)
+### Production Setup with SendGrid Web API (Railway + Vercel)
 
 1. **Create & verify your sender in SendGrid**
 
@@ -13,20 +13,16 @@ Your support ticket system now includes comprehensive email notifications! Here'
 
 2. **Generate an API key**
 
-   - Create a key with "Mail Send" permission.
+   - Create a key with "Mail Send" permission (Full Access works too).
    - Copy it once; you will paste it into Railway.
 
 3. **Configure environment variables in Railway (backend)**
 
    ```text
    SENDGRID_API_KEY=SG.xxxxxxxx
-   EMAIL_SERVICE=sendgrid
-   SMTP_HOST=smtp.sendgrid.net
-   SMTP_PORT=587
-   SMTP_SECURE=false
-   SMTP_USER=apikey
    EMAIL_FROM=support@yourdomain.com
    EMAIL_FROM_NAME=Your Support Team
+   EMAIL_TEST_RECIPIENT=alerts@yourdomain.com
    COMPANY_NAME=Your Company
    FRONTEND_URL=https://your-vercel-app.vercel.app
    EMAIL_ALLOW_DEMO=false
@@ -41,66 +37,8 @@ Your support ticket system now includes comprehensive email notifications! Here'
 
 5. **Redeploy & verify**
    - Restart the Railway service after saving variables.
-   - Watch the backend logs on boot – you should see `📧 Email: Configured` along with the host and from address.
+   - Watch the backend logs on boot – you should see `📧 Email: Configured` plus the verified sender address.
    - Hit `https://your-railway-service.up.railway.app/api/email/test` to trigger a test message.
-
-### Backend Setup (Required)
-
-1. **Configure Gmail App Password** (Recommended):
-
-   - Go to [Google Account Settings](https://myaccount.google.com/)
-   - Navigate to Security → 2-Step Verification
-   - Generate an "App Password" for Mail
-   - Copy the 16-character app password
-
-2. **Update Backend Environment Variables**:
-   Edit `backend/.env` and configure:
-   ```env
-   # Email Configuration
-   EMAIL_USER=your-email@gmail.com
-   EMAIL_APP_PASSWORD=your-16-char-app-password
-   EMAIL_SERVICE=gmail
-   COMPANY_NAME=Your Support Desk
-   SUPPORT_PHONE=(555) 123-4567
-   FRONTEND_URL=http://localhost:5174
-   ```
-
-### Alternative Email Providers
-
-#### Using Custom SMTP Server:
-
-```env
-EMAIL_SERVICE=smtp
-SMTP_HOST=smtp.yourdomain.com
-SMTP_PORT=587
-EMAIL_USER=support@yourdomain.com
-EMAIL_APP_PASSWORD=your-password
-```
-
-#### Using SendGrid via SMTP:
-
-```env
-EMAIL_SERVICE=sendgrid
-SMTP_HOST=smtp.sendgrid.net
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=apikey
-SENDGRID_API_KEY=SG.xxxxxxxx
-EMAIL_FROM=support@yourdomain.com
-EMAIL_FROM_NAME=Your Support Team
-```
-
-> Verify `support@yourdomain.com` inside SendGrid before sending, otherwise emails will be dropped.
-
-#### Using Outlook/Hotmail:
-
-```env
-EMAIL_SERVICE=smtp
-SMTP_HOST=smtp-mail.outlook.com
-SMTP_PORT=587
-EMAIL_USER=your-email@outlook.com
-EMAIL_APP_PASSWORD=your-password
-```
 
 ## 📧 Email Features
 
@@ -183,8 +121,8 @@ Edit the HTML/CSS in `backend/emailService.js` functions to match your brand col
 
 ### Email Security:
 
-- **Never use main Gmail password** - Always use App Passwords
-- **Protect .env files** - Never commit email credentials to git
+- **Protect your SendGrid API key** – keep it secret and rotate it regularly
+- **Lock down .env files** – never commit credentials to git
 - **Use environment variables** for all sensitive data
 
 ### Production Recommendations:
@@ -220,18 +158,18 @@ Edit the HTML/CSS in `backend/emailService.js` functions to match your brand col
 
 **"Email service not configured"**
 
-- Check `EMAIL_USER` and `EMAIL_APP_PASSWORD` in backend/.env
-- Restart backend server after env changes
+- Confirm `SENDGRID_API_KEY` and `EMAIL_FROM` are set in Railway or your `.env`
+- Restart the backend server after env changes
 
 **"Authentication failed"**
 
-- Use App Password, not regular Gmail password
-- Enable 2-Factor Authentication on Google Account first
+- Regenerate the SendGrid API key (Mail Send permission) and update the variable
+- Make sure the Single Sender or domain is verified in SendGrid
 
-**"Connection timeout"**
+**"Request blocked or 403"**
 
-- Check firewall settings
-- Verify SMTP settings for your provider
+- Ensure the API key has access to the Mail Send scope
+- Check SendGrid account suspension or IP restrictions
 
 **"Emails not arriving"**
 

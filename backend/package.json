@@ -10,7 +10,6 @@
     "remove-demo-users": "node remove-demo-users.js"
   },
   "dependencies": {
-    "@types/nodemailer": "^7.0.2",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
@@ -18,7 +17,7 @@
     "google-auth-library": "^10.3.1",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.0.0",
-    "nodemailer": "^7.0.6",
+    "@sendgrid/mail": "^8.1.0",
     "openai": "^6.0.0",
     "resend": "^6.1.2"
   }
