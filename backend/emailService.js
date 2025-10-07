@@ -63,9 +63,31 @@ class EmailService {
       this.demoMode = false;
       console.log('✅ Email transporter verified and ready.');
     } catch (error) {
+      console.error('❌ Failed to verify email transporter:', error.message || error);
+
+      if (!smtpConfig.secure) {
+        const fallbackPort = parseInt(process.env.SMTP_FALLBACK_PORT, 10) || 465;
+        const fallbackConfig = {
+          ...smtpConfig,
+          port: fallbackPort,
+          secure: true
+        };
+
+        console.log(`🔄 Retrying email transporter verification using TLS on port ${fallbackConfig.port}...`);
+        try {
+          this.transporter = nodemailer.createTransport(fallbackConfig);
+          await this.transporter.verify();
+          this.smtpConfig = fallbackConfig;
+          this.demoMode = false;
+          console.log('✅ Email transporter verified using fallback TLS configuration.');
+          return;
+        } catch (fallbackError) {
+          console.error('❌ Fallback verification failed:', fallbackError.message || fallbackError);
+        }
+      }
+
       this.transporter = null;
       this.demoMode = this.allowDemo;
-      console.error('❌ Failed to verify email transporter:', error.message || error);
       if (!this.allowDemo) {
         throw new Error('Failed to verify email transporter – emails will not be sent.');
       }

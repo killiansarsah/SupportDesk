@@ -7,14 +7,17 @@ Your support ticket system now includes comprehensive email notifications! Here'
 ### Production Setup with SendGrid (Railway + Vercel)
 
 1. **Create & verify your sender in SendGrid**
-   - Add a *Single Sender* or authenticate your domain inside the SendGrid dashboard.
+
+   - Add a _Single Sender_ or authenticate your domain inside the SendGrid dashboard.
    - The email you verify here must match the `EMAIL_FROM` you configure below.
 
 2. **Generate an API key**
+
    - Create a key with "Mail Send" permission.
    - Copy it once; you will paste it into Railway.
 
 3. **Configure environment variables in Railway (backend)**
+
    ```text
    SENDGRID_API_KEY=SG.xxxxxxxx
    EMAIL_SERVICE=sendgrid
@@ -28,9 +31,11 @@ Your support ticket system now includes comprehensive email notifications! Here'
    FRONTEND_URL=https://your-vercel-app.vercel.app
    EMAIL_ALLOW_DEMO=false
    ```
-   > Tip: set these under *Variables → Add Variable* in your Railway project so redeploys pick them up automatically.
+
+   > Tip: set these under _Variables → Add Variable_ in your Railway project so redeploys pick them up automatically.
 
 4. **Point the frontend at the deployed API**
+
    - In Vercel, set `VITE_API_BASE_URL=https://your-railway-service.up.railway.app`.
    - Redeploy the frontend so it uses the live backend.
 
