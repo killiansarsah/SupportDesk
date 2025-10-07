@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Search, BookOpen, ThumbsUp, ThumbsDown, Eye } from 'lucide-react';
 import { Article } from '../types';
+import CustomSelect from './CustomSelect';
 
 const MOCK_ARTICLES: Article[] = [
   {
@@ -68,6 +69,7 @@ const KnowledgeBase = () => {
   const [articles, setArticles] = useState<Article[]>(MOCK_ARTICLES);
 
   const categories = ['All', ...Array.from(new Set(articles.map(a => a.category)))];
+  const categoryOptions = categories.map(category => ({ value: category, label: category }));
   
   const filteredArticles = articles.filter(article => {
     const matchesSearch = article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -172,17 +174,14 @@ const KnowledgeBase = () => {
           />
         </div>
         
-        <select
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          {categories.map(category => (
-            <option key={category} value={category} className="bg-gray-800">
-              {category}
-            </option>
-          ))}
-        </select>
+        <div className="w-full md:w-60">
+          <CustomSelect
+            value={selectedCategory}
+            onChange={setSelectedCategory}
+            options={categoryOptions}
+            placeholder="Filter category"
+          />
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

@@ -1,5 +1,12 @@
 import { useState } from 'react';
-import { Star, ThumbsUp, ThumbsDown, Send } from 'lucide-react';
+import { Star, ThumbsUp, Send } from 'lucide-react';
+
+interface Survey {
+  rating: number;
+  feedback: string;
+  timestamp: string;
+  ticketId: string;
+}
 
 export default function CustomerSatisfaction() {
   const [rating, setRating] = useState(0);
@@ -7,14 +14,14 @@ export default function CustomerSatisfaction() {
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = () => {
-    const survey = {
+  const survey: Survey = {
       rating,
       feedback,
       timestamp: new Date().toISOString(),
       ticketId: 'TICKET-001'
     };
     
-    const surveys = JSON.parse(localStorage.getItem('csat-surveys') || '[]');
+  const surveys: Survey[] = JSON.parse(localStorage.getItem('csat-surveys') || '[]');
     surveys.push(survey);
     localStorage.setItem('csat-surveys', JSON.stringify(surveys));
     
@@ -22,10 +29,10 @@ export default function CustomerSatisfaction() {
   };
 
   const getSurveyStats = () => {
-    const surveys = JSON.parse(localStorage.getItem('csat-surveys') || '[]');
+  const surveys: Survey[] = JSON.parse(localStorage.getItem('csat-surveys') || '[]');
     const total = surveys.length;
-    const avgRating = total > 0 ? (surveys.reduce((sum: number, s: any) => sum + s.rating, 0) / total).toFixed(1) : '0';
-    const satisfied = surveys.filter((s: any) => s.rating >= 4).length;
+  const avgRating = total > 0 ? (surveys.reduce((sum: number, s: Survey) => sum + s.rating, 0) / total).toFixed(1) : '0';
+  const satisfied = surveys.filter((s: Survey) => s.rating >= 4).length;
     
     return { total, avgRating, satisfied, satisfactionRate: total > 0 ? Math.round((satisfied / total) * 100) : 0 };
   };

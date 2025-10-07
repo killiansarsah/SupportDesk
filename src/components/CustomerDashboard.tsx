@@ -123,7 +123,7 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ user, tickets, on
         <div className="absolute inset-0 backdrop-blur-xl bg-white/5"></div>
 
         {/* Content */}
-        <div className="relative z-10 flex flex-col gap-4 sm:gap-6">
+        <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6">
           <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 text-center sm:text-left">
             {/* Icon with Glass Effect */}
             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/20 backdrop-blur-md rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg border border-white/30 animate-float flex-shrink-0">
@@ -144,11 +144,10 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ user, tickets, on
               </div>
             </div>
           </div>
-          
           {/* Glass Button */}
           <button
             onClick={() => setShowCreateTicket(true)}
-            className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 bg-white/25 hover:bg-white/35 backdrop-blur-md text-white rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 shadow-xl border border-white/30 hover:scale-105 hover:shadow-2xl text-sm sm:text-base"
+            className="w-full sm:w-auto px-5 sm:px-6 py-2.5 sm:py-3 bg-white/15 hover:bg-white/25 backdrop-blur-md text-white rounded-2xl font-medium transition-all duration-300 flex items-center justify-center gap-2 shadow-xl border border-white/30 hover:shadow-2xl text-sm sm:text-base"
           >
             <Plus className="w-5 h-5" />
             <span>Create Ticket</span>

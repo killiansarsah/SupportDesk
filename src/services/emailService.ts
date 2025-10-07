@@ -170,9 +170,10 @@ class EmailService {
       const subject = this.replaceVariables(template.subject, variables);
       const html = this.replaceVariables(template.html, variables);
       const text = this.replaceVariables(template.text, variables);
+      const { from, replyTo } = this.config;
 
       // Mock email service - just log to console
-      console.log('📧 Mock Email Sent:', { to, subject, html, text });
+      console.log('📧 Mock Email Sent:', { from, replyTo, to, subject, html, text });
       
       // Simulate email sending delay
       await new Promise(resolve => setTimeout(resolve, 1000));

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Copy, Plus, Edit, Trash2, MessageSquare, FileText } from 'lucide-react';
 import Toast from './Toast';
+import CustomSelect from './CustomSelect';
 
 interface Template {
   id: string;
@@ -237,7 +238,16 @@ Customer Support Team`
     return matchesType && matchesCategory && matchesSearch;
   });
 
-  const categories = ['all', ...Array.from(new Set(templates.map(t => t.category).filter(Boolean)))];
+  const categories = [
+    'all',
+    ...Array.from(
+      new Set(templates.map(t => t.category).filter((category): category is string => !!category))
+    )
+  ];
+  const categoryOptions = categories.map(category => ({
+    value: category,
+    label: category === 'all' ? 'All Categories' : category
+  }));
 
   const copyToClipboard = async (content: string, templateName: string) => {
     try {
@@ -284,17 +294,14 @@ Customer Support Team`
           onChange={(e) => setSearchTerm(e.target.value)}
           className="flex-1 bg-white/5 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-white/50 focus:outline-none focus:border-blue-400/50"
         />
-        <select
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          className="bg-white/5 border border-white/20 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-400/50"
-        >
-          {categories.map(category => (
-            <option key={category} value={category} className="bg-gray-800">
-              {category === 'all' ? 'All Categories' : category}
-            </option>
-          ))}
-        </select>
+        <div className="w-56">
+          <CustomSelect
+            value={selectedCategory}
+            onChange={setSelectedCategory}
+            options={categoryOptions}
+            placeholder="All Categories"
+          />
+        </div>
       </div>
 
       {/* Templates Grid */}

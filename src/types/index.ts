@@ -12,6 +12,7 @@ export interface User {
 
 export interface Ticket {
   id: string;
+  ticketNumber?: string;
   title: string;
   description: string;
   category: string;
@@ -179,7 +180,7 @@ export interface PWAStatus {
   isInstalled: boolean;
   isInstallable?: boolean;
   canInstall?: boolean;
-  deferredPrompt?: any;
+  deferredPrompt?: unknown;
   isOnline: boolean;
   syncPending: boolean;
 }

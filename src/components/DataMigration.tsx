@@ -14,7 +14,7 @@ export default function DataMigration() {
       const health = await apiService.healthCheck();
       setIsConnected(health.database === 'Connected');
       setConnectionStatus(health.database === 'Connected' ? 'Connected to MongoDB' : 'Database disconnected');
-    } catch (error) {
+    } catch {
       setIsConnected(false);
       setConnectionStatus('Backend server not running');
     }
@@ -27,8 +27,6 @@ export default function DataMigration() {
     try {
       // Get data from localStorage
       const tickets = JSON.parse(localStorage.getItem('tickets') || '[]');
-      const notifications = JSON.parse(localStorage.getItem('email-notifications') || '[]');
-      const screenshots = JSON.parse(localStorage.getItem('screenshots') || '[]');
 
       const apiService = ApiService.getInstance();
       
@@ -45,10 +43,11 @@ export default function DataMigration() {
       // localStorage.removeItem('email-notifications');
       // localStorage.removeItem('screenshots');
 
-    } catch (error) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
       setMigrationResult({
         success: false,
-        message: `Migration failed: ${error}`
+        message: `Migration failed: ${message}`
       });
     } finally {
       setIsMigrating(false);

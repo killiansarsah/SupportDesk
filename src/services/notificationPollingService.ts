@@ -110,7 +110,7 @@ class NotificationPollingService {
             id: `new-ticket-${ticket.id}-${Date.now()}`,
             type: 'new-ticket',
             title: '🎫 New Ticket Created',
-            message: `${ticket.title}`,
+            message: `${ticket.title || 'New support request'}`,
             ticketId: ticket.id,
             timestamp: new Date().toISOString(),
             read: false,
@@ -130,7 +130,7 @@ class NotificationPollingService {
               id: `status-${ticket.id}-${Date.now()}`,
               type: 'status-change',
               title: '📊 Ticket Status Updated',
-              message: `#${ticket.id}: ${lastState.status} → ${ticket.status}`,
+              message: `#${this.getTicketLabel(ticket)}: ${lastState.status} → ${ticket.status}`,
               ticketId: ticket.id,
               timestamp: new Date().toISOString(),
               read: false
@@ -145,7 +145,7 @@ class NotificationPollingService {
               id: `message-${ticket.id}-${Date.now()}`,
               type: 'new-message',
               title: '💬 New Message',
-              message: `${newMessageCount} new message${newMessageCount > 1 ? 's' : ''} in #${ticket.id}`,
+              message: `${newMessageCount} new message${newMessageCount > 1 ? 's' : ''} in #${this.getTicketLabel(ticket)}`,
               ticketId: ticket.id,
               timestamp: new Date().toISOString(),
               read: false
@@ -165,18 +165,44 @@ class NotificationPollingService {
     }
   }
 
+  private normalizeId(value: unknown): string | undefined {
+    if (!value) return undefined;
+    if (typeof value === 'string') return value;
+    if (typeof value === 'object') {
+      const valueWithId = value as { _id?: unknown; id?: unknown };
+      if (valueWithId._id !== undefined && valueWithId._id !== null) {
+        return valueWithId._id.toString();
+      }
+      if (valueWithId.id !== undefined && valueWithId.id !== null) {
+        return valueWithId.id.toString();
+      }
+    }
+    return undefined;
+  }
+
+  private isSameId(value: unknown, id: string): boolean {
+    const normalized = this.normalizeId(value);
+    return normalized === id;
+  }
+
+  private getTicketLabel(ticket: Ticket): string {
+    const enhancedTicket = ticket as Ticket & { ticketNumber?: string; _id?: string };
+    return enhancedTicket.ticketNumber || enhancedTicket.id;
+  }
+
   private shouldNotifyAboutTicket(ticket: Ticket, user: User): boolean {
     // Admins get notified about everything
     if (user.role === 'administrator') return true;
     
     // Agents get notified about tickets assigned to them or unassigned tickets
     if (user.role === 'support-agent') {
-      return !ticket.assignedTo || ticket.assignedTo === user.id;
+      const assignedToId = this.normalizeId(ticket.assignedTo);
+      return !assignedToId || assignedToId === user.id;
     }
     
     // Customers get notified about their own tickets
     if (user.role === 'customer') {
-      return ticket.customerId === user.id;
+      return this.isSameId(ticket.customerId, user.id);
     }
     
     return false;
@@ -189,7 +215,7 @@ class NotificationPollingService {
     const lastMessage = ticket.messages[ticket.messages.length - 1];
     
     // Don't notify about your own messages
-    if (lastMessage.userId === user.id) return false;
+    if (this.isSameId(lastMessage.userId, user.id)) return false;
     
     return this.shouldNotifyAboutTicket(ticket, user);
   }

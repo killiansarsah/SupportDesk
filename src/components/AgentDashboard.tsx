@@ -5,6 +5,23 @@ import TicketList from './TicketList';
 import TicketDetail from './TicketDetail';
 import TemplateManager from './TemplateManager';
 import AppState from '../services/appState';
+import CustomSelect from './CustomSelect';
+
+const statusOptions = [
+  { value: '', label: 'All Status' },
+  { value: 'open', label: 'Open' },
+  { value: 'in-progress', label: 'In Progress' },
+  { value: 'resolved', label: 'Resolved' },
+  { value: 'closed', label: 'Closed' }
+];
+
+const priorityOptions = [
+  { value: '', label: 'All Priority' },
+  { value: 'urgent', label: 'Urgent' },
+  { value: 'high', label: 'High' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'low', label: 'Low' }
+];
 
 interface AgentDashboardProps {
   user: User;
@@ -216,7 +233,7 @@ const AgentDashboard: React.FC<AgentDashboardProps> = ({ user, tickets, onTicket
           </div>
 
           {/* Filters and Search */}
-          <div className="relative z-50 backdrop-blur-lg bg-white/10 border border-white/20 rounded-xl p-4 sm:p-6" style={{ zIndex: 9999 }}>
+          <div className="relative z-40 backdrop-blur-lg bg-white/10 border border-white/20 rounded-xl p-4 sm:p-6 overflow-visible">
             <div className="flex flex-col gap-3 sm:gap-4">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
@@ -229,32 +246,32 @@ const AgentDashboard: React.FC<AgentDashboardProps> = ({ user, tickets, onTicket
                 />
               </div>
               
-              <div className="relative flex gap-2 sm:gap-3">
-                <select
-                  value={filters.status?.[0] || ''}
-                  onChange={(e) => setFilters({ ...filters, status: e.target.value ? [e.target.value] : undefined })}
-                  className="relative z-50 flex-1 px-3 sm:px-4 py-2.5 sm:py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
-                  style={{ zIndex: 9999 }}
-                >
-                  <option value="">All Status</option>
-                  <option value="open">Open</option>
-                  <option value="in-progress">In Progress</option>
-                  <option value="resolved">Resolved</option>
-                  <option value="closed">Closed</option>
-                </select>
-                
-                <select
-                  value={filters.priority?.[0] || ''}
-                  onChange={(e) => setFilters({ ...filters, priority: e.target.value ? [e.target.value] : undefined })}
-                  className="relative z-50 flex-1 px-3 sm:px-4 py-2.5 sm:py-3 backdrop-blur-lg bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
-                  style={{ zIndex: 9999 }}
-                >
-                  <option value="">All Priority</option>
-                  <option value="urgent">Urgent</option>
-                  <option value="high">High</option>
-                  <option value="medium">Medium</option>
-                  <option value="low">Low</option>
-                </select>
+              <div className="relative z-30 flex flex-col sm:flex-row gap-2 sm:gap-3">
+                <CustomSelect
+                  value={filters.status?.[0] ?? ''}
+                  onChange={(statusValue) =>
+                    setFilters({
+                      ...filters,
+                      status: statusValue ? [statusValue] : undefined
+                    })
+                  }
+                  options={statusOptions}
+                  placeholder="All Status"
+                  className="flex-1 z-40"
+                />
+
+                <CustomSelect
+                  value={filters.priority?.[0] ?? ''}
+                  onChange={(priorityValue) =>
+                    setFilters({
+                      ...filters,
+                      priority: priorityValue ? [priorityValue] : undefined
+                    })
+                  }
+                  options={priorityOptions}
+                  placeholder="All Priority"
+                  className="flex-1 z-30"
+                />
               </div>
             </div>
           </div>

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip, Download, FileText, X } from 'lucide-react';
+import { Send, Paperclip, Download, FileText, X, ArrowLeft } from 'lucide-react';
 import { Ticket, User as UserType } from '../types';
 import TicketService from '../services/ticketService';
 import ApiService from '../services/apiService';
@@ -184,18 +184,29 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumb Navigation */}
-      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-        <button 
-          onClick={onBack}
-          className="hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-        >
-          Tickets
-        </button>
-        <span>/</span>
-        <span>{ticketStatus === 'open' ? 'Open' : ticketStatus === 'closed' ? 'Closed' : 'Open'}</span>
-        <span>/</span>
-        <span className="text-gray-900 dark:text-white font-medium">#{currentTicket.id}</span>
+      {/* Header Navigation */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onBack}
+            className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-3 py-1.5 text-sm font-medium text-gray-700 transition-all duration-200 hover:bg-white/20 dark:bg-dark-800 dark:text-gray-200 dark:hover:bg-dark-700"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back</span>
+          </button>
+          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+            <button
+              onClick={onBack}
+              className="hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+            >
+              Tickets
+            </button>
+            <span>/</span>
+            <span>{ticketStatus === 'open' ? 'Open' : ticketStatus === 'closed' ? 'Closed' : 'Open'}</span>
+            <span>/</span>
+            <span className="text-gray-900 dark:text-white font-medium">#{currentTicket.id}</span>
+          </div>
+        </div>
       </div>
 
       {/* Main Layout - Two Column */}

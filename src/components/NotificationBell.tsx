@@ -12,6 +12,7 @@ export default function NotificationBell({ user, onNavigateToTicket }: Notificat
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; right: number } | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -55,6 +56,34 @@ export default function NotificationBell({ user, onNavigateToTicket }: Notificat
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showDropdown]);
+
+  const updateDropdownPosition = () => {
+    const buttonElement = buttonRef.current;
+    if (!buttonElement) return;
+    const rect = buttonElement.getBoundingClientRect();
+    const top = rect.bottom + 8; // 8px spacing below the button
+    const right = Math.max(window.innerWidth - rect.right, 16); // keep at least 16px from viewport edge
+    setDropdownPosition({ top, right });
+  };
+
+  useEffect(() => {
+    if (!showDropdown) return;
+    updateDropdownPosition();
+    const handleResizeOrScroll = () => updateDropdownPosition();
+    window.addEventListener('resize', handleResizeOrScroll);
+    window.addEventListener('scroll', handleResizeOrScroll, true);
+    return () => {
+      window.removeEventListener('resize', handleResizeOrScroll);
+      window.removeEventListener('scroll', handleResizeOrScroll, true);
+    };
+  }, [showDropdown]);
+
+  const handleToggleDropdown = () => {
+    if (!showDropdown) {
+      updateDropdownPosition();
+    }
+    setShowDropdown(prev => !prev);
+  };
 
   const handleNotificationClick = (notification: AppNotification) => {
     const pollingService = NotificationPollingService.getInstance();
@@ -105,11 +134,11 @@ export default function NotificationBell({ user, onNavigateToTicket }: Notificat
   };
 
   return (
-    <div className="relative z-[200]">
+  <div className="relative z-[1200]">
       {/* Notification Bell Button */}
       <button
         ref={buttonRef}
-        onClick={() => setShowDropdown(!showDropdown)}
+        onClick={handleToggleDropdown}
         className="relative p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg transition-colors"
       >
         <Bell className="w-5 h-5" />
@@ -133,7 +162,8 @@ export default function NotificationBell({ user, onNavigateToTicket }: Notificat
       {showDropdown && (
         <div
           ref={dropdownRef}
-          className="absolute right-0 mt-2 w-96 max-w-[calc(100vw-2rem)] bg-white dark:bg-dark-900 rounded-xl shadow-2xl border border-gray-200 dark:border-dark-700 z-[999] overflow-hidden"
+          className="fixed w-96 max-w-[calc(100vw-2rem)] bg-white dark:bg-dark-900 rounded-xl shadow-2xl border border-gray-200 dark:border-dark-700 z-[1300] overflow-hidden"
+          style={dropdownPosition ? { top: dropdownPosition.top, right: dropdownPosition.right } : undefined}
         >
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-dark-700 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">

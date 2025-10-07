@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { TrendingUp, Clock, CheckCircle, Users, Target, Award } from 'lucide-react';
 import { performanceService, PerformanceOverview, AgentPerformance } from '../services/performanceService';
+import CustomSelect from './CustomSelect';
 
 export default function PerformanceDashboard() {
   const [selectedAgent, setSelectedAgent] = useState('all');
@@ -29,6 +30,7 @@ export default function PerformanceDashboard() {
   };
 
   const selectedAgentData = selectedAgent === 'all' ? null : agents.find(a => a.id === selectedAgent);
+  const agentOptions = [{ value: 'all', label: 'All Agents' }, ...agents.map(agent => ({ value: agent.id, label: agent.name }))];
 
   if (loading) {
     return (
@@ -54,16 +56,14 @@ export default function PerformanceDashboard() {
     <div className="max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-white">Performance Dashboard</h1>
-        <select
-          value={selectedAgent}
-          onChange={(e) => setSelectedAgent(e.target.value)}
-          className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="all">All Agents</option>
-          {agents.map(agent => (
-            <option key={agent.id} value={agent.id}>{agent.name}</option>
-          ))}
-        </select>
+        <div className="w-64">
+          <CustomSelect
+            value={selectedAgent}
+            onChange={setSelectedAgent}
+            options={agentOptions}
+            placeholder="Select agent"
+          />
+        </div>
       </div>
 
       {/* Key Metrics */}

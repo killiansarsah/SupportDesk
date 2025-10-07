@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Plus, Edit, Trash2, Copy } from 'lucide-react';
 import { TicketTemplate } from '../types';
+import CustomSelect from './CustomSelect';
 
 const MOCK_TEMPLATES: TicketTemplate[] = [
   {
@@ -200,6 +201,16 @@ const EditTemplateForm: React.FC<EditTemplateFormProps> = ({ template, onSave, o
   const [priority, setPriority] = useState(template.priority);
   const [assignedTo, setAssignedTo] = useState(template.assignedTo || '');
 
+  const categoryOptions = ['Technical', 'Payment', 'Registration', 'Meals'].map(cat => ({
+    value: cat,
+    label: cat
+  }));
+
+  const priorityOptions = ['low', 'medium', 'high', 'urgent'].map(level => ({
+    value: level,
+    label: level.charAt(0).toUpperCase() + level.slice(1)
+  }));
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave({
@@ -233,26 +244,20 @@ const EditTemplateForm: React.FC<EditTemplateFormProps> = ({ template, onSave, o
         required
       />
       
-      <div className="grid grid-cols-3 gap-4">
-        <select
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <CustomSelect
           value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          {['Technical', 'Payment', 'Registration', 'Meals'].map(cat => (
-            <option key={cat} value={cat} className="bg-gray-800">{cat}</option>
-          ))}
-        </select>
-        
-        <select
+          onChange={setCategory}
+          options={categoryOptions}
+          placeholder="Category"
+        />
+
+        <CustomSelect
           value={priority}
-          onChange={(e) => setPriority(e.target.value as any)}
-          className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          {['low', 'medium', 'high', 'urgent'].map(p => (
-            <option key={p} value={p} className="bg-gray-800">{p}</option>
-          ))}
-        </select>
+          onChange={(value) => setPriority(value as TicketTemplate['priority'])}
+          options={priorityOptions}
+          placeholder="Priority"
+        />
         
         <input
           type="text"

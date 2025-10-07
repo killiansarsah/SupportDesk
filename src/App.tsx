@@ -5,6 +5,8 @@ import Login from './components/Login';
 // import Layout from './components/Layout'; // Original gradient layout
 import Layout from './components/LayoutModern'; // New modern sidebar layout
 import Dashboard from './components/Dashboard';
+import { navigationService } from './services/navigationService';
+import type { PageId } from './services/navigationService';
 import ChatInterface from './components/ChatInterface';
 
 import KnowledgeBase from './components/KnowledgeBase';
@@ -39,6 +41,11 @@ function App() {
       setUser(authService.getCurrentUser());
     }
     setIsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    navigationService.setPageChangeHandler((page: PageId) => setCurrentPage(page));
+    navigationService.setDashboardHandler(() => setCurrentPage('dashboard'));
   }, []);
 
   const handleLogin = async (email: string, password: string) => {

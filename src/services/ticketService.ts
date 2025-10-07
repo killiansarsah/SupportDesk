@@ -1,4 +1,4 @@
-import { Ticket, Message, Attachment, HistoryEntry, TicketFilters, User } from '../types';
+import { Ticket, Message, Attachment, HistoryEntry, TicketFilters, InternalNote } from '../types';
 
 // Load tickets from localStorage or use mock data
 const loadTicketsFromStorage = (): Ticket[] => {
@@ -41,7 +41,7 @@ const loadTicketsFromStorage = (): Ticket[] => {
   ];
 };
 
-let MOCK_TICKETS: Ticket[] = loadTicketsFromStorage();
+const MOCK_TICKETS: Ticket[] = loadTicketsFromStorage();
 
 // Save tickets to localStorage
 const saveTicketsToStorage = () => {
@@ -65,7 +65,7 @@ class TicketService {
       const ApiService = (await import('./apiService')).default;
       const apiService = ApiService.getInstance();
       
-      const params: any = {};
+  const params: Record<string, string> = {};
       if (userId) params.userId = userId;
       if (userRole) params.userRole = userRole;
       
@@ -300,13 +300,13 @@ class TicketService {
     return attachment;
   }
 
-  async addInternalNote(ticketId: string, content: string, userId: string, userName: string): Promise<any | null> {
+  async addInternalNote(ticketId: string, content: string, userId: string, userName: string): Promise<InternalNote | null> {
     await new Promise(resolve => setTimeout(resolve, 300));
 
     const ticketIndex = MOCK_TICKETS.findIndex(ticket => ticket.id === ticketId);
     if (ticketIndex === -1) return null;
 
-    const note = {
+    const note: InternalNote = {
       id: `note_${Date.now()}`,
       ticketId,
       userId,
@@ -322,18 +322,7 @@ class TicketService {
     return note;
   }
 
-  private async notifyAgentOfNewTicket(ticket: any) {
-    try {
-      const EmailService = (await import('./emailService')).default;
-      const emailService = EmailService.getInstance();
-      const mockAgent = { email: 'agent@company.com' };
-      await emailService.sendNewTicketNotification(ticket, mockAgent);
-    } catch (error) {
-      console.error('Failed to send agent notification:', error);
-    }
-  }
-
-  private async notifyCustomerOfUpdate(ticket: any, status: string) {
+  private async notifyCustomerOfUpdate(ticket: Ticket, status: string) {
     try {
       const EmailService = (await import('./emailService')).default;
       const emailService = EmailService.getInstance();

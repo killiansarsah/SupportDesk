@@ -34,10 +34,48 @@ interface GoogleJWTPayload {
   exp: number;         // Expiration timestamp
 }
 
+interface GoogleIdConfiguration {
+  client_id: string;
+  callback: (response: GoogleSignInResponse) => void;
+  auto_select?: boolean;
+  cancel_on_tap_outside?: boolean;
+  use_fedcm_for_prompt?: boolean;
+}
+
+interface GoogleButtonConfiguration {
+  type?: 'standard' | 'icon';
+  theme?: 'outline' | 'filled_blue' | 'filled_black';
+  size?: 'large' | 'medium' | 'small';
+  text?: 'signin_with' | 'signup_with' | 'continue_with';
+  shape?: 'rectangular' | 'pill' | 'circle' | 'square';
+}
+
+interface GooglePromptNotification {
+  isNotDisplayed?: () => boolean;
+  getNotDisplayedReason?: () => string | null;
+  isSkippedMoment?: () => boolean;
+  getSkippedReason?: () => string | null;
+  getMomentType?: () => string;
+  [key: string]: unknown;
+}
+
+interface GoogleAccountsId {
+  initialize: (config: GoogleIdConfiguration) => void;
+  renderButton: (element: HTMLElement, config: GoogleButtonConfiguration) => void;
+  prompt: (callback?: (notification: GooglePromptNotification) => void) => void;
+  disableAutoSelect: () => void;
+}
+
+interface GoogleIdentityServices {
+  accounts: {
+    id: GoogleAccountsId;
+  };
+}
+
 class GoogleOAuthService {
   private static instance: GoogleOAuthService;
   private isInitialized = false;
-  private google: any = null;
+  private google: GoogleIdentityServices | null = null;
 
   /**
    * Singleton pattern implementation
@@ -170,12 +208,13 @@ class GoogleOAuthService {
         window.dispatchEvent(event);
       }
 
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('❌ Error handling Google credential:', error);
+      const message = error instanceof Error ? error.message : 'Unknown error';
       
       // Trigger error event
       const event = new CustomEvent('googleSignInError', {
-        detail: { error: error.message }
+        detail: { error: message }
       });
       window.dispatchEvent(event);
     }
@@ -246,7 +285,7 @@ class GoogleOAuthService {
     }
 
     // Default button configuration following Google's branding guidelines
-    const buttonConfig = {
+    const buttonConfig: GoogleButtonConfiguration = {
       type: options.type || 'standard',
       theme: options.theme || 'outline',
       size: options.size || 'large',
@@ -257,8 +296,14 @@ class GoogleOAuthService {
 
     try {
       // Render the button in the specified container
+      const container = document.getElementById(containerId);
+      if (!container) {
+        console.error(`❌ Container with id "${containerId}" not found for Google Sign-In button`);
+        return;
+      }
+
       this.google.accounts.id.renderButton(
-        document.getElementById(containerId),
+        container,
         buttonConfig
       );
       console.log('🎨 Google Sign-In button rendered');
@@ -279,7 +324,7 @@ class GoogleOAuthService {
     }
 
     try {
-      this.google.accounts.id.prompt((notification: any) => {
+      this.google.accounts.id.prompt((notification?: GooglePromptNotification) => {
         console.log('One Tap prompt notification:', notification);
       });
     } catch (error) {
@@ -325,16 +370,7 @@ class GoogleOAuthService {
 // Global interface extension for Google Identity Services
 declare global {
   interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (config: any) => void;
-          renderButton: (element: HTMLElement, config: any) => void;
-          prompt: (callback?: (notification: any) => void) => void;
-          disableAutoSelect: () => void;
-        };
-      };
-    };
+    google?: GoogleIdentityServices;
   }
 }
 

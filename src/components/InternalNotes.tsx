@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Lock, Plus, Edit, Trash2, User } from 'lucide-react';
+import { Lock, Plus, Trash2, User } from 'lucide-react';
 import { InternalNote } from '../types';
 
 interface InternalNotesProps {

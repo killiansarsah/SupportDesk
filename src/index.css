@@ -358,6 +358,81 @@ select:focus {
   animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+/* Modern dropdown styling */
+.modern-dropdown {
+  --dropdown-bg: rgba(24, 33, 51, 0.92);
+  --dropdown-border: rgba(90, 104, 133, 0.45);
+  --dropdown-text: #eef1ff;
+  --dropdown-highlight: #8b5cf6;
+  appearance: none;
+  width: 100%;
+  border-radius: 0.9rem;
+  border: 1px solid var(--dropdown-border);
+  background-color: var(--dropdown-bg);
+  color: var(--dropdown-text);
+  padding: 0.65rem 2.75rem 0.65rem 1rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  font-weight: 500;
+  box-shadow: 0 18px 45px rgba(8, 12, 24, 0.35);
+  backdrop-filter: blur(14px);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7' viewBox='0 0 12 7' fill='none'%3E%3Cpath d='M10.59 0.589844L6 5.16984L1.41 0.589843L0 1.99984L6 7.99984L12 1.99984L10.59 0.589844Z' fill='%238B5CF6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1.1rem center;
+  background-size: 12px 7px;
+  cursor: pointer;
+}
+
+.modern-dropdown:hover {
+  border-color: rgba(139, 92, 246, 0.6);
+  color: #ffffff;
+}
+
+.modern-dropdown:focus {
+  outline: none;
+  border-color: var(--dropdown-highlight);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.25), 0 18px 45px rgba(8, 12, 24, 0.35);
+}
+
+.modern-dropdown:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.modern-dropdown option {
+  background: #0f1626;
+  color: #e7ebff;
+  font-weight: 500;
+}
+
+.modern-dropdown option:checked {
+  background: linear-gradient(90deg, rgba(139, 92, 246, 0.85), rgba(99, 102, 241, 0.6));
+  color: #ffffff;
+}
+
+.modern-dropdown::-ms-expand {
+  display: none;
+}
+
+html:not(.dark) .modern-dropdown {
+  --dropdown-bg: #ffffff;
+  --dropdown-border: rgba(148, 163, 184, 0.6);
+  --dropdown-text: #1f2937;
+  box-shadow: 0 18px 35px rgba(15, 23, 42, 0.08);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7' viewBox='0 0 12 7' fill='none'%3E%3Cpath d='M10.59 0.589844L6 5.16984L1.41 0.589843L0 1.99984L6 7.99984L12 1.99984L10.59 0.589844Z' fill='%2352566A'/%3E%3C/svg%3E");
+}
+
+html:not(.dark) .modern-dropdown option {
+  background: #f8fafc;
+  color: #1f2937;
+}
+
+html:not(.dark) .modern-dropdown option:checked {
+  background: rgba(59, 130, 246, 0.2);
+  color: #1f2937;
+}
+
 /* Notification styles */
 .notification-enter {
   transform: translateX(100%);
