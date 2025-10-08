@@ -26,7 +26,11 @@ const UserManagement = () => {
     try {
       setLoading(true);
       const data = await api.getUsers();
-      setUsers(data);
+      const normalized = data.map(user => ({
+        ...user,
+        _id: user._id ?? user.id
+      }));
+      setUsers(normalized);
     } catch (error) {
       console.error('Failed to load users:', error);
     } finally {

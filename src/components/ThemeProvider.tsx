@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useState, useEffect, ReactNode } from 'react';
 import { Theme } from '../types';
+import { ThemeContext } from '../context/ThemeContext';
 
 const THEMES: Record<string, Theme> = {
   dark: {
@@ -18,22 +19,6 @@ const THEMES: Record<string, Theme> = {
     surface: 'bg-white/90 backdrop-blur-lg border-gray-200',
     text: 'text-gray-900'
   }
-};
-
-interface ThemeContextType {
-  theme: Theme;
-  toggleTheme: () => void;
-  setTheme: (themeName: string) => void;
-}
-
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
-
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
 };
 
 interface ThemeProviderProps {

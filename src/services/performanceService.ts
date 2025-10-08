@@ -23,11 +23,11 @@ class PerformanceService {
   private apiService = ApiService.getInstance();
 
   async getOverview(): Promise<PerformanceOverview> {
-    return this.apiService.get('/performance/overview');
+    return this.apiService.get<PerformanceOverview>('/performance/overview');
   }
 
   async getAgentPerformance(): Promise<AgentPerformance[]> {
-    return this.apiService.get('/performance/agents');
+    return this.apiService.get<AgentPerformance[]>('/performance/agents');
   }
 }
 

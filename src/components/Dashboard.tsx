@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Ticket, User } from '../types';
 import TicketService from '../services/ticketService';
 import AdminDashboard from './AdminDashboard';
@@ -14,17 +14,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadTickets();
-    // Check if there's a ticket to open from notification
-    const ticketToOpen = localStorage.getItem('openTicketId');
-    if (ticketToOpen) {
-      setSelectedTicketId(ticketToOpen);
-      localStorage.removeItem('openTicketId');
-    }
-  }, [user]);
-
-  const loadTickets = async () => {
+  const loadTickets = useCallback(async () => {
     try {
       setIsLoading(true);
       const ticketService = TicketService.getInstance();
@@ -35,13 +25,23 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user.id, user.role]);
 
-  const handleTicketUpdate = async () => {
+  useEffect(() => {
+    loadTickets();
+    // Check if there's a ticket to open from notification
+    const ticketToOpen = localStorage.getItem('openTicketId');
+    if (ticketToOpen) {
+      setSelectedTicketId(ticketToOpen);
+      localStorage.removeItem('openTicketId');
+    }
+  }, [loadTickets]);
+
+  const handleTicketUpdate = useCallback(async () => {
     console.log('🔄 Dashboard - handleTicketUpdate called, reloading tickets...');
     await loadTickets();
     console.log('✅ Dashboard - Tickets reloaded');
-  };
+  }, [loadTickets]);
 
   if (isLoading) {
     return (

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Wifi, WifiOff, Download, Smartphone, RotateCw, CheckCircle, AlertCircle } from 'lucide-react';
-import { PWAStatus } from '../types';
+import { PWAInstallPrompt, PWAStatus } from '../types';
+
+type BeforeInstallPromptEvent = Event & PWAInstallPrompt;
 
 const PWAManager = () => {
   const [pwaStatus, setPwaStatus] = useState<PWAStatus>({
@@ -9,19 +11,21 @@ const PWAManager = () => {
     canInstall: false,
     syncPending: false
   });
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
     // Check if app is installed
-    const isInstalled = window.matchMedia('(display-mode: standalone)').matches || 
-                       (window.navigator as any).standalone === true;
+    const isInstalled =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      Boolean((window.navigator as unknown as { standalone?: boolean }).standalone);
     
     setPwaStatus(prev => ({ ...prev, isInstalled }));
 
     // Listen for install prompt
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e);
+      const promptEvent = e as BeforeInstallPromptEvent;
+      setDeferredPrompt(promptEvent);
       setPwaStatus(prev => ({ ...prev, canInstall: true }));
     };
 

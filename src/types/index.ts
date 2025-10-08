@@ -180,9 +180,18 @@ export interface PWAStatus {
   isInstalled: boolean;
   isInstallable?: boolean;
   canInstall?: boolean;
-  deferredPrompt?: unknown;
+  deferredPrompt?: PWAInstallPrompt | null;
   isOnline: boolean;
   syncPending: boolean;
+}
+
+export interface PWAInstallPrompt {
+  platforms?: string[];
+  prompt(): Promise<void>;
+  userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed';
+    platform: string;
+  }>;
 }
 
 export interface Screenshot {

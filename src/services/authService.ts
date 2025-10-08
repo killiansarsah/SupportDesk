@@ -27,17 +27,20 @@ class AuthService {
           ...result.user,
           id: result.user._id || result.user.id
         };
+        const token = result.token ?? null;
         
         this.authState = {
           user: transformedUser,
           isAuthenticated: true,
-          token: result.token,
+          token,
         };
 
-        localStorage.setItem('auth_token', result.token);
+        if (token) {
+          localStorage.setItem('auth_token', token);
+        }
         localStorage.setItem('user_data', JSON.stringify(transformedUser));
 
-        return { success: true, user: transformedUser, token: result.token };
+        return { success: true, user: transformedUser, token: token ?? undefined };
       } else {
         return { success: false, error: result.error || 'Invalid credentials' };
       }
@@ -59,17 +62,20 @@ class AuthService {
           ...result.user,
           id: result.user._id || result.user.id
         };
+        const token = result.token ?? null;
         
         this.authState = {
           user: transformedUser,
           isAuthenticated: true,
-          token: result.token,
+          token,
         };
 
-        localStorage.setItem('auth_token', result.token);
+        if (token) {
+          localStorage.setItem('auth_token', token);
+        }
         localStorage.setItem('user_data', JSON.stringify(transformedUser));
 
-        return { success: true, user: transformedUser, token: result.token };
+        return { success: true, user: transformedUser, token: token ?? undefined };
       } else {
         return { success: false, error: result.error || 'Registration failed' };
       }
@@ -164,21 +170,24 @@ class AuthService {
           ...result.user,
           id: result.user._id || result.user.id
         };
+        const token = result.token ?? null;
         
         // Update authentication state
         this.authState = {
           user: transformedUser,
           isAuthenticated: true,
-          token: result.token,
+          token,
         };
 
         // Store session data
-        localStorage.setItem('auth_token', result.token);
+        if (token) {
+          localStorage.setItem('auth_token', token);
+        }
         localStorage.setItem('user_data', JSON.stringify(transformedUser));
         localStorage.setItem('auth_provider', 'google');
 
         console.log('✅ Google sign-in successful');
-        return { success: true, user: transformedUser, token: result.token };
+        return { success: true, user: transformedUser, token: token ?? undefined };
         
       } else {
         console.log('❌ Google sign-in failed:', result.error);
@@ -217,21 +226,24 @@ class AuthService {
           ...result.user,
           id: result.user._id || result.user.id
         };
+        const token = result.token ?? null;
         
         // Update authentication state
         this.authState = {
           user: transformedUser,
           isAuthenticated: true,
-          token: result.token,
+          token,
         };
 
         // Store session data
-        localStorage.setItem('auth_token', result.token);
+        if (token) {
+          localStorage.setItem('auth_token', token);
+        }
         localStorage.setItem('user_data', JSON.stringify(transformedUser));
         localStorage.setItem('auth_provider', 'google');
 
         console.log('✅ Google sign-up successful');
-        return { success: true, user: transformedUser, token: result.token };
+        return { success: true, user: transformedUser, token: token ?? undefined };
         
       } else {
         console.log('❌ Google sign-up failed:', result.error);
