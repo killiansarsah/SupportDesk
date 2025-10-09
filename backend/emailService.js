@@ -191,18 +191,42 @@ class EmailService {
               <p>${ticket.description.replace(/\n/g, '<br>')}</p>
             </div>
 
-            <div style="text-align: center; margin: 20px 0;">
-              <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/tickets/${ticket.id}" 
-                 style="display: inline-block; background: #667eea; color: white !important; padding: 12px 24px; text-decoration: none !important; border-radius: 5px; margin: 10px 5px; font-weight: bold;" 
-                 target="_blank">
-                📝 View & Respond to Ticket
-              </a>
-              <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/dashboard" 
-                 style="display: inline-block; background: #28a745; color: white !important; padding: 12px 24px; text-decoration: none !important; border-radius: 5px; margin: 10px 5px; font-weight: bold;" 
-                 target="_blank">
-                📊 Go to Dashboard
-              </a>
-            </div>
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0;">
+              <tr>
+                <td align="center">
+                  <table cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td style="padding: 0 10px;">
+                        <table cellpadding="0" cellspacing="0" style="border-radius: 5px; background: #667eea;">
+                          <tr>
+                            <td>
+                              <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/tickets/${ticket.id}" 
+                                 style="display: block; padding: 12px 24px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 14px;" 
+                                 target="_blank">
+                                📝 View & Respond to Ticket
+                              </a>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                      <td style="padding: 0 10px;">
+                        <table cellpadding="0" cellspacing="0" style="border-radius: 5px; background: #28a745;">
+                          <tr>
+                            <td>
+                              <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/dashboard" 
+                                 style="display: block; padding: 12px 24px; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 14px;" 
+                                 target="_blank">
+                                📊 Go to Dashboard
+                              </a>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
           </div>
 
           <div class="footer">
