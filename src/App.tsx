@@ -8,6 +8,7 @@ import Dashboard from './components/Dashboard';
 import { navigationService } from './services/navigationService';
 import type { PageId } from './services/navigationService';
 import ChatInterface from './components/ChatInterface';
+import AppState from './services/appState';
 
 import KnowledgeBase from './components/KnowledgeBase';
 import TicketTemplates from './components/TicketTemplates';
@@ -39,6 +40,31 @@ function App() {
     const restored = authService.restoreSession();
     if (restored) {
       setUser(authService.getCurrentUser());
+      
+      // Handle URL routing for email links
+      const path = window.location.pathname;
+      
+      // Handle /tickets/:id route
+      const ticketMatch = path.match(/^\/tickets\/(.+)$/);
+      if (ticketMatch) {
+        const ticketId = ticketMatch[1];
+        setCurrentPage('dashboard');
+        // Open the specific ticket after a short delay
+        setTimeout(() => {
+          const appState = AppState.getInstance();
+          appState.openTicket(ticketId);
+        }, 100);
+        // Clean up URL
+        window.history.replaceState({}, '', '/');
+        return;
+      }
+      
+      // Handle /dashboard route
+      if (path === '/dashboard') {
+        setCurrentPage('dashboard');
+        window.history.replaceState({}, '', '/');
+        return;
+      }
     }
     setIsLoading(false);
   }, []);
@@ -46,6 +72,17 @@ function App() {
   useEffect(() => {
     navigationService.setPageChangeHandler((page: PageId) => setCurrentPage(page));
     navigationService.setDashboardHandler(() => setCurrentPage('dashboard'));
+    
+    // Listen for popstate events (back/forward navigation)
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      if (path === '/dashboard' || path === '/') {
+        setCurrentPage('dashboard');
+      }
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   const handleLogin = async (email: string, password: string) => {
