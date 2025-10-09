@@ -192,10 +192,14 @@ class EmailService {
             </div>
 
             <div style="text-align: center; margin: 20px 0;">
-              <a href="${process.env.FRONTEND_URL || 'http://localhost:5174'}/tickets/${ticket.id}" class="btn">
+              <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/tickets/${ticket.id}" 
+                 style="display: inline-block; background: #667eea; color: white !important; padding: 12px 24px; text-decoration: none !important; border-radius: 5px; margin: 10px 5px; font-weight: bold;" 
+                 target="_blank">
                 📝 View & Respond to Ticket
               </a>
-              <a href="${process.env.FRONTEND_URL || 'http://localhost:5174'}/dashboard" class="btn">
+              <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/dashboard" 
+                 style="display: inline-block; background: #28a745; color: white !important; padding: 12px 24px; text-decoration: none !important; border-radius: 5px; margin: 10px 5px; font-weight: bold;" 
+                 target="_blank">
                 📊 Go to Dashboard
               </a>
             </div>
