@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ArrowLeft, Paperclip, X, Upload } from 'lucide-react';
 import { User } from '../types';
 import TicketService from '../services/ticketService';
+import CustomSelect from './CustomSelect';
 
 interface CreateTicketProps {
   user: User;
@@ -18,13 +19,21 @@ const CreateTicket: React.FC<CreateTicketProps> = ({ user, onBack, onTicketCreat
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dragOver, setDragOver] = useState(false);
 
-  const categories = [
-    'Account',
-    'Billing',
-    'Technical',
-    'General',
-    'Bug Report',
-    'Feature Request',
+  const categoryOptions = [
+    { value: '', label: 'Select a category' },
+    { value: 'Account', label: 'Account' },
+    { value: 'Billing', label: 'Billing' },
+    { value: 'Technical', label: 'Technical' },
+    { value: 'General', label: 'General' },
+    { value: 'Bug Report', label: 'Bug Report' },
+    { value: 'Feature Request', label: 'Feature Request' },
+  ];
+
+  const priorityOptions = [
+    { value: 'low', label: 'Low' },
+    { value: 'medium', label: 'Medium' },
+    { value: 'high', label: 'High' },
+    { value: 'urgent', label: 'Urgent' },
   ];
 
   const handleFileUpload = (files: FileList) => {
@@ -125,33 +134,26 @@ const CreateTicket: React.FC<CreateTicketProps> = ({ user, onBack, onTicketCreat
               <label className="block text-xs sm:text-sm font-medium text-white mb-2">
                 Category <span className="text-red-400">*</span>
               </label>
-              <select
+              <CustomSelect
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 backdrop-blur-lg bg-white/10 dark:bg-dark-900 border border-white/20 dark:border-dark-800 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
-                required
-              >
-                <option value="" className="bg-gray-800 text-white">Select a category</option>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat} className="bg-gray-800 text-white">{cat}</option>
-                ))}
-              </select>
+                onChange={setCategory}
+                options={categoryOptions}
+                placeholder="Select a category"
+                className="w-full"
+              />
             </div>
 
             <div>
               <label className="block text-xs sm:text-sm font-medium text-white mb-2">
                 Priority
               </label>
-              <select
+              <CustomSelect
                 value={priority}
-                onChange={(e) => setPriority(e.target.value as 'low' | 'medium' | 'high' | 'urgent')}
-                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 backdrop-blur-lg bg-white/10 dark:bg-dark-900 border border-white/20 dark:border-dark-800 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
-              >
-                <option value="low" className="bg-gray-800 text-white">Low</option>
-                <option value="medium" className="bg-gray-800 text-white">Medium</option>
-                <option value="high" className="bg-gray-800 text-white">High</option>
-                <option value="urgent" className="bg-gray-800 text-white">Urgent</option>
-              </select>
+                onChange={(value) => setPriority(value as 'low' | 'medium' | 'high' | 'urgent')}
+                options={priorityOptions}
+                placeholder="Select priority"
+                className="w-full"
+              />
             </div>
           </div>
 

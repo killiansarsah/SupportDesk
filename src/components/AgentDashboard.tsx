@@ -233,7 +233,7 @@ const AgentDashboard: React.FC<AgentDashboardProps> = ({ user, tickets, onTicket
           </div>
 
           {/* Filters and Search */}
-          <div className="relative z-40 backdrop-blur-lg bg-white/10 border border-white/20 rounded-xl p-4 sm:p-6 overflow-visible">
+          <div className="relative z-20 backdrop-blur-lg bg-white/10 border border-white/20 rounded-xl p-4 sm:p-6 overflow-visible">
             <div className="flex flex-col gap-3 sm:gap-4">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
@@ -246,7 +246,7 @@ const AgentDashboard: React.FC<AgentDashboardProps> = ({ user, tickets, onTicket
                 />
               </div>
               
-              <div className="relative z-30 flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <div className="relative z-20 flex flex-col sm:flex-row gap-2 sm:gap-3">
                 <CustomSelect
                   value={filters.status?.[0] ?? ''}
                   onChange={(statusValue) =>
@@ -257,7 +257,7 @@ const AgentDashboard: React.FC<AgentDashboardProps> = ({ user, tickets, onTicket
                   }
                   options={statusOptions}
                   placeholder="All Status"
-                  className="flex-1 z-40"
+                  className="flex-1 z-25"
                 />
 
                 <CustomSelect
@@ -270,7 +270,7 @@ const AgentDashboard: React.FC<AgentDashboardProps> = ({ user, tickets, onTicket
                   }
                   options={priorityOptions}
                   placeholder="All Priority"
-                  className="flex-1 z-30"
+                  className="flex-1 z-20"
                 />
               </div>
             </div>
