@@ -327,7 +327,7 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
               
               {/* Agents & Admins: Quick Controls */}
               {(user.role === 'support-agent' || user.role === 'administrator') && (
-                <div className="space-y-2.5 backdrop-blur-xl bg-white/70 dark:bg-gray-800/60 rounded-2xl p-3 border-2 border-white/60 dark:border-white/20 shadow-lg relative z-50">
+                <div className="space-y-2.5 backdrop-blur-xl bg-white/70 dark:bg-gray-800/60 rounded-2xl p-3 border-2 border-white/60 dark:border-white/20 shadow-lg relative z-10">
                   {/* Status & Assignment Row */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
@@ -418,10 +418,10 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
             </div>
           </div>
 
-          {/* Conversation Card - WhatsApp Style with Fixed Input */}
-          <div className="backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 dark:from-gray-900/60 dark:via-gray-800/40 dark:to-gray-900/60 rounded-3xl border-2 border-white/60 dark:border-white/20 overflow-hidden shadow-[0_20px_70px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_70px_rgba(0,0,0,0.6)] flex flex-col h-[calc(100vh-280px)] min-h-[500px]">
+          {/* Conversation Card - Modern Minimalist Chat */}
+          <div className="backdrop-blur-xl bg-white/95 dark:bg-gray-900/95 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden shadow-2xl flex flex-col h-[calc(100vh-280px)] min-h-[500px]">
 
-            <div className="conversation-messages flex-1 p-6 space-y-4 overflow-y-auto bg-gradient-to-b from-gray-50/50 via-white/30 to-gray-50/50 dark:from-gray-950/30 dark:via-gray-900/20 dark:to-gray-950/30">
+            <div className="conversation-messages flex-1 p-4 sm:p-6 space-y-3 overflow-y-auto bg-gray-50/50 dark:bg-gray-950/50">
               {currentTicket.messages && currentTicket.messages.length > 0 ? (
                 currentTicket.messages.map((message, index) => {
                 const isCurrentUser = message.userId === user.id;
@@ -430,62 +430,62 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                 const showAvatar = index === 0 || currentTicket.messages[index - 1]?.userId !== message.userId;
                 
                 return (
-                  <div key={message.id} className={`flex gap-2 ${isCurrentUser ? 'justify-end' : 'justify-start'} animate-fadeIn`}>
-                    {/* Left Avatar (for received messages) */}
+                  <div key={message.id} className={`flex gap-2.5 ${isCurrentUser ? 'justify-end' : 'justify-start'} animate-fadeIn`}>
+                    {/* Left Avatar */}
                     {!isCurrentUser && (
-                      <div className="flex-shrink-0 self-end">
+                      <div className="flex-shrink-0 self-end mb-1">
                         {showAvatar ? (
                           message.userAvatar ? (
                             <img 
                               src={message.userAvatar} 
                               alt={message.userName}
-                              className="w-7 h-7 rounded-full object-cover ring-2 ring-white/50 dark:ring-white/20 shadow-md"
+                              className="w-8 h-8 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
                             />
                           ) : (
-                            <div className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-xs bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 shadow-md ring-2 ring-white/50 dark:ring-white/20">
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-sm bg-gradient-to-br from-indigo-500 to-purple-600 shadow-sm">
                               {message.userName.charAt(0).toUpperCase()}
                             </div>
                           )
                         ) : (
-                          <div className="w-7 h-7"></div>
+                          <div className="w-8 h-8"></div>
                         )}
                       </div>
                     )}
 
                     {/* Message Bubble */}
-                    <div className={`flex flex-col max-w-[75%] sm:max-w-[65%] ${isCurrentUser ? 'items-end' : 'items-start'}`}>
-                      {/* Sender name (only show if different from previous message or first message) */}
+                    <div className={`flex flex-col max-w-[80%] sm:max-w-[70%] ${isCurrentUser ? 'items-end' : 'items-start'}`}>
+                      {/* Sender name */}
                       {showAvatar && !isCurrentUser && (
-                        <div className="flex items-center gap-2 mb-2 px-3">
-                          <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                        <div className="flex items-center gap-2 mb-1 px-1">
+                          <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
                             {message.userName}
                           </span>
                           {isAgent && (
-                            <span className="text-[10px] px-2 py-1 backdrop-blur-xl bg-gradient-to-r from-orange-500/20 to-red-500/20 text-orange-700 dark:text-orange-300 rounded-full font-bold border border-orange-400/30 shadow-sm">
+                            <span className="text-[10px] px-2 py-0.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-full font-bold shadow-sm">
                               Agent
                             </span>
                           )}
                         </div>
                       )}
                       
-                      {/* Message Content - Claymorphism Style */}
-                      <div className={`rounded-3xl px-5 py-3.5 shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] backdrop-blur-xl border-2 transition-all duration-300 hover:scale-[1.02] ${
+                      {/* Message Content - Sleek Modern Style */}
+                      <div className={`rounded-2xl px-4 py-2.5 shadow-sm transition-all duration-200 ${
                         isCurrentUser
-                          ? 'bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 text-white border-blue-400/50 dark:border-blue-500/30 shadow-blue-500/20'
-                          : 'bg-gradient-to-br from-white/90 via-white/80 to-white/70 dark:from-gray-800/90 dark:via-gray-800/80 dark:to-gray-700/90 text-gray-900 dark:text-gray-100 border-white/60 dark:border-white/20'
+                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-br-md'
+                          : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-bl-md'
                       }`}>
-                        <p className="text-[15px] leading-relaxed break-words whitespace-pre-wrap font-medium">
+                        <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">
                           {message.content}
                         </p>
                         
-                        {/* Timestamp - WhatsApp Style */}
+                        {/* Timestamp */}
                         <div className={`flex items-center gap-1 mt-1 ${
                           isCurrentUser ? 'justify-end' : 'justify-start'
                         }`}>
-                          <span className={`text-[10px] opacity-70 ${
+                          <span className={`text-[10px] ${
                             isCurrentUser 
-                              ? 'text-white' 
-                              : 'text-gray-600 dark:text-gray-400'
+                              ? 'text-blue-100' 
+                              : 'text-gray-500 dark:text-gray-400'
                           }`}>
                             {new Date(message.timestamp).toLocaleTimeString('en-US', {
                               hour: 'numeric',
@@ -494,7 +494,7 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                             })}
                           </span>
                           {isCurrentUser && (
-                            <svg className="w-3 h-3 text-white opacity-70" fill="currentColor" viewBox="0 0 20 20">
+                            <svg className="w-3 h-3 text-blue-100" fill="currentColor" viewBox="0 0 20 20">
                               <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
                             </svg>
                           )}
@@ -502,23 +502,23 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                       </div>
                     </div>
 
-                    {/* Right Avatar (for sent messages) */}
+                    {/* Right Avatar */}
                     {isCurrentUser && (
-                      <div className="flex-shrink-0 self-end">
+                      <div className="flex-shrink-0 self-end mb-1">
                         {showAvatar ? (
                           message.userAvatar ? (
                             <img 
                               src={message.userAvatar} 
                               alt={message.userName}
-                              className="w-7 h-7 rounded-full object-cover ring-2 ring-white/50 dark:ring-white/20 shadow-md"
+                              className="w-8 h-8 rounded-full object-cover border-2 border-blue-200 dark:border-blue-700"
                             />
                           ) : (
-                            <div className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-xs bg-gradient-to-br from-green-500 via-emerald-600 to-teal-600 shadow-md ring-2 ring-white/50 dark:ring-white/20">
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-sm bg-gradient-to-br from-blue-600 to-indigo-600 shadow-sm">
                               {message.userName.charAt(0).toUpperCase()}
                             </div>
                           )
                         ) : (
-                          <div className="w-7 h-7"></div>
+                          <div className="w-8 h-8"></div>
                         )}
                       </div>
                     )}
@@ -533,14 +533,18 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Reply Section - Fixed at Bottom */}
-            <div className="flex-shrink-0 p-6 border-t border-white/40 dark:border-white/10 backdrop-blur-xl bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 relative z-10">
-              
-
-              
-              <form onSubmit={handleSendMessage} className="relative z-20">
-                <div className="flex items-end gap-2 sm:gap-3 relative z-20">
-                  <div className="flex-1 relative backdrop-blur-2xl bg-gradient-to-r from-white/80 via-white/60 to-white/80 dark:from-gray-800/60 dark:via-gray-700/40 dark:to-gray-800/60 border-2 border-white/60 dark:border-white/20 rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] p-2 sm:p-3">
+            {/* Reply Section - Modern Input */}
+            <div className="flex-shrink-0 p-4 border-t border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
+              <form onSubmit={handleSendMessage}>
+                <div className="flex items-end gap-2">
+                  <button
+                    type="button"
+                    className="flex-shrink-0 p-2.5 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all"
+                  >
+                    <Paperclip className="w-5 h-5" />
+                  </button>
+                  
+                  <div className="flex-1 relative">
                     <textarea
                       ref={textareaRef}
                       value={newMessage}
@@ -551,27 +555,22 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                           handleSendMessage(e);
                         }
                       }}
-                      placeholder="Type a message..."
+                      placeholder="Type your message..."
                       rows={1}
-                      className="w-full px-4 sm:px-6 py-2.5 sm:py-3.5 pr-12 sm:pr-14 backdrop-blur-xl bg-white/70 dark:bg-gray-900/50 border-2 border-white/40 dark:border-white/10 rounded-3xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:border-blue-400/60 dark:focus:border-blue-500/40 focus:shadow-[0_0_20px_rgba(59,130,246,0.3)] resize-none transition-all font-medium text-sm sm:text-base"
-                      style={{ minHeight: '52px', height: '52px', maxHeight: '200px', overflow: 'auto' }}
+                      className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all text-sm"
+                      style={{ minHeight: '44px', height: '44px', maxHeight: '120px', overflow: 'auto' }}
                     />
-                    <button
-                      type="button"
-                      className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-all p-1.5 sm:p-2 hover:bg-white/70 dark:hover:bg-white/10 rounded-full backdrop-blur-xl shadow-lg hover:scale-110"
-                    >
-                      <Paperclip className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </button>
                   </div>
+                  
                   <button
                     type="submit"
                     disabled={isSubmitting || !newMessage.trim()}
-                    className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 hover:from-blue-600 hover:via-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-full transition-all disabled:cursor-not-allowed flex items-center justify-center shadow-[0_8px_24px_rgba(59,130,246,0.4)] hover:shadow-[0_12px_32px_rgba(59,130,246,0.6)] hover:scale-110 disabled:shadow-none disabled:scale-100 disabled:opacity-50 border-2 border-white/30 relative z-30"
+                    className="flex-shrink-0 p-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-xl transition-all disabled:cursor-not-allowed flex items-center justify-center shadow-md hover:shadow-lg disabled:opacity-50"
                   >
                     {isSubmitting ? (
-                      <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                     ) : (
-                      <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <Send className="w-5 h-5" />
                     )}
                   </button>
                 </div>

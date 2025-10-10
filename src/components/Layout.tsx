@@ -373,7 +373,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, onNavigate, c
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 relative">
       {renderAnimatedBackground()}
 
-      <header className="relative z-[9999] backdrop-blur-lg bg-white/10 border-b border-white/20">
+      <header className="relative z-[99999] backdrop-blur-lg bg-white/10 border-b border-white/20">
         <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between gap-2 sm:gap-4">
             <div className="flex items-center space-x-2 sm:space-x-4">
