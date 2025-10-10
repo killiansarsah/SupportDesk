@@ -43,13 +43,17 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
     setAssignedTo(ticket.assignedTo || '');
   }, [ticket]);
 
-  // Handle browser back button
+  /**
+   * Handle browser/mobile back button navigation
+   * Prevents users from exiting the app when pressing back
+   * Instead, navigates back to the dashboard
+   */
   useEffect(() => {
-    // Push a new state when ticket detail opens
+    // Push a new history state when ticket detail opens
     window.history.pushState({ ticketDetail: true }, '');
     
     const handlePopState = (e: PopStateEvent) => {
-      // If user presses back, go back to dashboard
+      // If user presses back, navigate to dashboard instead of exiting
       if (!e.state?.ticketDetail) {
         onBack();
       }
@@ -57,10 +61,42 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
     
     window.addEventListener('popstate', handlePopState);
     
+    // Cleanup event listener on component unmount
     return () => {
       window.removeEventListener('popstate', handlePopState);
     };
   }, [onBack]);
+
+  /**
+   * Real-time message polling - WhatsApp-style auto-refresh
+   * Polls the MongoDB API every 2 seconds to check for new messages
+   * Automatically updates the chat when new messages are detected
+   */
+  useEffect(() => {
+    const pollMessages = async () => {
+      try {
+        // Fetch latest ticket data from MongoDB via API
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/tickets/${currentTicket.id}`);
+        if (response.ok) {
+          const updated = await response.json();
+          // Only update if there are new messages
+          if (updated.messages && updated.messages.length > currentTicket.messages.length) {
+            setCurrentTicket(updated);
+            // Auto-scroll to show new messages
+            setTimeout(scrollToBottom, 100);
+          }
+        }
+      } catch (error) {
+        // Silently fail - API might be down, will retry on next interval
+      }
+    };
+
+    // Poll every 2 seconds for new messages
+    const interval = setInterval(pollMessages, 2000);
+    
+    // Cleanup interval on component unmount
+    return () => clearInterval(interval);
+  }, [currentTicket.id, currentTicket.messages.length]);
 
   const loadAvailableAgents = async () => {
     try {
@@ -77,22 +113,30 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  /**
+   * Auto-expanding textarea handler
+   * Dynamically adjusts height from 52px to 200px max as user types
+   */
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setNewMessage(e.target.value);
     if (textareaRef.current) {
+      // Reset to minimum height first
       textareaRef.current.style.height = '52px';
+      // Expand to fit content, max 200px
       textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
     }
   };
 
+  /**
+   * Handles sending a new message in the ticket conversation
+   * Updates local state immediately for instant feedback
+   */
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('📨 TicketDetail - handleSendMessage called');
     if (!newMessage.trim()) return;
 
     setIsSubmitting(true);
     try {
-      console.log('📨 TicketDetail - Sending message to ticket:', currentTicket.id);
       const ticketService = TicketService.getInstance();
       const message = await ticketService.addMessage(
         currentTicket.id,
@@ -103,23 +147,21 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
       );
       
       if (message) {
-        console.log('✅ TicketDetail - Message sent successfully, updating local state');
+        // Clear input and reset textarea height
         setNewMessage('');
         if (textareaRef.current) {
           textareaRef.current.style.height = '52px';
         }
-        // Update local ticket state with new message instead of reloading everything
+        // Update local state with new message for instant display
         setCurrentTicket(prev => ({
           ...prev,
           messages: [...(prev.messages || []), message]
         }));
-        console.log('✅ TicketDetail - Local state updated, NOT calling onUpdate()');
       }
     } catch (error) {
-      console.error('❌ TicketDetail - Error sending message:', error);
+      console.error('Error sending message:', error);
     } finally {
       setIsSubmitting(false);
-      console.log('✅ TicketDetail - handleSendMessage finished');
     }
   };
 
@@ -142,9 +184,11 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
     }
   };
 
+  /**
+   * Handles ticket assignment changes
+   * Updates the assigned agent and shows success/error notifications
+   */
   const handleAssignmentChange = async (newAssignedTo: string) => {
-    console.log('Assignment change requested:', { ticketId: currentTicket.id, newAssignedTo, currentUser: user });
-    
     setIsUpdatingAssignment(true);
     try {
       const ticketService = TicketService.getInstance();
@@ -155,12 +199,10 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
         user.name
       );
       
-      console.log('Assignment update result:', updatedTicket);
-      
       if (updatedTicket) {
         setAssignedTo(newAssignedTo);
         
-        // Show success toast
+        // Show success notification
         const toastService = ToastService.getInstance();
         if (newAssignedTo) {
           const agentName = availableAgents.find(a => a.id === newAssignedTo)?.name || 'Agent';
@@ -169,7 +211,7 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
           toastService.success('Ticket Unassigned', 'Ticket has been unassigned successfully');
         }
         
-        // Force a complete refresh of the parent component
+        // Refresh parent component to update ticket list
         setTimeout(() => {
           onUpdate();
         }, 500);
@@ -285,7 +327,7 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
               
               {/* Agents & Admins: Quick Controls */}
               {(user.role === 'support-agent' || user.role === 'administrator') && (
-                <div className="space-y-3 backdrop-blur-xl bg-white/70 dark:bg-gray-800/60 rounded-2xl p-4 border-2 border-white/60 dark:border-white/20 shadow-lg">
+                <div className="space-y-2.5 backdrop-blur-xl bg-white/70 dark:bg-gray-800/60 rounded-2xl p-3 border-2 border-white/60 dark:border-white/20 shadow-lg relative z-50">
                   {/* Status & Assignment Row */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
@@ -345,6 +387,22 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                     }`}>
                       {ticket.priority}
                     </span>
+                  </div>
+                  
+                  {/* Timestamps */}
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <span className="text-gray-500 dark:text-gray-400">Created:</span>
+                      <div className="font-medium text-gray-900 dark:text-white mt-0.5">
+                        {new Date(ticket.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 dark:text-gray-400">Updated:</span>
+                      <div className="font-medium text-gray-900 dark:text-white mt-0.5">
+                        {new Date(ticket.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </div>
+                    </div>
                   </div>
                   
                   {/* Send Email Button */}
@@ -476,13 +534,13 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
             </div>
 
             {/* Reply Section - Fixed at Bottom */}
-            <div className="flex-shrink-0 p-6 border-t border-white/40 dark:border-white/10 backdrop-blur-xl bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5">
+            <div className="flex-shrink-0 p-6 border-t border-white/40 dark:border-white/10 backdrop-blur-xl bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 relative z-10">
               
 
               
-              <form onSubmit={handleSendMessage} className="relative">
-                <div className="flex items-center gap-3 p-3 backdrop-blur-2xl bg-gradient-to-r from-white/80 via-white/60 to-white/80 dark:from-gray-800/60 dark:via-gray-700/40 dark:to-gray-800/60 border-2 border-white/60 dark:border-white/20 rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
-                  <div className="flex-1 relative">
+              <form onSubmit={handleSendMessage} className="relative z-20">
+                <div className="flex items-end gap-2 sm:gap-3 relative z-20">
+                  <div className="flex-1 relative backdrop-blur-2xl bg-gradient-to-r from-white/80 via-white/60 to-white/80 dark:from-gray-800/60 dark:via-gray-700/40 dark:to-gray-800/60 border-2 border-white/60 dark:border-white/20 rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] p-2 sm:p-3">
                     <textarea
                       ref={textareaRef}
                       value={newMessage}
@@ -495,25 +553,25 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                       }}
                       placeholder="Type a message..."
                       rows={1}
-                      className="w-full px-6 py-3.5 pr-14 backdrop-blur-xl bg-white/70 dark:bg-gray-900/50 border-2 border-white/40 dark:border-white/10 rounded-3xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:border-blue-400/60 dark:focus:border-blue-500/40 focus:shadow-[0_0_20px_rgba(59,130,246,0.3)] resize-none transition-all font-medium"
+                      className="w-full px-4 sm:px-6 py-2.5 sm:py-3.5 pr-12 sm:pr-14 backdrop-blur-xl bg-white/70 dark:bg-gray-900/50 border-2 border-white/40 dark:border-white/10 rounded-3xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:border-blue-400/60 dark:focus:border-blue-500/40 focus:shadow-[0_0_20px_rgba(59,130,246,0.3)] resize-none transition-all font-medium text-sm sm:text-base"
                       style={{ minHeight: '52px', height: '52px', maxHeight: '200px', overflow: 'auto' }}
                     />
                     <button
                       type="button"
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-all p-2 hover:bg-white/70 dark:hover:bg-white/10 rounded-full backdrop-blur-xl shadow-lg hover:scale-110"
+                      className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-all p-1.5 sm:p-2 hover:bg-white/70 dark:hover:bg-white/10 rounded-full backdrop-blur-xl shadow-lg hover:scale-110"
                     >
-                      <Paperclip className="w-5 h-5" />
+                      <Paperclip className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
                   </div>
                   <button
                     type="submit"
                     disabled={isSubmitting || !newMessage.trim()}
-                    className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 hover:from-blue-600 hover:via-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-full transition-all disabled:cursor-not-allowed flex items-center justify-center shadow-[0_8px_24px_rgba(59,130,246,0.4)] hover:shadow-[0_12px_32px_rgba(59,130,246,0.6)] hover:scale-110 disabled:shadow-none disabled:scale-100 disabled:opacity-50 border-2 border-white/30"
+                    className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 hover:from-blue-600 hover:via-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-full transition-all disabled:cursor-not-allowed flex items-center justify-center shadow-[0_8px_24px_rgba(59,130,246,0.4)] hover:shadow-[0_12px_32px_rgba(59,130,246,0.6)] hover:scale-110 disabled:shadow-none disabled:scale-100 disabled:opacity-50 border-2 border-white/30 relative z-30"
                   >
                     {isSubmitting ? (
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                     ) : (
-                      <Send className="w-5 h-5" />
+                      <Send className="w-4 h-4 sm:w-5 sm:h-5" />
                     )}
                   </button>
                 </div>
@@ -523,8 +581,8 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
 
         </div>
 
-        {/* Right Column - Ticket Details (Hidden on Mobile for Customers Only) */}
-        <div className={`${user.role === 'customer' ? 'hidden lg:block' : ''} space-y-6`}>
+        {/* Right Column - Ticket Details (Hidden on Mobile) */}
+        <div className="hidden lg:block space-y-6">
           {/* Actions Card - Email Customer (Top Priority) */}
           {(user.role === 'support-agent' || user.role === 'administrator') && (
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border-2 border-green-200 dark:border-green-800 overflow-hidden shadow-lg">
