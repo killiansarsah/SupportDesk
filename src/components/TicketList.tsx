@@ -104,7 +104,7 @@ const TicketList: React.FC<TicketListProps> = ({
             
             <div className="flex flex-col items-end space-y-2 flex-shrink-0">
               <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(ticket.status)} whitespace-nowrap`}>
-                {ticket.status.replace('-', ' ')}
+                {ticket.status ? ticket.status.replace('-', ' ') : 'unknown'}
               </span>
               {showAssignOption && !ticket.assignedTo && (
                 <button
