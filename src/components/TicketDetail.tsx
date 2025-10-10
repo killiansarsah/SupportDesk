@@ -221,18 +221,45 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
         </div>
       </div>
 
-      {/* Main Layout - Two Column */}
+      {/* Main Layout - Single Column on Mobile, Two Column on Desktop */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Conversation */}
+        {/* Conversation Section - Full Width on Mobile */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Title */}
+          {/* Title & Mobile Status Bar */}
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-3">
               {currentTicket.title}
             </h1>
+            
+            {/* Mobile-Only Compact Status Bar */}
+            <div className="lg:hidden flex flex-wrap items-center gap-2 mb-4">
+              <span className={`inline-flex px-3 py-1.5 rounded-full text-xs font-semibold backdrop-blur-sm border ${
+                ticketStatus === 'open' 
+                  ? 'bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30'
+                  : ticketStatus === 'closed'
+                  ? 'bg-gray-500/20 text-gray-700 dark:text-gray-400 border-gray-500/30'
+                  : ticketStatus === 'in-progress'
+                  ? 'bg-purple-500/20 text-purple-700 dark:text-purple-400 border-purple-500/30'
+                  : 'bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30'
+              }`}>
+                {ticketStatus ? ticketStatus.replace('-', ' ').toUpperCase() : 'UNKNOWN'}
+              </span>
+              <span className={`inline-flex px-3 py-1.5 rounded-full text-xs font-semibold capitalize backdrop-blur-sm border ${
+                ticket.priority === 'urgent'
+                  ? 'bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30'
+                  : ticket.priority === 'high'
+                  ? 'bg-orange-500/20 text-orange-700 dark:text-orange-400 border-orange-500/30'
+                  : ticket.priority === 'medium'
+                  ? 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border-yellow-500/30'
+                  : 'bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30'
+              }`}>
+                {ticket.priority}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                Created {new Date(ticket.createdAt).toLocaleDateString()}
+              </span>
+            </div>
           </div>
-
-
 
           {/* Conversation Card - Glassmorphism Design */}
           <div className="backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 dark:from-gray-900/60 dark:via-gray-800/40 dark:to-gray-900/60 rounded-3xl border-2 border-white/60 dark:border-white/20 overflow-hidden shadow-[0_20px_70px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_70px_rgba(0,0,0,0.6)]">
@@ -424,8 +451,8 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
 
         </div>
 
-        {/* Right Column - Ticket Details */}
-        <div className="space-y-6">
+        {/* Right Column - Ticket Details (Hidden on Mobile, Visible on Desktop) */}
+        <div className="hidden lg:block space-y-6">
           {/* Actions Card - Email Customer (Top Priority) */}
           {(user.role === 'support-agent' || user.role === 'administrator') && (
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border-2 border-green-200 dark:border-green-800 overflow-hidden shadow-lg">
