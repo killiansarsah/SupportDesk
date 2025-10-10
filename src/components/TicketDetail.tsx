@@ -28,6 +28,7 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
   const [resolutionMessage, setResolutionMessage] = useState('');
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Update local ticket when prop changes
   useEffect(() => {
@@ -57,6 +58,14 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setNewMessage(e.target.value);
+    if (textareaRef.current) {
+      textareaRef.current.style.height = '52px';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
+    }
+  };
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('📨 TicketDetail - handleSendMessage called');
@@ -77,6 +86,9 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
       if (message) {
         console.log('✅ TicketDetail - Message sent successfully, updating local state');
         setNewMessage('');
+        if (textareaRef.current) {
+          textareaRef.current.style.height = '52px';
+        }
         // Update local ticket state with new message instead of reloading everything
         setCurrentTicket(prev => ({
           ...prev,
@@ -222,21 +234,22 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
 
 
 
-          {/* Conversation Card */}
-          <div className="bg-white dark:bg-dark-900 rounded-xl border border-gray-200 dark:border-dark-800 overflow-hidden">
-            <div className="p-6 border-b border-gray-200 dark:border-dark-800">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Conversation</h2>
+          {/* Conversation Card - Glassmorphism Design */}
+          <div className="backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 dark:from-gray-900/60 dark:via-gray-800/40 dark:to-gray-900/60 rounded-3xl border-2 border-white/60 dark:border-white/20 overflow-hidden shadow-[0_20px_70px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_70px_rgba(0,0,0,0.6)]">
+            <div className="p-6 border-b border-white/40 dark:border-white/10 backdrop-blur-xl bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Conversation</h2>
             </div>
 
-            <div className="p-4 sm:p-6 space-y-3 max-h-[600px] overflow-y-auto bg-gray-50 dark:bg-dark-950/50">
+            <div className="p-6 space-y-4 max-h-[600px] overflow-y-auto bg-gradient-to-b from-gray-50/50 via-white/30 to-gray-50/50 dark:from-gray-950/30 dark:via-gray-900/20 dark:to-gray-950/30">
               {currentTicket.messages && currentTicket.messages.length > 0 ? (
                 currentTicket.messages.map((message, index) => {
                 const isCurrentUser = message.userId === user.id;
-                const isAgent = message.userName.includes('Agent') || user.role === 'support-agent' || user.role === 'administrator';
+                // Check if message sender is an agent based on isInternal flag or if assigned agent sent it
+                const isAgent = message.isInternal === true || message.userId === currentTicket.assignedTo;
                 const showAvatar = index === 0 || currentTicket.messages[index - 1]?.userId !== message.userId;
                 
                 return (
-                  <div key={message.id} className={`flex gap-2 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
+                  <div key={message.id} className={`flex gap-3 ${isCurrentUser ? 'justify-end' : 'justify-start'} animate-fadeIn`}>
                     {/* Left Avatar (for received messages) */}
                     {!isCurrentUser && (
                       <div className="flex-shrink-0 self-end">
@@ -245,15 +258,15 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                             <img 
                               src={message.userAvatar} 
                               alt={message.userName}
-                              className="w-8 h-8 rounded-full object-cover"
+                              className="w-10 h-10 rounded-full object-cover ring-4 ring-white/50 dark:ring-white/20 shadow-lg"
                             />
                           ) : (
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-medium text-sm bg-gradient-to-br from-blue-500 to-blue-600">
+                            <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 shadow-lg ring-4 ring-white/50 dark:ring-white/20">
                               {message.userName.charAt(0).toUpperCase()}
                             </div>
                           )
                         ) : (
-                          <div className="w-8 h-8"></div>
+                          <div className="w-10 h-10"></div>
                         )}
                       </div>
                     )}
@@ -262,36 +275,36 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                     <div className={`flex flex-col max-w-[75%] sm:max-w-[65%] ${isCurrentUser ? 'items-end' : 'items-start'}`}>
                       {/* Sender name (only show if different from previous message or first message) */}
                       {showAvatar && !isCurrentUser && (
-                        <div className="flex items-center gap-2 mb-1 px-2">
-                          <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">
+                        <div className="flex items-center gap-2 mb-2 px-3">
+                          <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
                             {message.userName}
                           </span>
                           {isAgent && (
-                            <span className="text-[10px] px-1.5 py-0.5 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-full font-medium">
+                            <span className="text-[10px] px-2 py-1 backdrop-blur-xl bg-gradient-to-r from-orange-500/20 to-red-500/20 text-orange-700 dark:text-orange-300 rounded-full font-bold border border-orange-400/30 shadow-sm">
                               Agent
                             </span>
                           )}
                         </div>
                       )}
                       
-                      {/* Message Content */}
-                      <div className={`rounded-2xl px-4 py-2.5 shadow-sm ${
+                      {/* Message Content - Claymorphism Style */}
+                      <div className={`rounded-3xl px-5 py-3.5 shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] backdrop-blur-xl border-2 transition-all duration-300 hover:scale-[1.02] ${
                         isCurrentUser
-                          ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-br-sm'
-                          : 'bg-white dark:bg-dark-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-dark-700 rounded-bl-sm'
+                          ? 'bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 text-white border-blue-400/50 dark:border-blue-500/30 shadow-blue-500/20'
+                          : 'bg-gradient-to-br from-white/90 via-white/80 to-white/70 dark:from-gray-800/90 dark:via-gray-800/80 dark:to-gray-700/90 text-gray-900 dark:text-gray-100 border-white/60 dark:border-white/20'
                       }`}>
-                        <p className="text-[15px] leading-relaxed break-words whitespace-pre-wrap">
+                        <p className="text-[15px] leading-relaxed break-words whitespace-pre-wrap font-medium">
                           {message.content}
                         </p>
                         
                         {/* Timestamp */}
-                        <div className={`flex items-center gap-1 mt-1 ${
+                        <div className={`flex items-center gap-1.5 mt-2 ${
                           isCurrentUser ? 'justify-end' : 'justify-start'
                         }`}>
-                          <span className={`text-[11px] ${
+                          <span className={`text-[11px] font-semibold ${
                             isCurrentUser 
                               ? 'text-blue-100' 
-                              : 'text-gray-500 dark:text-gray-500'
+                              : 'text-gray-500 dark:text-gray-400'
                           }`}>
                             {new Date(message.timestamp).toLocaleTimeString('en-US', {
                               hour: 'numeric',
@@ -316,15 +329,15 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                             <img 
                               src={message.userAvatar} 
                               alt={message.userName}
-                              className="w-8 h-8 rounded-full object-cover"
+                              className="w-10 h-10 rounded-full object-cover ring-4 ring-white/50 dark:ring-white/20 shadow-lg"
                             />
                           ) : (
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-medium text-sm bg-gradient-to-br from-green-500 to-green-600">
+                            <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm bg-gradient-to-br from-green-500 via-emerald-600 to-teal-600 shadow-lg ring-4 ring-white/50 dark:ring-white/20">
                               {message.userName.charAt(0).toUpperCase()}
                             </div>
                           )
                         ) : (
-                          <div className="w-8 h-8"></div>
+                          <div className="w-10 h-10"></div>
                         )}
                       </div>
                     )}
@@ -340,8 +353,8 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
             </div>
 
             {/* Reply Section */}
-            <div className="p-6 border-t border-gray-200 dark:border-dark-800">
-              <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">Reply</h3>
+            <div className="p-6 border-t border-white/40 dark:border-white/10 backdrop-blur-xl bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5">
+              <h3 className="text-base font-bold text-gray-900 dark:text-white mb-4">Reply</h3>
               
               {/* Template Selector */}
               {(user.role === 'support-agent' || user.role === 'administrator') && (
@@ -368,40 +381,43 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                 </div>
               )}
               
-              <form onSubmit={handleSendMessage} className="flex items-end gap-3">
-                <div className="flex-1 relative">
-                  <textarea
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSendMessage(e);
-                      }
-                    }}
-                    placeholder="Type a message..."
-                    rows={1}
-                    className="w-full px-4 py-3 pr-12 bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-full text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none max-h-32"
-                    style={{ minHeight: '48px' }}
-                  />
+              <form onSubmit={handleSendMessage} className="relative">
+                <div className="flex items-center gap-3 p-3 backdrop-blur-2xl bg-gradient-to-r from-white/80 via-white/60 to-white/80 dark:from-gray-800/60 dark:via-gray-700/40 dark:to-gray-800/60 border-2 border-white/60 dark:border-white/20 rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+                  <div className="flex-1 relative">
+                    <textarea
+                      ref={textareaRef}
+                      value={newMessage}
+                      onChange={handleTextareaChange}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSendMessage(e);
+                        }
+                      }}
+                      placeholder="Type a message..."
+                      rows={1}
+                      className="w-full px-6 py-3.5 pr-14 backdrop-blur-xl bg-white/70 dark:bg-gray-900/50 border-2 border-white/40 dark:border-white/10 rounded-3xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:border-blue-400/60 dark:focus:border-blue-500/40 focus:shadow-[0_0_20px_rgba(59,130,246,0.3)] resize-none transition-all font-medium"
+                      style={{ minHeight: '52px', height: '52px', maxHeight: '200px', overflow: 'auto' }}
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-all p-2 hover:bg-white/70 dark:hover:bg-white/10 rounded-full backdrop-blur-xl shadow-lg hover:scale-110"
+                    >
+                      <Paperclip className="w-5 h-5" />
+                    </button>
+                  </div>
                   <button
-                    type="button"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    type="submit"
+                    disabled={isSubmitting || !newMessage.trim()}
+                    className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 hover:from-blue-600 hover:via-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-full transition-all disabled:cursor-not-allowed flex items-center justify-center shadow-[0_8px_24px_rgba(59,130,246,0.4)] hover:shadow-[0_12px_32px_rgba(59,130,246,0.6)] hover:scale-110 disabled:shadow-none disabled:scale-100 disabled:opacity-50 border-2 border-white/30"
                   >
-                    <Paperclip className="w-5 h-5" />
+                    {isSubmitting ? (
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    ) : (
+                      <Send className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
-                <button
-                  type="submit"
-                  disabled={isSubmitting || !newMessage.trim()}
-                  className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-gray-400 disabled:to-gray-400 dark:disabled:from-dark-700 dark:disabled:to-dark-700 text-white rounded-full transition-all disabled:cursor-not-allowed flex items-center justify-center shadow-lg hover:shadow-xl disabled:shadow-none"
-                >
-                  {isSubmitting ? (
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  ) : (
-                    <Send className="w-5 h-5" />
-                  )}
-                </button>
               </form>
             </div>
           </div>
@@ -464,12 +480,12 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                     className="w-full bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-lg focus:ring-2 focus:ring-primary-500"
                   />
                 ) : (
-                  <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
+                  <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm border ${
                     ticketStatus === 'open' 
-                      ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400'
+                      ? 'bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30'
                       : ticketStatus === 'closed'
-                      ? 'bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400'
-                      : 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
+                      ? 'bg-gray-500/20 text-gray-700 dark:text-gray-400 border-gray-500/30'
+                      : 'bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30'
                   }`}>
                     {ticketStatus.charAt(0).toUpperCase() + ticketStatus.slice(1)}
                   </span>
@@ -506,7 +522,7 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                 <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
                   Customer
                 </label>
-                <div className="text-gray-900 dark:text-white font-medium">
+                <div className="px-3 py-2 backdrop-blur-sm bg-white/50 dark:bg-white/5 rounded-lg border border-white/30 dark:border-white/10 text-gray-900 dark:text-white font-medium">
                   {typeof ticket.customerId === 'object' && ticket.customerId ? (ticket.customerId as UserType).name : 'Unknown'}
                 </div>
               </div>
@@ -516,7 +532,7 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                 <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
                   Created
                 </label>
-                <div className="text-gray-900 dark:text-white">
+                <div className="px-3 py-2 backdrop-blur-sm bg-white/50 dark:bg-white/5 rounded-lg border border-white/30 dark:border-white/10 text-gray-900 dark:text-white">
                   {new Date(ticket.createdAt).toLocaleString('en-US', {
                     year: 'numeric',
                     month: 'short',
@@ -531,7 +547,7 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                 <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
                   Last Update
                 </label>
-                <div className="text-gray-900 dark:text-white">
+                <div className="px-3 py-2 backdrop-blur-sm bg-white/50 dark:bg-white/5 rounded-lg border border-white/30 dark:border-white/10 text-gray-900 dark:text-white">
                   {new Date(ticket.updatedAt).toLocaleString('en-US', {
                     year: 'numeric',
                     month: 'short',
@@ -546,9 +562,17 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                 <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
                   Priority
                 </label>
-                <div className="text-gray-900 dark:text-white font-medium capitalize">
+                <span className={`inline-flex px-3 py-1.5 rounded-lg text-sm font-semibold capitalize backdrop-blur-sm border ${
+                  ticket.priority === 'urgent'
+                    ? 'bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30'
+                    : ticket.priority === 'high'
+                    ? 'bg-orange-500/20 text-orange-700 dark:text-orange-400 border-orange-500/30'
+                    : ticket.priority === 'medium'
+                    ? 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border-yellow-500/30'
+                    : 'bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30'
+                }`}>
                   {ticket.priority}
-                </div>
+                </span>
               </div>
 
               {/* Related Order */}
@@ -557,7 +581,7 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                   <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
                     Related Order
                   </label>
-                  <a href="#" className="text-primary-600 hover:text-primary-700 font-medium">
+                  <a href="#" className="inline-flex px-3 py-2 backdrop-blur-sm bg-blue-500/10 hover:bg-blue-500/20 rounded-lg border border-blue-500/30 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-all">
                     #{currentTicket.description.match(/#(\d+)/)?.[1] || '5678'}
                   </a>
                 </div>
@@ -567,18 +591,18 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
 
           {/* Attachments */}
           {currentTicket.attachments && currentTicket.attachments.length > 0 && (
-            <div className="bg-white dark:bg-dark-900 rounded-xl border border-gray-200 dark:border-dark-800 overflow-hidden">
-              <div className="p-6 border-b border-gray-200 dark:border-dark-800">
+            <div className="backdrop-blur-xl bg-white/70 dark:bg-gradient-to-br dark:from-white/5 dark:to-white/10 rounded-xl border border-white/40 dark:border-white/10 overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)]">
+              <div className="p-6 border-b border-white/30 dark:border-white/10 backdrop-blur-sm bg-white/50 dark:bg-white/5">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Attachments</h2>
               </div>
               <div className="p-6 space-y-2">
                 {ticket.attachments.map((attachment) => (
-                  <div key={attachment.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-dark-800 rounded-lg">
+                  <div key={attachment.id} className="flex items-center justify-between p-3 backdrop-blur-sm bg-white/50 dark:bg-white/5 rounded-lg border border-white/30 dark:border-white/10">
                     <div className="flex items-center gap-2">
                       <Paperclip className="w-4 h-4 text-gray-400" />
                       <span className="text-sm text-gray-900 dark:text-white">{attachment.name}</span>
                     </div>
-                    <button className="p-1 rounded hover:bg-gray-200 dark:hover:bg-dark-700 transition-colors">
+                    <button className="p-1 rounded hover:bg-white/50 dark:hover:bg-white/10 transition-colors">
                       <Download className="w-4 h-4 text-gray-400" />
                     </button>
                   </div>
@@ -591,8 +615,8 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
 
       {/* Email Customer Modal */}
       {showEmailModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-gradient-to-br from-gray-900/95 to-gray-800/95 backdrop-blur-lg border border-white/20 rounded-xl p-6 w-full max-w-lg">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center p-4 z-50">
+          <div className="backdrop-blur-xl bg-gradient-to-br from-gray-900/90 to-gray-800/90 dark:from-gray-900/95 dark:to-gray-800/95 border border-white/20 rounded-xl p-6 w-full max-w-lg shadow-[0_20px_60px_rgb(0,0,0,0.5)]">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                 <Send className="w-5 h-5" />
@@ -611,7 +635,7 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Customer Email
                 </label>
-                <div className="px-3 py-2 bg-gray-800/50 border border-gray-600 rounded-lg text-gray-300">
+                <div className="px-3 py-2 backdrop-blur-sm bg-white/5 border border-white/20 rounded-lg text-gray-300">
                   {typeof ticket.customerId === 'object' && (ticket.customerId as UserType)?.email || 'No email available'}
                 </div>
               </div>
@@ -624,7 +648,7 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                   value={resolutionMessage}
                   onChange={(e) => setResolutionMessage(e.target.value)}
                   placeholder="Enter a custom resolution message (optional)"
-                  className="w-full px-3 py-2 bg-gray-800/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400"
+                  className="w-full px-3 py-2 backdrop-blur-sm bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-400/50"
                   rows={4}
                 />
                 <p className="text-xs text-gray-400 mt-1">
@@ -635,14 +659,14 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
               <div className="flex gap-3 pt-2">
                 <button
                   onClick={() => setShowEmailModal(false)}
-                  className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+                  className="flex-1 px-4 py-2 backdrop-blur-sm bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all border border-white/20"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSendResolutionEmail}
                   disabled={isSendingEmail}
-                  className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-600/50 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-green-600/50 disabled:to-emerald-600/50 text-white rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
                 >
                   {isSendingEmail ? (
                     <>
