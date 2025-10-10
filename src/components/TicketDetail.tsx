@@ -43,6 +43,25 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
     setAssignedTo(ticket.assignedTo || '');
   }, [ticket]);
 
+  // Handle browser back button
+  useEffect(() => {
+    // Push a new state when ticket detail opens
+    window.history.pushState({ ticketDetail: true }, '');
+    
+    const handlePopState = (e: PopStateEvent) => {
+      // If user presses back, go back to dashboard
+      if (!e.state?.ticketDetail) {
+        onBack();
+      }
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [onBack]);
+
   const loadAvailableAgents = async () => {
     try {
       const apiService = ApiService.getInstance();
@@ -231,42 +250,120 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
               {currentTicket.title}
             </h1>
             
-            {/* Mobile-Only Compact Status Bar (Customers Only) */}
-            {user.role === 'customer' && (
-              <div className="lg:hidden flex flex-wrap items-center gap-2 mb-4">
-                <span className={`inline-flex px-3 py-1.5 rounded-full text-xs font-semibold backdrop-blur-sm border ${
-                  ticketStatus === 'open' 
-                    ? 'bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30'
-                    : ticketStatus === 'closed'
-                    ? 'bg-gray-500/20 text-gray-700 dark:text-gray-400 border-gray-500/30'
-                    : ticketStatus === 'in-progress'
-                    ? 'bg-purple-500/20 text-purple-700 dark:text-purple-400 border-purple-500/30'
-                    : 'bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30'
-                }`}>
-                  {ticketStatus ? ticketStatus.replace('-', ' ').toUpperCase() : 'UNKNOWN'}
-                </span>
-                <span className={`inline-flex px-3 py-1.5 rounded-full text-xs font-semibold capitalize backdrop-blur-sm border ${
-                  ticket.priority === 'urgent'
-                    ? 'bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30'
-                    : ticket.priority === 'high'
-                    ? 'bg-orange-500/20 text-orange-700 dark:text-orange-400 border-orange-500/30'
-                    : ticket.priority === 'medium'
-                    ? 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border-yellow-500/30'
-                    : 'bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30'
-                }`}>
-                  {ticket.priority}
-                </span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  Created {new Date(ticket.createdAt).toLocaleDateString()}
-                </span>
-              </div>
-            )}
+            {/* Mobile-Only Status Bar */}
+            <div className="lg:hidden mb-4">
+              {/* Customers: Simple Status Badges */}
+              {user.role === 'customer' && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={`inline-flex px-3 py-1.5 rounded-full text-xs font-semibold backdrop-blur-sm border ${
+                    ticketStatus === 'open' 
+                      ? 'bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30'
+                      : ticketStatus === 'closed'
+                      ? 'bg-gray-500/20 text-gray-700 dark:text-gray-400 border-gray-500/30'
+                      : ticketStatus === 'in-progress'
+                      ? 'bg-purple-500/20 text-purple-700 dark:text-purple-400 border-purple-500/30'
+                      : 'bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30'
+                  }`}>
+                    {ticketStatus ? ticketStatus.replace('-', ' ').toUpperCase() : 'UNKNOWN'}
+                  </span>
+                  <span className={`inline-flex px-3 py-1.5 rounded-full text-xs font-semibold capitalize backdrop-blur-sm border ${
+                    ticket.priority === 'urgent'
+                      ? 'bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30'
+                      : ticket.priority === 'high'
+                      ? 'bg-orange-500/20 text-orange-700 dark:text-orange-400 border-orange-500/30'
+                      : ticket.priority === 'medium'
+                      ? 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border-yellow-500/30'
+                      : 'bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30'
+                  }`}>
+                    {ticket.priority}
+                  </span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    Created {new Date(ticket.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+              )}
+              
+              {/* Agents & Admins: Quick Controls */}
+              {(user.role === 'support-agent' || user.role === 'administrator') && (
+                <div className="space-y-3 backdrop-blur-xl bg-white/70 dark:bg-gray-800/60 rounded-2xl p-4 border-2 border-white/60 dark:border-white/20 shadow-lg">
+                  {/* Status & Assignment Row */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1.5">
+                        Status
+                      </label>
+                      <CustomSelect
+                        value={ticketStatus}
+                        onChange={handleStatusChange}
+                        disabled={isUpdatingStatus}
+                        options={[
+                          { value: 'open', label: 'Open' },
+                          { value: 'in-progress', label: 'In Progress' },
+                          { value: 'resolved', label: 'Resolved' },
+                          { value: 'closed', label: 'Closed' }
+                        ]}
+                        className="w-full text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1.5">
+                        Assignee
+                      </label>
+                      <CustomSelect
+                        value={assignedTo}
+                        onChange={handleAssignmentChange}
+                        disabled={isUpdatingAssignment}
+                        placeholder="Unassigned"
+                        options={[
+                          { value: '', label: 'Unassigned' },
+                          ...availableAgents.map((agent) => ({
+                            value: agent.id,
+                            label: agent.name
+                          }))
+                        ]}
+                        className="w-full text-sm"
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Customer & Priority Info */}
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-500 dark:text-gray-400">Customer:</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">
+                        {typeof ticket.customerId === 'object' && ticket.customerId ? (ticket.customerId as UserType).name : 'Unknown'}
+                      </span>
+                    </div>
+                    <span className={`px-2 py-1 rounded-lg text-xs font-semibold capitalize backdrop-blur-sm border ${
+                      ticket.priority === 'urgent'
+                        ? 'bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30'
+                        : ticket.priority === 'high'
+                        ? 'bg-orange-500/20 text-orange-700 dark:text-orange-400 border-orange-500/30'
+                        : ticket.priority === 'medium'
+                        ? 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border-yellow-500/30'
+                        : 'bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30'
+                    }`}>
+                      {ticket.priority}
+                    </span>
+                  </div>
+                  
+                  {/* Send Email Button */}
+                  <button
+                    onClick={() => setShowEmailModal(true)}
+                    className="w-full px-4 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white text-sm font-semibold rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+                  >
+                    <Send className="w-4 h-4" />
+                    Email Customer
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Conversation Card - WhatsApp Style with Fixed Input */}
           <div className="backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 dark:from-gray-900/60 dark:via-gray-800/40 dark:to-gray-900/60 rounded-3xl border-2 border-white/60 dark:border-white/20 overflow-hidden shadow-[0_20px_70px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_70px_rgba(0,0,0,0.6)] flex flex-col h-[calc(100vh-280px)] min-h-[500px]">
 
-            <div className="flex-1 p-6 space-y-4 overflow-y-auto bg-gradient-to-b from-gray-50/50 via-white/30 to-gray-50/50 dark:from-gray-950/30 dark:via-gray-900/20 dark:to-gray-950/30">
+            <div className="conversation-messages flex-1 p-6 space-y-4 overflow-y-auto bg-gradient-to-b from-gray-50/50 via-white/30 to-gray-50/50 dark:from-gray-950/30 dark:via-gray-900/20 dark:to-gray-950/30">
               {currentTicket.messages && currentTicket.messages.length > 0 ? (
                 currentTicket.messages.map((message, index) => {
                 const isCurrentUser = message.userId === user.id;
@@ -275,7 +372,7 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                 const showAvatar = index === 0 || currentTicket.messages[index - 1]?.userId !== message.userId;
                 
                 return (
-                  <div key={message.id} className={`flex gap-3 ${isCurrentUser ? 'justify-end' : 'justify-start'} animate-fadeIn`}>
+                  <div key={message.id} className={`flex gap-2 ${isCurrentUser ? 'justify-end' : 'justify-start'} animate-fadeIn`}>
                     {/* Left Avatar (for received messages) */}
                     {!isCurrentUser && (
                       <div className="flex-shrink-0 self-end">
@@ -284,15 +381,15 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                             <img 
                               src={message.userAvatar} 
                               alt={message.userName}
-                              className="w-10 h-10 rounded-full object-cover ring-4 ring-white/50 dark:ring-white/20 shadow-lg"
+                              className="w-7 h-7 rounded-full object-cover ring-2 ring-white/50 dark:ring-white/20 shadow-md"
                             />
                           ) : (
-                            <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 shadow-lg ring-4 ring-white/50 dark:ring-white/20">
+                            <div className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-xs bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 shadow-md ring-2 ring-white/50 dark:ring-white/20">
                               {message.userName.charAt(0).toUpperCase()}
                             </div>
                           )
                         ) : (
-                          <div className="w-10 h-10"></div>
+                          <div className="w-7 h-7"></div>
                         )}
                       </div>
                     )}
@@ -323,14 +420,14 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                           {message.content}
                         </p>
                         
-                        {/* Timestamp */}
-                        <div className={`flex items-center gap-1.5 mt-2 ${
+                        {/* Timestamp - WhatsApp Style */}
+                        <div className={`flex items-center gap-1 mt-1 ${
                           isCurrentUser ? 'justify-end' : 'justify-start'
                         }`}>
-                          <span className={`text-[11px] font-semibold ${
+                          <span className={`text-[10px] opacity-70 ${
                             isCurrentUser 
-                              ? 'text-blue-100' 
-                              : 'text-gray-500 dark:text-gray-400'
+                              ? 'text-white' 
+                              : 'text-gray-600 dark:text-gray-400'
                           }`}>
                             {new Date(message.timestamp).toLocaleTimeString('en-US', {
                               hour: 'numeric',
@@ -339,7 +436,7 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                             })}
                           </span>
                           {isCurrentUser && (
-                            <svg className="w-4 h-4 text-blue-100" fill="currentColor" viewBox="0 0 20 20">
+                            <svg className="w-3 h-3 text-white opacity-70" fill="currentColor" viewBox="0 0 20 20">
                               <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
                             </svg>
                           )}
@@ -355,15 +452,15 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                             <img 
                               src={message.userAvatar} 
                               alt={message.userName}
-                              className="w-10 h-10 rounded-full object-cover ring-4 ring-white/50 dark:ring-white/20 shadow-lg"
+                              className="w-7 h-7 rounded-full object-cover ring-2 ring-white/50 dark:ring-white/20 shadow-md"
                             />
                           ) : (
-                            <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm bg-gradient-to-br from-green-500 via-emerald-600 to-teal-600 shadow-lg ring-4 ring-white/50 dark:ring-white/20">
+                            <div className="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-xs bg-gradient-to-br from-green-500 via-emerald-600 to-teal-600 shadow-md ring-2 ring-white/50 dark:ring-white/20">
                               {message.userName.charAt(0).toUpperCase()}
                             </div>
                           )
                         ) : (
-                          <div className="w-10 h-10"></div>
+                          <div className="w-7 h-7"></div>
                         )}
                       </div>
                     )}
