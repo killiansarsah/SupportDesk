@@ -7,31 +7,7 @@ interface ChatBotIconProps {
 
 const ChatBotIcon: React.FC<ChatBotIconProps> = ({ className = "", size = 24 }) => {
   return (
-    <div className="relative">
-      {/* Spinning Circle Background */}
-      <div className="absolute inset-0 animate-spin">
-        <svg
-          width={size}
-          height={size}
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className={className}
-        >
-          <circle 
-            cx="12" 
-            cy="12" 
-            r="10" 
-            stroke="currentColor" 
-            strokeWidth="1" 
-            strokeDasharray="8 4" 
-            opacity="0.3"
-          />
-        </svg>
-      </div>
-      
-      {/* Main Robot */}
-      <svg
+    <svg
         width={size}
         height={size}
         viewBox="0 0 24 24"
@@ -74,7 +50,6 @@ const ChatBotIcon: React.FC<ChatBotIconProps> = ({ className = "", size = 24 }) 
         <circle cx="12" cy="2" r="0.8" fill="currentColor"/>
         <line x1="12" y1="2.8" x2="12" y2="4" stroke="currentColor" strokeWidth="1"/>
       </svg>
-    </div>
   );
 };
 

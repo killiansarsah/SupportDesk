@@ -425,8 +425,12 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
               {currentTicket.messages && currentTicket.messages.length > 0 ? (
                 currentTicket.messages.map((message, index) => {
                 const isCurrentUser = message.userId === user.id;
-                // Check if message sender is an agent based on isInternal flag or if assigned agent sent it
-                const isAgent = message.isInternal === true || message.userId === currentTicket.assignedTo;
+                // Get customer ID properly
+                const customerId = typeof currentTicket.customerId === 'string' ? currentTicket.customerId : (currentTicket.customerId as UserType)?.id;
+                // Show Agent label ONLY if message is from an agent/admin (not from customer)
+                const isMessageFromAgent = isCurrentUser 
+                  ? (user.role === 'support-agent' || user.role === 'administrator')
+                  : (message.userId !== customerId);
                 const showAvatar = index === 0 || currentTicket.messages[index - 1]?.userId !== message.userId;
                 
                 return (
@@ -455,16 +459,11 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
                     {/* Message Bubble */}
                     <div className={`flex flex-col max-w-[80%] sm:max-w-[70%] ${isCurrentUser ? 'items-end' : 'items-start'}`}>
                       {/* Sender name */}
-                      {showAvatar && !isCurrentUser && (
+                      {showAvatar && !isCurrentUser && isMessageFromAgent && (
                         <div className="flex items-center gap-2 mb-1 px-1">
                           <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
                             {message.userName}
                           </span>
-                          {isAgent && (
-                            <span className="text-[10px] px-2 py-0.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-full font-bold shadow-sm">
-                              Agent
-                            </span>
-                          )}
                         </div>
                       )}
                       
@@ -533,39 +532,39 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Reply Section - Modern Input */}
-            <div className="flex-shrink-0 p-4 border-t border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
+            {/* Reply Section - Telegram-style Input */}
+            <div className="flex-shrink-0 p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
               <form onSubmit={handleSendMessage}>
-                <div className="flex items-end gap-2">
-                  <button
-                    type="button"
-                    className="flex-shrink-0 p-2.5 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all"
-                  >
-                    <Paperclip className="w-5 h-5" />
-                  </button>
-                  
+                <div className="flex items-end gap-3 mr-16 sm:mr-0"> {/* Add right margin to avoid chat bot icon */}
                   <div className="flex-1 relative">
-                    <textarea
-                      ref={textareaRef}
-                      value={newMessage}
-                      onChange={handleTextareaChange}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSendMessage(e);
-                        }
-                      }}
-                      placeholder="Type your message..."
-                      rows={1}
-                      className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all text-sm"
-                      style={{ minHeight: '44px', height: '44px', maxHeight: '120px', overflow: 'auto' }}
-                    />
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 focus-within:border-blue-500 dark:focus-within:border-blue-400 transition-all">
+                      <textarea
+                        ref={textareaRef}
+                        value={newMessage}
+                        onChange={handleTextareaChange}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendMessage(e);
+                          }
+                        }}
+                        placeholder="Write a message..."
+                        rows={1}
+                        className="w-full px-4 py-3 bg-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none resize-none text-sm rounded-2xl"
+                        style={{ minHeight: '48px', height: '48px', maxHeight: '120px', overflow: 'auto' }}
+                      />
+                    </div>
                   </div>
                   
+                  {/* Separate send button - Telegram style */}
                   <button
                     type="submit"
                     disabled={isSubmitting || !newMessage.trim()}
-                    className="flex-shrink-0 p-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-xl transition-all disabled:cursor-not-allowed flex items-center justify-center shadow-md hover:shadow-lg disabled:opacity-50"
+                    className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition-all transform ${
+                      newMessage.trim() && !isSubmitting
+                        ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-xl scale-100 hover:scale-105'
+                        : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 scale-90 cursor-not-allowed'
+                    }`}
                   >
                     {isSubmitting ? (
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Copy, Plus, Edit, Trash2, MessageSquare, FileText } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { Copy, Plus, Edit, Trash2, MessageSquare, FileText, X } from 'lucide-react';
 import Toast from './Toast';
 import CustomSelect from './CustomSelect';
 
@@ -22,7 +23,9 @@ const TemplateManager: React.FC<TemplateManagerProps> = ({
 }) => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  const [templates] = useState<Template[]>([
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newTemplate, setNewTemplate] = useState({ name: '', content: '', type: 'ticket' as 'ticket' | 'response', category: '' });
+  const [templates, setTemplates] = useState<Template[]>([
     // Ticket Templates
     {
       id: '1',
@@ -228,6 +231,67 @@ Customer Support Team`
 
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
+
+  useEffect(() => {
+    if (showAddModal) {
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showAddModal]);
+
+  const handleEditTemplate = (template: Template) => {
+    setEditingTemplate(template);
+    setNewTemplate({
+      name: template.name,
+      content: template.content,
+      type: template.type,
+      category: template.category || ''
+    });
+    setShowAddModal(true);
+  };
+
+  const handleDeleteTemplate = (templateId: string) => {
+    if (confirm('Are you sure you want to delete this template?')) {
+      setTemplates(templates.filter(t => t.id !== templateId));
+      setToastMessage('Template deleted successfully');
+      setShowToast(true);
+    }
+  };
+
+  const handleAddTemplate = () => {
+    if (!newTemplate.name.trim() || !newTemplate.content.trim()) {
+      setToastMessage('Please fill in all required fields');
+      setShowToast(true);
+      return;
+    }
+    
+    if (editingTemplate) {
+      setTemplates(templates.map(t => 
+        t.id === editingTemplate.id
+          ? { ...t, name: newTemplate.name, content: newTemplate.content, type: newTemplate.type, category: newTemplate.category || undefined }
+          : t
+      ));
+      setToastMessage('Template updated successfully!');
+      setEditingTemplate(null);
+    } else {
+      const template: Template = {
+        id: Date.now().toString(),
+        name: newTemplate.name,
+        content: newTemplate.content,
+        type: newTemplate.type,
+        category: newTemplate.category || undefined
+      };
+      setTemplates([...templates, template]);
+      setToastMessage('Template created successfully!');
+    }
+    
+    setShowToast(true);
+    setShowAddModal(false);
+    setNewTemplate({ name: '', content: '', type: 'ticket', category: '' });
+  };
 
   const filteredTemplates = templates.filter(template => {
     const matchesType = type === 'both' || template.type === type;
@@ -269,24 +333,29 @@ Customer Support Team`
   };
 
   return (
-    <div className="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+    <div className="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+        <h3 className="text-lg sm:text-xl font-semibold text-white flex items-center gap-2">
           {type === 'ticket' && <FileText className="w-5 h-5" />}
           {type === 'response' && <MessageSquare className="w-5 h-5" />}
           {type === 'both' && <FileText className="w-5 h-5" />}
-          {type === 'ticket' ? 'Ticket Templates' : 
-           type === 'response' ? 'Canned Responses' : 
-           'Templates & Responses'}
+          <span className="truncate">
+            {type === 'ticket' ? 'Ticket Templates' : 
+             type === 'response' ? 'Canned Responses' : 
+             'Templates & Responses'}
+          </span>
         </h3>
-        <button className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 px-4 py-2 rounded-lg border border-blue-400/30 transition-colors flex items-center gap-2">
+        <button 
+          onClick={() => setShowAddModal(true)}
+          className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 px-4 py-2 rounded-lg border border-blue-400/30 transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
+        >
           <Plus className="w-4 h-4" />
-          Add New
+          <span>Add New</span>
         </button>
       </div>
 
       {/* Search and Filter */}
-      <div className="flex gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <input
           type="text"
           placeholder="Search templates..."
@@ -294,7 +363,7 @@ Customer Support Team`
           onChange={(e) => setSearchTerm(e.target.value)}
           className="flex-1 bg-white/5 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-white/50 focus:outline-none focus:border-blue-400/50"
         />
-        <div className="w-56">
+        <div className="w-full sm:w-56">
           <CustomSelect
             value={selectedCategory}
             onChange={setSelectedCategory}
@@ -305,20 +374,20 @@ Customer Support Team`
       </div>
 
       {/* Templates Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {filteredTemplates.map(template => (
           <div
             key={template.id}
-            className="bg-white/5 border border-white/20 rounded-lg p-4 hover:bg-white/10 transition-colors"
+            className="bg-white/5 border border-white/20 rounded-lg p-4 hover:bg-white/10 transition-colors break-words"
           >
-            <div className="flex items-start justify-between mb-3">
-              <div>
-                <h4 className="font-medium text-white flex items-center gap-2">
+            <div className="flex items-start justify-between gap-2 mb-3">
+              <div className="flex-1 min-w-0">
+                <h4 className="font-medium text-white flex items-center gap-2 flex-wrap">
                   {template.type === 'ticket' ? 
-                    <FileText className="w-4 h-4 text-blue-400" /> : 
-                    <MessageSquare className="w-4 h-4 text-green-400" />
+                    <FileText className="w-4 h-4 text-blue-400 flex-shrink-0" /> : 
+                    <MessageSquare className="w-4 h-4 text-green-400 flex-shrink-0" />
                   }
-                  {template.name}
+                  <span className="break-words">{template.name}</span>
                 </h4>
                 {template.category && (
                   <span className="text-xs text-white/60 bg-white/10 px-2 py-1 rounded mt-1 inline-block">
@@ -326,7 +395,7 @@ Customer Support Team`
                   </span>
                 )}
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-1 flex-shrink-0">
                 <button
                   onClick={() => handleTemplateSelect(template)}
                   className="text-blue-400 hover:text-blue-300 p-1 rounded transition-colors"
@@ -334,17 +403,23 @@ Customer Support Team`
                 >
                   <Copy className="w-4 h-4" />
                 </button>
-                <button className="text-white/60 hover:text-white/80 p-1 rounded transition-colors">
+                <button 
+                  onClick={() => handleEditTemplate(template)}
+                  className="text-white/60 hover:text-white/80 p-1 rounded transition-colors"
+                >
                   <Edit className="w-4 h-4" />
                 </button>
-                <button className="text-red-400 hover:text-red-300 p-1 rounded transition-colors">
+                <button 
+                  onClick={() => handleDeleteTemplate(template.id)}
+                  className="text-red-400 hover:text-red-300 p-1 rounded transition-colors"
+                >
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             </div>
             
-            <div className="text-white/70 text-sm bg-black/20 rounded p-3 max-h-32 overflow-y-auto">
-              <pre className="whitespace-pre-wrap font-mono text-xs">
+            <div className="text-white/70 text-sm bg-black/20 rounded p-3 max-h-32 overflow-y-auto overflow-x-hidden">
+              <pre className="whitespace-pre-wrap font-mono text-xs break-words">
                 {template.content.substring(0, 200)}
                 {template.content.length > 200 && '...'}
               </pre>
@@ -355,7 +430,7 @@ Customer Support Team`
               className="w-full mt-3 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 py-2 rounded-lg border border-blue-400/30 transition-colors flex items-center justify-center gap-2"
             >
               <Copy className="w-4 h-4" />
-              Copy Template
+              <span>Copy Template</span>
             </button>
           </div>
         ))}
@@ -368,6 +443,87 @@ Customer Support Team`
         </div>
       )}
       
+      {/* Add Template Modal */}
+      {showAddModal && createPortal(
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[100000]" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+          <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 w-full max-w-lg max-h-[70vh] overflow-y-auto shadow-2xl">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold text-white">Create New Template</h3>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Template Name *</label>
+                <input
+                  type="text"
+                  value={newTemplate.name}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, name: e.target.value })}
+                  placeholder="Enter template name"
+                  className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-blue-400/50"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Type *</label>
+                <CustomSelect
+                  value={newTemplate.type}
+                  onChange={(value) => setNewTemplate({ ...newTemplate, type: value as 'ticket' | 'response' })}
+                  options={[
+                    { value: 'ticket', label: 'Ticket Template' },
+                    { value: 'response', label: 'Response Template' }
+                  ]}
+                  placeholder="Select Type"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
+                <input
+                  type="text"
+                  value={newTemplate.category}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, category: e.target.value })}
+                  placeholder="e.g., Account, Technical, Billing"
+                  className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-blue-400/50"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Content *</label>
+                <textarea
+                  value={newTemplate.content}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, content: e.target.value })}
+                  placeholder="Enter template content..."
+                  rows={6}
+                  className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-blue-400/50 resize-none"
+                />
+              </div>
+              
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all border border-white/20"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddTemplate}
+                  className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg transition-all shadow-lg hover:shadow-xl"
+                >
+                  Create Template
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
       {/* Toast Notification */}
       {showToast && (
         <Toast

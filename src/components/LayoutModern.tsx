@@ -381,7 +381,7 @@ const LayoutModern: React.FC<LayoutModernProps> = ({
             {children}
           </main>
         </div>
-
+        
         <LiveChat />
       </div>
     </div>
