@@ -231,43 +231,42 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
               {currentTicket.title}
             </h1>
             
-            {/* Mobile-Only Compact Status Bar */}
-            <div className="lg:hidden flex flex-wrap items-center gap-2 mb-4">
-              <span className={`inline-flex px-3 py-1.5 rounded-full text-xs font-semibold backdrop-blur-sm border ${
-                ticketStatus === 'open' 
-                  ? 'bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30'
-                  : ticketStatus === 'closed'
-                  ? 'bg-gray-500/20 text-gray-700 dark:text-gray-400 border-gray-500/30'
-                  : ticketStatus === 'in-progress'
-                  ? 'bg-purple-500/20 text-purple-700 dark:text-purple-400 border-purple-500/30'
-                  : 'bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30'
-              }`}>
-                {ticketStatus ? ticketStatus.replace('-', ' ').toUpperCase() : 'UNKNOWN'}
-              </span>
-              <span className={`inline-flex px-3 py-1.5 rounded-full text-xs font-semibold capitalize backdrop-blur-sm border ${
-                ticket.priority === 'urgent'
-                  ? 'bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30'
-                  : ticket.priority === 'high'
-                  ? 'bg-orange-500/20 text-orange-700 dark:text-orange-400 border-orange-500/30'
-                  : ticket.priority === 'medium'
-                  ? 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border-yellow-500/30'
-                  : 'bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30'
-              }`}>
-                {ticket.priority}
-              </span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                Created {new Date(ticket.createdAt).toLocaleDateString()}
-              </span>
-            </div>
+            {/* Mobile-Only Compact Status Bar (Customers Only) */}
+            {user.role === 'customer' && (
+              <div className="lg:hidden flex flex-wrap items-center gap-2 mb-4">
+                <span className={`inline-flex px-3 py-1.5 rounded-full text-xs font-semibold backdrop-blur-sm border ${
+                  ticketStatus === 'open' 
+                    ? 'bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30'
+                    : ticketStatus === 'closed'
+                    ? 'bg-gray-500/20 text-gray-700 dark:text-gray-400 border-gray-500/30'
+                    : ticketStatus === 'in-progress'
+                    ? 'bg-purple-500/20 text-purple-700 dark:text-purple-400 border-purple-500/30'
+                    : 'bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30'
+                }`}>
+                  {ticketStatus ? ticketStatus.replace('-', ' ').toUpperCase() : 'UNKNOWN'}
+                </span>
+                <span className={`inline-flex px-3 py-1.5 rounded-full text-xs font-semibold capitalize backdrop-blur-sm border ${
+                  ticket.priority === 'urgent'
+                    ? 'bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30'
+                    : ticket.priority === 'high'
+                    ? 'bg-orange-500/20 text-orange-700 dark:text-orange-400 border-orange-500/30'
+                    : ticket.priority === 'medium'
+                    ? 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border-yellow-500/30'
+                    : 'bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-500/30'
+                }`}>
+                  {ticket.priority}
+                </span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  Created {new Date(ticket.createdAt).toLocaleDateString()}
+                </span>
+              </div>
+            )}
           </div>
 
-          {/* Conversation Card - Glassmorphism Design */}
-          <div className="backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 dark:from-gray-900/60 dark:via-gray-800/40 dark:to-gray-900/60 rounded-3xl border-2 border-white/60 dark:border-white/20 overflow-hidden shadow-[0_20px_70px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_70px_rgba(0,0,0,0.6)]">
-            <div className="p-6 border-b border-white/40 dark:border-white/10 backdrop-blur-xl bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Conversation</h2>
-            </div>
+          {/* Conversation Card - WhatsApp Style with Fixed Input */}
+          <div className="backdrop-blur-2xl bg-gradient-to-br from-white/80 via-white/60 to-white/40 dark:from-gray-900/60 dark:via-gray-800/40 dark:to-gray-900/60 rounded-3xl border-2 border-white/60 dark:border-white/20 overflow-hidden shadow-[0_20px_70px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_70px_rgba(0,0,0,0.6)] flex flex-col h-[calc(100vh-280px)] min-h-[500px]">
 
-            <div className="p-6 space-y-4 max-h-[600px] overflow-y-auto bg-gradient-to-b from-gray-50/50 via-white/30 to-gray-50/50 dark:from-gray-950/30 dark:via-gray-900/20 dark:to-gray-950/30">
+            <div className="flex-1 p-6 space-y-4 overflow-y-auto bg-gradient-to-b from-gray-50/50 via-white/30 to-gray-50/50 dark:from-gray-950/30 dark:via-gray-900/20 dark:to-gray-950/30">
               {currentTicket.messages && currentTicket.messages.length > 0 ? (
                 currentTicket.messages.map((message, index) => {
                 const isCurrentUser = message.userId === user.id;
@@ -379,34 +378,10 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Reply Section */}
-            <div className="p-6 border-t border-white/40 dark:border-white/10 backdrop-blur-xl bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5">
-              <h3 className="text-base font-bold text-gray-900 dark:text-white mb-4">Reply</h3>
+            {/* Reply Section - Fixed at Bottom */}
+            <div className="flex-shrink-0 p-6 border-t border-white/40 dark:border-white/10 backdrop-blur-xl bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5">
               
-              {/* Template Selector */}
-              {(user.role === 'support-agent' || user.role === 'administrator') && (
-                <div className="mb-4">
-                  <button
-                    onClick={() => setShowTemplates(!showTemplates)}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-100 hover:bg-green-200 dark:bg-green-900/20 dark:hover:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg border border-green-300 dark:border-green-700 transition-colors text-sm"
-                  >
-                    <FileText className="w-4 h-4" />
-                    {showTemplates ? 'Hide Templates' : 'Use Template'}
-                  </button>
-                  
-                  {showTemplates && (
-                    <div className="mt-4 max-h-96 overflow-y-auto">
-                      <TemplateManager 
-                        type="response" 
-                        onTemplateSelect={(template) => {
-                          setNewMessage(template.content);
-                          setShowTemplates(false);
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
+
               
               <form onSubmit={handleSendMessage} className="relative">
                 <div className="flex items-center gap-3 p-3 backdrop-blur-2xl bg-gradient-to-r from-white/80 via-white/60 to-white/80 dark:from-gray-800/60 dark:via-gray-700/40 dark:to-gray-800/60 border-2 border-white/60 dark:border-white/20 rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
@@ -451,8 +426,8 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
 
         </div>
 
-        {/* Right Column - Ticket Details (Hidden on Mobile, Visible on Desktop) */}
-        <div className="hidden lg:block space-y-6">
+        {/* Right Column - Ticket Details (Hidden on Mobile for Customers Only) */}
+        <div className={`${user.role === 'customer' ? 'hidden lg:block' : ''} space-y-6`}>
           {/* Actions Card - Email Customer (Top Priority) */}
           {(user.role === 'support-agent' || user.role === 'administrator') && (
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border-2 border-green-200 dark:border-green-800 overflow-hidden shadow-lg">
