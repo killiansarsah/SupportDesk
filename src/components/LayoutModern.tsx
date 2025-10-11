@@ -351,27 +351,29 @@ const LayoutModern: React.FC<LayoutModernProps> = ({
               </div>
 
               {/* Right Side */}
-              <div className="flex items-center gap-3">
-                <ConnectionStatus />
-                
-                <button
-                  onClick={() => setDarkMode(!darkMode)}
-                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-800 text-gray-600 dark:text-gray-400"
-                  title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                >
-                  {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                </button>
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="flex items-center gap-2">
+                  <ConnectionStatus />
+                  
+                  <button
+                    onClick={() => setDarkMode(!darkMode)}
+                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-800 text-gray-600 dark:text-gray-400 transition-colors"
+                    title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                  >
+                    {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                  </button>
 
-                <NotificationBell 
-                  user={user} 
-                  onNavigateToTicket={(ticketId) => {
-                    onNavigate?.('dashboard');
-                    setTimeout(() => {
-                      const appState = AppState.getInstance();
-                      appState.openTicket(ticketId);
-                    }, 50);
-                  }}
-                />
+                  <NotificationBell 
+                    user={user} 
+                    onNavigateToTicket={(ticketId) => {
+                      onNavigate?.('dashboard');
+                      setTimeout(() => {
+                        const appState = AppState.getInstance();
+                        appState.openTicket(ticketId);
+                      }, 50);
+                    }}
+                  />
+                </div>
               </div>
             </div>
           </header>

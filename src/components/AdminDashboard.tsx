@@ -81,7 +81,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, tickets, selected
     color: string;
     trend?: string;
   }> = ({ title, value, icon, color, trend }) => (
-    <div className="backdrop-blur-xl bg-white/70 dark:bg-gradient-to-br dark:from-white/10 dark:to-white/5 border border-white/40 dark:border-white/20 rounded-2xl p-3 sm:p-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] hover:shadow-2xl hover:scale-105 hover:border-blue-400/50 dark:hover:border-white/40 transition-all duration-300 cursor-pointer group">
+    <div className="backdrop-blur-xl bg-white/70 dark:bg-gray-800/90 border border-white/40 dark:border-gray-700/50 rounded-2xl p-3 sm:p-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] hover:shadow-2xl hover:scale-105 hover:border-blue-400/50 dark:hover:border-gray-600 transition-all duration-300 cursor-pointer group">
       <div className="flex items-center justify-between mb-2 sm:mb-4">
         <div className={`p-2 sm:p-3 rounded-xl ${color} group-hover:scale-110 group-hover:shadow-lg transition-all duration-300`}>
           {icon}
@@ -146,7 +146,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, tickets, selected
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
         {/* Recent Tickets */}
-        <div className="lg:col-span-2 backdrop-blur-xl bg-white/70 dark:bg-gradient-to-br dark:from-white/10 dark:to-white/5 border border-white/40 dark:border-white/20 rounded-2xl p-4 sm:p-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] hover:shadow-xl transition-all duration-300">
+        <div className="lg:col-span-2 backdrop-blur-xl bg-white/70 dark:bg-gray-800/90 border border-white/40 dark:border-gray-700/50 rounded-2xl p-4 sm:p-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] hover:shadow-xl transition-all duration-300">
           <div className="flex items-center justify-between mb-4 sm:mb-6">
             <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Recent Tickets</h2>
             <div className="p-2 rounded-lg backdrop-blur-sm bg-blue-500/10 dark:bg-blue-500/20 border border-blue-500/30">
@@ -188,7 +188,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, tickets, selected
         </div>
 
         {/* Team Overview */}
-        <div className="backdrop-blur-xl bg-white/70 dark:bg-gradient-to-br dark:from-white/10 dark:to-white/5 border border-white/40 dark:border-white/20 rounded-2xl p-4 sm:p-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] hover:shadow-xl transition-all duration-300">
+        <div className="backdrop-blur-xl bg-white/70 dark:bg-gray-800/90 border border-white/40 dark:border-gray-700/50 rounded-2xl p-4 sm:p-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] hover:shadow-xl transition-all duration-300">
           <div className="flex items-center justify-between mb-4 sm:mb-6">
             <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Team Overview</h2>
             <div className="p-2 rounded-lg backdrop-blur-sm bg-purple-500/10 dark:bg-purple-500/20 border border-purple-500/30">
@@ -251,7 +251,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, tickets, selected
       </div>
 
       {/* Performance Metrics */}
-      <div className="backdrop-blur-xl bg-white/70 dark:bg-gradient-to-br dark:from-white/10 dark:to-white/5 border border-white/40 dark:border-white/20 rounded-2xl p-4 sm:p-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] hover:shadow-xl transition-all duration-300">
+      <div className="backdrop-blur-xl bg-white/70 dark:bg-gray-800/90 border border-white/40 dark:border-gray-700/50 rounded-2xl p-4 sm:p-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] hover:shadow-xl transition-all duration-300">
         <div className="flex items-center justify-between mb-4 sm:mb-6">
           <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Performance Metrics</h2>
           <div className="p-2 rounded-lg bg-green-50 dark:bg-green-500/10 border border-green-200/30 dark:border-green-500/20">

@@ -139,7 +139,7 @@ export default function NotificationBell({ user, onNavigateToTicket }: Notificat
       <button
         ref={buttonRef}
         onClick={handleToggleDropdown}
-        className="relative p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg transition-colors"
+        className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-800 text-gray-600 dark:text-gray-400 transition-colors"
       >
         <Bell className="w-5 h-5" />
         

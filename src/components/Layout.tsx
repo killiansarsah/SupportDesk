@@ -124,9 +124,12 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, onNavigate, c
   const NavButton = ({ page, icon: Icon, title }: { page: string; icon: React.ElementType; title: string }) => (
     <button 
       onClick={() => onNavigate?.(page)}
-      className={`${getButtonClass(page)} relative z-20`}
+      className={`p-2 rounded-lg transition-colors duration-200 ${
+        currentPage === page
+          ? 'bg-blue-600 text-white'
+          : 'bg-white/10 hover:bg-white/20 text-white'
+      }`}
       title={title}
-      style={{ pointerEvents: 'auto' }}
     >
       <Icon className="w-4 h-4" />
     </button>
@@ -396,18 +399,17 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, onNavigate, c
             </div>
 
             {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center gap-1 sm:gap-2 relative z-[9999] min-h-[40px] sm:min-h-[44px] overflow-x-auto">
-              <ConnectionStatus className="mr-2 sm:mr-4" />
+            <div className="hidden lg:flex items-center gap-2 relative z-[9999]">
+              <ConnectionStatus className="mr-4" />
               
               <button 
                 onClick={() => onNavigate?.('dashboard')}
-                className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg transition-colors duration-200 font-medium relative z-20 ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors duration-200 font-medium relative z-20 ${
                   currentPage === 'dashboard' 
                     ? 'bg-blue-600 text-white' 
                     : 'bg-white/10 hover:bg-white/20 text-white'
                 }`}
                 title="Dashboard"
-                style={{ pointerEvents: 'auto' }}
               >
                 <Home className="w-4 h-4" />
                 <span className="text-sm">Dashboard</span>
@@ -430,58 +432,48 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, onNavigate, c
                 </>
               )}
               
-
-
-              <NotificationBell 
-                user={user} 
-                onNavigateToTicket={(ticketId) => {
-                  onNavigate?.('dashboard');
-                  setTimeout(() => {
-                    const appState = AppState.getInstance();
-                    appState.openTicket(ticketId);
-                  }, 50);
-                }}
-              />
-              
-              <div
-                className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 transition-colors duration-200 cursor-pointer relative"
-                style={{ 
-                  zIndex: 99999,
-                  pointerEvents: 'auto',
-                  minWidth: '60px',
-                  minHeight: '40px'
-                }}
-                onMouseUp={() => onLogout()}
-                onTouchEnd={() => onLogout()}
-                onClick={() => onLogout()}
-              >
-                <LogOut className="w-4 h-4 text-red-300" />
-                <span className="text-sm text-red-300">Logout</span>
-              </div>
-              
-              <div className="relative z-40 shrink-0" ref={userMenuRef}>
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const next = !showUserMenu;
-                    if (next && userMenuRef.current) {
-                      const rect = userMenuRef.current.getBoundingClientRect();
-                      const menuWidth = 192;
-                      const left = Math.max(8, rect.right + window.scrollX - menuWidth);
-                      const top = rect.bottom + window.scrollY + 8;
-                      setMenuPos({ top, left });
-                    }
-                    setShowUserMenu(next);
+              <div className="flex items-center gap-2 ml-4">
+                <NotificationBell 
+                  user={user} 
+                  onNavigateToTicket={(ticketId) => {
+                    onNavigate?.('dashboard');
+                    setTimeout(() => {
+                      const appState = AppState.getInstance();
+                      appState.openTicket(ticketId);
+                    }, 50);
                   }}
-                  className="flex items-center space-x-2 sm:space-x-3 p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors duration-200"
+                />
+                
+                <button
+                  onClick={() => onLogout()}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 transition-colors duration-200 text-red-300"
                 >
-                  {renderUserAvatar()}
-                  <div>
-                    {renderUserInfo()}
-                  </div>
+                  <LogOut className="w-4 h-4" />
+                  <span className="text-sm">Logout</span>
                 </button>
-                {showUserMenu && renderDropdownMenu()}
+                
+                <div className="relative" ref={userMenuRef}>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const next = !showUserMenu;
+                      if (next && userMenuRef.current) {
+                        const rect = userMenuRef.current.getBoundingClientRect();
+                        const menuWidth = 192;
+                        const left = Math.max(8, rect.right + window.scrollX - menuWidth);
+                        const top = rect.bottom + window.scrollY + 8;
+                        setMenuPos({ top, left });
+                      }
+                      setShowUserMenu(next);
+                    }}
+                    className="flex items-center gap-3 p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors duration-200"
+                  >
+                    {renderUserAvatar()}
+                    {renderUserInfo()}
+                  </button>
+                  {showUserMenu && renderDropdownMenu()}
+                </div>
               </div>
             </div>
 

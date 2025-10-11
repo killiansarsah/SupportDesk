@@ -59,7 +59,10 @@ const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ className = '' }) =
   };
 
   return (
-    <div className={`flex items-center ${className}`} title={getTooltipText()}>
+    <div 
+      className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dark-800 transition-colors ${className}`} 
+      title={getTooltipText()}
+    >
       <div className={`${getStatusColor()}`}>
         {getStatusIcon()}
       </div>
