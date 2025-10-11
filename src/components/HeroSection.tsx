@@ -62,9 +62,28 @@ const HeroSection: React.FC<HeroSectionProps> = ({
           <div className="space-y-2 sm:space-y-4 flex-1">
             {/* Role Badge */}
             <div className="flex justify-center sm:justify-start">
-              <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-white/20 backdrop-blur-lg rounded-full border border-white/30">
-                <div className="w-2 h-2 bg-white rounded-full"></div>
-                <span className="text-white/90 text-xs sm:text-sm font-medium">{getRoleDisplay()}</span>
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-lg rounded-full border border-white/30">
+                {user.role === 'administrator' && (
+                  <svg className="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2L3 7V12C3 16.55 6.84 20.74 9.91 21.79C11.04 22.26 12.96 22.26 14.09 21.79C17.16 20.74 21 16.55 21 12V7L12 2Z" fill="currentColor"/>
+                    <path d="M9 12L11 14L15 10" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
+                {user.role === 'support-agent' && (
+                  <svg className="w-4 h-4 text-blue-400" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2Z" fill="currentColor"/>
+                    <path d="M21 9V7C21 5.9 20.1 5 19 5H17.5C16.1 5 15 6.1 15 7.5V9.5C15 10.9 16.1 12 17.5 12H19C20.1 12 21 11.1 21 10V9Z" fill="currentColor"/>
+                    <path d="M3 9V7C3 5.9 3.9 5 5 5H6.5C7.9 5 9 6.1 9 7.5V9.5C9 10.9 7.9 12 6.5 12H5C3.9 12 3 11.1 3 10V9Z" fill="currentColor"/>
+                    <path d="M12 14C8 14 5 17 5 21H19C19 17 16 14 12 14Z" fill="currentColor" fillOpacity="0.7"/>
+                  </svg>
+                )}
+                {user.role === 'customer' && (
+                  <svg className="w-4 h-4 text-purple-400" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="8" r="4" fill="currentColor"/>
+                    <path d="M20 21C20 16.58 16.42 13 12 13S4 16.58 4 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/>
+                  </svg>
+                )}
+                <span className="text-white text-sm font-medium">{getRoleDisplay()}</span>
               </div>
             </div>
 
