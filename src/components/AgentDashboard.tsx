@@ -6,6 +6,7 @@ import TicketDetail from './TicketDetail';
 import TemplateManager from './TemplateManager';
 import AppState from '../services/appState';
 import CustomSelect from './CustomSelect';
+import HeroSection from './HeroSection';
 
 const statusOptions = [
   { value: '', label: 'All Status' },
@@ -127,78 +128,45 @@ const AgentDashboard: React.FC<AgentDashboardProps> = ({ user, tickets, onTicket
     );
   }
 
+  const handleCreateTicket = () => {
+    // Add create ticket logic here
+    console.log('Create ticket clicked');
+  };
+
   return (
     <div className="space-y-4 sm:space-y-6 md:space-y-8 px-2 sm:px-0">
-      {/* Header - Beautiful Gradient Design */}
-      <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden bg-gradient-to-r from-blue-600 via-purple-600 to-purple-700 dark:from-blue-600 dark:via-purple-600 dark:to-purple-700 p-4 sm:p-6 md:p-8 shadow-xl border border-white/20">
-        {/* Animated Background Gradients */}
-        <div className="absolute inset-0 opacity-50 dark:opacity-30">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full blur-3xl animate-blob"></div>
-          <div className="absolute top-0 left-20 w-96 h-96 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
-          <div className="absolute -bottom-8 left-40 w-96 h-96 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full blur-3xl animate-blob animation-delay-4000"></div>
-        </div>
+      {/* Modern Hero Section */}
+      <HeroSection 
+        user={user}
+        totalTickets={myTickets.length}
+        totalUsers={inProgressTickets.length}
+        onCreateTicket={handleCreateTicket}
+      />
 
-        {/* Glass Overlay Layer */}
-        <div className="absolute inset-0 backdrop-blur-xl bg-white/5"></div>
-
-        {/* Content */}
-        <div className="relative z-10 flex flex-col lg:flex-row justify-between items-center gap-4 sm:gap-6">
-          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 text-center sm:text-left w-full lg:w-auto">
-            {/* Icon with Glass Effect */}
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-lg border border-white/30 animate-float">
-              <MessageSquare className="w-8 h-8 sm:w-10 sm:h-10 text-white drop-shadow-lg" />
-            </div>
-            <div className="w-full sm:w-auto">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2 drop-shadow-lg">Agent Dashboard</h1>
-              <p className="text-white/95 text-sm sm:text-base lg:text-lg drop-shadow-md">Manage and resolve customer support tickets</p>
-              <div className="flex items-center gap-2 sm:gap-4 mt-3 text-white/90 justify-center sm:justify-start flex-wrap">
-                <span className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 text-xs sm:text-sm">
-                  <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
-                  {myTickets.length} Assigned
-                </span>
-                <span className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 text-xs sm:text-sm">
-                  <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-                  {inProgressTickets.length} In Progress
-                </span>
-                <span className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 text-xs sm:text-sm">
-                  <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-                  {resolvedTickets.length} Resolved
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          {/* Tab Navigation - Glass Style */}
-          <div className="backdrop-blur-md bg-white/15 border border-white/30 rounded-xl p-1 flex shadow-lg w-full sm:w-auto">
-            <button
-              onClick={() => setActiveTab('tickets')}
-              className={`flex-1 sm:flex-initial px-3 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base ${
-                activeTab === 'tickets'
-                  ? 'bg-white/30 text-white shadow-lg'
-                  : 'text-white/80 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              <MessageSquare className="w-4 h-4" />
-              <span>Tickets</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('templates')}
-              className={`flex-1 sm:flex-initial px-3 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base ${
-                activeTab === 'templates'
-                  ? 'bg-white/30 text-white shadow-lg'
-                  : 'text-white/80 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              <Clipboard className="w-4 h-4" />
-              <span>Templates</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Sparkle Effects */}
-        <div className="absolute top-10 right-40 w-2 h-2 bg-white/80 rounded-full animate-pulse shadow-lg"></div>
-        <div className="absolute top-20 right-60 w-1.5 h-1.5 bg-white/70 rounded-full animate-pulse animation-delay-1000 shadow-lg"></div>
-        <div className="absolute bottom-10 right-20 w-2 h-2 bg-white/80 rounded-full animate-pulse animation-delay-2000 shadow-lg"></div>
+      {/* Tab Navigation */}
+      <div className="backdrop-blur-md bg-white/15 border border-white/30 rounded-xl p-1 flex shadow-lg w-full sm:w-auto">
+        <button
+          onClick={() => setActiveTab('tickets')}
+          className={`flex-1 sm:flex-initial px-3 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base ${
+            activeTab === 'tickets'
+              ? 'bg-white/30 text-white shadow-lg'
+              : 'text-white/80 hover:text-white hover:bg-white/10'
+          }`}
+        >
+          <MessageSquare className="w-4 h-4" />
+          <span>Tickets</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('templates')}
+          className={`flex-1 sm:flex-initial px-3 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base ${
+            activeTab === 'templates'
+              ? 'bg-white/30 text-white shadow-lg'
+              : 'text-white/80 hover:text-white hover:bg-white/10'
+          }`}
+        >
+          <Clipboard className="w-4 h-4" />
+          <span>Templates</span>
+        </button>
       </div>
 
       {/* Content based on active tab */}

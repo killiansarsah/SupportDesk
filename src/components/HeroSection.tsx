@@ -1,0 +1,112 @@
+import React from 'react';
+import { User } from '../types';
+import { Plus, BarChart3, Users, Ticket } from 'lucide-react';
+
+interface HeroSectionProps {
+  user: User;
+  onCreateTicket?: () => void;
+  totalTickets?: number;
+  totalUsers?: number;
+}
+
+const HeroSection: React.FC<HeroSectionProps> = ({ 
+  user, 
+  onCreateTicket,
+  totalTickets = 0,
+  totalUsers = 0
+}) => {
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  };
+
+  const getRoleDisplay = () => {
+    switch (user.role) {
+      case 'administrator':
+        return 'Admin Dashboard';
+      case 'support-agent':
+        return 'Agent Dashboard';
+      case 'customer':
+        return 'Customer Portal';
+      default:
+        return 'Dashboard';
+    }
+  };
+
+  const getDescription = () => {
+    switch (user.role) {
+      case 'administrator':
+        return 'Manage events, registrations, and staff with powerful insights.';
+      case 'support-agent':
+        return 'Handle customer inquiries and resolve tickets efficiently.';
+      case 'customer':
+        return 'Track your support requests and get help when you need it.';
+      default:
+        return 'Welcome to your personalized dashboard experience.';
+    }
+  };
+
+  return (
+    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-600 via-purple-600 to-purple-700 p-4 sm:p-8 mb-8">
+      {/* Content Container */}
+      <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6">
+        {/* Left Side - Icon, Badge and Content */}
+        <div className="flex items-center gap-4 sm:gap-6 w-full lg:w-auto">
+          {/* Chart Icon - Hidden on mobile */}
+          <div className="hidden sm:flex w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl items-center justify-center">
+            <BarChart3 className="w-10 h-10 text-white" />
+          </div>
+          
+          <div className="space-y-2 sm:space-y-4 flex-1">
+            {/* Role Badge */}
+            <div className="flex justify-center sm:justify-start">
+              <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-white/20 backdrop-blur-lg rounded-full border border-white/30">
+                <div className="w-2 h-2 bg-white rounded-full"></div>
+                <span className="text-white/90 text-xs sm:text-sm font-medium">{getRoleDisplay()}</span>
+              </div>
+            </div>
+
+            {/* Greeting */}
+            <div className="text-center sm:text-left">
+              <h1 className="text-2xl sm:text-4xl font-bold text-white mb-1 sm:mb-2">
+                {getGreeting()}, {user.name} <span className="inline-block animate-gentle-float">👋</span>
+              </h1>
+              <p className="text-white/90 text-sm sm:text-lg">
+                {getDescription()}
+              </p>
+            </div>
+
+            {/* Stats */}
+            <div className="flex items-center justify-center sm:justify-start gap-4 sm:gap-6 text-white/80">
+              <div className="flex items-center gap-2">
+                <Ticket className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="text-xs sm:text-sm">{totalTickets} Total Tickets</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Users className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="text-xs sm:text-sm">{totalUsers} Total Users</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Side - Create Ticket Button */}
+        <button
+          onClick={onCreateTicket}
+          className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 bg-white/20 backdrop-blur-lg rounded-2xl border border-white/30 text-white font-medium transition-all duration-300 hover:bg-white/30 hover:scale-105 flex items-center justify-center gap-2 text-sm sm:text-base"
+        >
+          <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span>Create Ticket</span>
+        </button>
+      </div>
+
+      {/* Decorative gradient orbs */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-purple-400/30 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-400/30 rounded-full blur-3xl"></div>
+    </div>
+  );
+};
+
+export default HeroSection;

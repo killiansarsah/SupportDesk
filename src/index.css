@@ -867,12 +867,40 @@ html:not(.dark) select:focus {
   }
 }
 
+/* Gentle floating animation for emojis */
+@keyframes gentle-float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(2deg);
+  }
+}
+
+/* Pulse glow animation */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.2), 0 0 40px rgba(139, 92, 246, 0.1);
+  }
+}
+
 .animate-blob {
   animation: blob 7s infinite ease-in-out;
 }
 
 .animate-float {
   animation: float 3s ease-in-out infinite;
+}
+
+.animate-gentle-float {
+  animation: gentle-float 4s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
 }
 
 .animation-delay-1000 {

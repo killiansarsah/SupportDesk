@@ -4,6 +4,7 @@ import { User, Ticket } from '../types';
 import TicketService from '../services/ticketService';
 import ApiService from '../services/apiService';
 import AppState from '../services/appState';
+import HeroSection from './HeroSection';
 
 interface AdminDashboardProps {
   user: User;
@@ -12,7 +13,7 @@ interface AdminDashboardProps {
   selectedTicketId?: string | null;
 }
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({ tickets, selectedTicketId }) => {
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, tickets, selectedTicketId }) => {
   const [stats, setStats] = useState({
     total: 0,
     open: 0,
@@ -99,39 +100,20 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ tickets, selectedTicket
   const customers = users.filter(u => u.role === 'customer');
   const administrators = users.filter(u => u.role === 'administrator');
 
+  const handleCreateTicket = () => {
+    // Add create ticket logic here
+    console.log('Create ticket clicked');
+  };
+
   return (
     <div className="space-y-4 sm:space-y-6 md:space-y-8 px-2 sm:px-0">
-      {/* Header - Gradient style matching screenshot */}
-      <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden bg-gradient-to-r from-blue-600 via-purple-600 to-purple-700 p-4 sm:p-6 md:p-8 shadow-[0_20px_60px_rgb(0,0,0,0.3)]">
-        <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6">
-          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 text-center sm:text-left w-full lg:w-auto">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-              <BarChart3 className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
-            </div>
-            <div className="w-full sm:w-auto">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2">Admin Dashboard</h1>
-              <p className="text-white/90 text-sm sm:text-base lg:text-lg">Welcome back, System! Manage events, registrations, and staff with powerful insights.</p>
-              <div className="flex items-center gap-2 sm:gap-4 mt-3 text-white/80 justify-center sm:justify-start flex-wrap">
-                <span className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
-                  <TicketIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-                  {stats.total} Total Tickets
-                </span>
-                <span className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
-                  <Users className="w-3 h-3 sm:w-4 sm:h-4" />
-                  {users.length} Total Users
-                </span>
-              </div>
-            </div>
-          </div>
-          <button className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 backdrop-blur-xl bg-white/20 hover:bg-white/30 border border-white/30 hover:border-white/50 text-white rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base shadow-lg hover:shadow-xl hover:scale-105">
-            <span className="text-xl sm:text-2xl">+</span>
-            Create Ticket
-          </button>
-        </div>
-        {/* Decorative gradient orbs */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-purple-400/30 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-400/30 rounded-full blur-3xl"></div>
-      </div>
+      {/* Modern Hero Section */}
+      <HeroSection 
+        user={user}
+        totalTickets={stats.total}
+        totalUsers={users.length}
+        onCreateTicket={handleCreateTicket}
+      />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
