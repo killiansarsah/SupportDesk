@@ -3,7 +3,6 @@ import { BarChart3, Users, Ticket as TicketIcon, TrendingUp, Clock, CheckCircle,
 import { User, Ticket } from '../types';
 import TicketService from '../services/ticketService';
 import ApiService from '../services/apiService';
-import AppState from '../services/appState';
 import HeroSection from './HeroSection';
 
 interface AdminDashboardProps {
@@ -13,7 +12,7 @@ interface AdminDashboardProps {
   selectedTicketId?: string | null;
 }
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, tickets, selectedTicketId }) => {
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, tickets }) => {
   const [stats, setStats] = useState({
     total: 0,
     open: 0,
@@ -23,29 +22,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, tickets, selected
   });
   const [users, setUsers] = useState<User[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
-  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
 
-  // Auto-select ticket from notification
-  useEffect(() => {
-    if (selectedTicketId && tickets.length > 0) {
-      const ticket = tickets.find(t => t.id === selectedTicketId);
-      if (ticket) {
-        setSelectedTicket(ticket);
-      }
-    }
-  }, [selectedTicketId, tickets]);
-
-  // Listen for ticket open events from notifications
-  useEffect(() => {
-    const appState = AppState.getInstance();
-    const unsubscribe = appState.onTicketOpen((ticketId) => {
-      const ticket = tickets.find(t => t.id === ticketId);
-      if (ticket) {
-        setSelectedTicket(ticket);
-      }
-    });
-    return unsubscribe;
-  }, [tickets]);
+  
 
   useEffect(() => {
     loadStats();

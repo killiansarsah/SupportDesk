@@ -1,10 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip, Download, FileText, X, ArrowLeft } from 'lucide-react';
+import { Send, Paperclip, Download, X, ArrowLeft } from 'lucide-react';
 import { Ticket, User as UserType } from '../types';
 import TicketService from '../services/ticketService';
 import ApiService from '../services/apiService';
 import ToastService from '../services/toastService';
-import TemplateManager from './TemplateManager';
 import CustomSelect from './CustomSelect';
 
 interface TicketDetailProps {
@@ -23,7 +22,6 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
   const [assignedTo, setAssignedTo] = useState(ticket.assignedTo || '');
   const [isUpdatingAssignment, setIsUpdatingAssignment] = useState(false);
   const [availableAgents, setAvailableAgents] = useState<UserType[]>([]);
-  const [showTemplates, setShowTemplates] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [resolutionMessage, setResolutionMessage] = useState('');
   const [isSendingEmail, setIsSendingEmail] = useState(false);
@@ -86,7 +84,7 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
             setTimeout(scrollToBottom, 100);
           }
         }
-      } catch (error) {
+      } catch {
         // Silently fail - API might be down, will retry on next interval
       }
     };
@@ -262,10 +260,13 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
         <div className="flex items-center gap-2">
           <button
             onClick={onBack}
-            className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-3 py-1.5 text-sm font-medium text-gray-700 transition-all duration-200 hover:bg-white/20 dark:bg-dark-800 dark:text-gray-200 dark:hover:bg-dark-700"
+            className="back-btn-animate inline-flex items-center gap-3 text-sm font-medium text-gray-700 transition-all duration-200 hover:bg-white/20 dark:text-gray-200"
+            aria-label="Back"
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back</span>
+            <span className="back-btn-glass back-btn-animate inline-flex items-center justify-center w-9 h-9 rounded-full text-gray-700 dark:text-gray-200 shadow-sm">
+              <ArrowLeft className="w-4 h-4 back-icon text-current" />
+            </span>
+            <span className="hidden sm:inline">Back</span>
           </button>
           <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
             <button

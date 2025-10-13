@@ -332,11 +332,13 @@ const LayoutModern: React.FC<LayoutModernProps> = ({
                   {currentPage !== 'dashboard' && (
                     <button
                       onClick={() => navigationService.goToDashboard()}
-                      className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-sm font-medium text-gray-700 transition-all duration-200 hover:bg-white/20 dark:bg-dark-800 dark:text-gray-200 dark:hover:bg-dark-700"
+                      className="back-btn-animate inline-flex items-center gap-3 text-sm font-medium text-gray-700 transition-all duration-200 hover:bg-white/20 dark:text-gray-200"
+                      aria-label="Back to Dashboard"
                     >
-                      <ArrowLeft className="w-4 h-4" />
+                      <span className="back-btn-glass back-btn-animate inline-flex items-center justify-center w-9 h-9 rounded-full text-gray-700 dark:text-gray-200 shadow-sm">
+                        <ArrowLeft className="w-4 h-4 back-icon text-current" />
+                      </span>
                       <span className="hidden sm:inline">Back to Dashboard</span>
-                      <span className="sm:hidden">Back</span>
                     </button>
                   )}
                   <div>

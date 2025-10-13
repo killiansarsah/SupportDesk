@@ -1,3 +1,4 @@
+/* Tailwind directives - processed by PostCSS/Tailwind during build. Linter may flag these as unknown but they are required. */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -5,7 +6,9 @@
 /* Apply Inter font globally */
 @layer base {
   body {
-    @apply font-sans antialiased;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   /* Light mode background - clean white/gray */
@@ -104,7 +107,8 @@
   html:not(.dark) textarea:focus,
   html:not(.dark) select:focus {
     border-color: #4f46e5 !important;
-    ring-color: #4f46e5 !important;
+    /* 'ring-color' is a Tailwind convenience - replace with standard box-shadow for compatibility */
+    box-shadow: 0 0 0 3px rgba(79,70,229,0.12) !important;
   }
 
   html:not(.dark) input::placeholder,
@@ -200,6 +204,101 @@
   }
 }
 
+/* Back button animations: gentle float + stronger hover swing */
+@keyframes backFloat {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes backSwingIn {
+  0% { transform: translateX(0) rotate(0deg); opacity: 0; }
+  40% { transform: translateX(-12px) rotate(-18deg); opacity: 1; }
+  70% { transform: translateX(6px) rotate(12deg); }
+ 100% { transform: translateX(0) rotate(0deg); }
+}
+
+.back-btn-animate {
+  animation: backFloat 3.6s ease-in-out infinite, backSwingIn 700ms cubic-bezier(.2,.9,.2,1) both;
+}
+
+.back-btn-animate:hover {
+  transform: translateX(-10px) rotate(-16deg);
+  transition: transform 180ms ease-in-out;
+}
+
+.back-btn-animate:active {
+  transform: translateX(-2px) rotate(-6deg) scale(0.98);
+}
+
+.back-btn-animate .back-icon {
+  /* small wiggle animation for the arrow to make the button feel alive */
+  animation: arrowWiggle 2.4s ease-in-out infinite;
+  transition: transform 220ms ease-in-out;
+  transform-origin: center;
+}
+.back-btn-animate:hover .back-icon,
+.back-btn-animate:focus .back-icon {
+  /* pause the wiggle and apply the hover transform for clarity */
+  animation-play-state: paused;
+  transform: rotate(-20deg) translateX(-2px);
+}
+
+@keyframes arrowWiggle {
+  0% { transform: rotate(0deg) translateX(0); }
+  10% { transform: rotate(-10deg) translateX(-4px); }
+  30% { transform: rotate(6deg) translateX(2px); }
+  60% { transform: rotate(-6deg) translateX(-2px); }
+  90% { transform: rotate(10deg) translateX(4px); }
+ 100% { transform: rotate(0deg) translateX(0); }
+}
+
+/* Stronger float for glass buttons */
+@keyframes backFloatStrong {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-8px) rotate(-1deg); }
+  100% { transform: translateY(0px); }
+}
+
+/* Glass-look button for back controls */
+.back-btn-glass {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem; /* 36px */
+  height: 2.25rem;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  backdrop-filter: blur(6px) saturate(120%);
+  -webkit-backdrop-filter: blur(6px) saturate(120%);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 6px 18px rgba(10, 12, 20, 0.45), inset 0 1px 0 rgba(255,255,255,0.02);
+  color: inherit;
+}
+
+/* Apply stronger float + entrance to glass back buttons */
+.back-btn-glass.back-btn-animate {
+  animation: backFloatStrong 3.6s ease-in-out infinite, backSwingIn 700ms cubic-bezier(.2,.9,.2,1) both;
+}
+
+/* Slight inner highlight to emphasize glass when hovering */
+.back-btn-glass::after {
+  content: '';
+  position: absolute;
+  width: 60%;
+  height: 40%;
+  top: 8%;
+  left: 10%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.02));
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+.back-btn-glass:active {
+  transform: translateY(1px) scale(0.98);
+}
+
 .animate-slide-in {
   animation: slide-in 0.3s ease-out;
 }
@@ -226,6 +325,27 @@
 
 .animation-delay-6000 {
   animation-delay: 6s;
+}
+
+/* Back button animation: entrance swing + hover interaction */
+@keyframes backSwingIn {
+  0% { transform: translateX(0) rotate(0deg); opacity: 0; }
+  40% { transform: translateX(-12px) rotate(-20deg); opacity: 1; }
+  70% { transform: translateX(8px) rotate(12deg); }
+ 100% { transform: translateX(0) rotate(0deg); }
+}
+
+.back-btn-animate {
+  animation: backSwingIn 700ms cubic-bezier(.2,.9,.2,1) both;
+}
+
+.back-btn-animate:hover {
+  transform: translateX(-10px) rotate(-16deg);
+  transition: transform 200ms ease-in-out;
+}
+
+.back-btn-animate:active {
+  transform: translateX(-2px) rotate(-6deg) scale(0.98);
 }
 
 /* Glassmorphism scrollbar */
@@ -345,6 +465,7 @@ html:not(.dark) .conversation-messages::-webkit-scrollbar-thumb:hover {
 /* Line clamp utility */
 .line-clamp-2 {
   display: -webkit-box;
+  line-clamp: 2;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
@@ -401,35 +522,72 @@ select:focus {
 
 /* Custom button styles */
 .btn-primary {
-  @apply bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-200 px-4 py-2 sm:px-6 sm:py-3;
+  background-image: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+  color: #ffffff;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  padding: 0.5rem 1rem;
+}
+.btn-primary:hover {
+  background-image: linear-gradient(90deg, #2563eb 0%, #7c3aed 100%);
 }
 
 .btn-secondary {
-  @apply backdrop-blur-lg bg-white/10 border border-white/20 text-white rounded-lg hover:bg-white/20 transition-colors px-4 py-2 sm:px-6 sm:py-3;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #ffffff;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s ease;
+  padding: 0.5rem 1rem;
+}
+.btn-secondary:hover {
+  background: rgba(255,255,255,0.08);
 }
 
 /* Responsive containers */
 .container-responsive {
-  @apply px-4 sm:px-6 lg:px-8;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+@media (min-width: 640px) {
+  .container-responsive { padding-left: 1.5rem; padding-right: 1.5rem; }
+}
+@media (min-width: 1024px) {
+  .container-responsive { padding-left: 2rem; padding-right: 2rem; }
 }
 
 /* Responsive grid */
 .grid-responsive {
-  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6;
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 1rem;
+}
+@media (min-width: 640px) {
+  .grid-responsive { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1024px) {
+  .grid-responsive { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (min-width: 1280px) {
+  .grid-responsive { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
 /* Responsive text */
-.text-responsive-xl {
-  @apply text-2xl sm:text-3xl lg:text-4xl xl:text-5xl;
-}
+.text-responsive-xl { font-size: 1.5rem; line-height: 2rem; }
+@media (min-width: 640px) { .text-responsive-xl { font-size: 1.875rem; line-height: 2.25rem; } }
+@media (min-width: 1024px) { .text-responsive-xl { font-size: 2.25rem; line-height: 2.5rem; } }
+@media (min-width: 1280px) { .text-responsive-xl { font-size: 3rem; line-height: 1; } }
 
-.text-responsive-lg {
-  @apply text-xl sm:text-2xl lg:text-3xl;
-}
+.text-responsive-lg { font-size: 1.125rem; }
+@media (min-width: 640px) { .text-responsive-lg { font-size: 1.25rem; } }
+@media (min-width: 1024px) { .text-responsive-lg { font-size: 1.375rem; } }
 
-.text-responsive-base {
-  @apply text-sm sm:text-base lg:text-lg;
-}
+.text-responsive-base { font-size: 0.875rem; }
+@media (min-width: 640px) { .text-responsive-base { font-size: 1rem; } }
+@media (min-width: 1024px) { .text-responsive-base { font-size: 1.125rem; } }
 
 /* Status indicators */
 .status-indicator {
@@ -450,19 +608,39 @@ select:focus {
 
 /* Priority badges */
 .priority-urgent {
-  @apply bg-red-500/20 text-red-300 border-red-500/30;
+  background: rgba(239, 68, 68, 0.12);
+  color: rgba(248, 113, 113, 1);
+  border: 1px solid rgba(239, 68, 68, 0.18);
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-weight: 600;
 }
 
 .priority-high {
-  @apply bg-orange-500/20 text-orange-300 border-orange-500/30;
+  background: rgba(249, 115, 22, 0.12);
+  color: rgba(249, 115, 22, 1);
+  border: 1px solid rgba(249, 115, 22, 0.18);
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-weight: 600;
 }
 
 .priority-medium {
-  @apply bg-yellow-500/20 text-yellow-300 border-yellow-500/30;
+  background: rgba(234, 179, 8, 0.12);
+  color: rgba(234, 179, 8, 1);
+  border: 1px solid rgba(234, 179, 8, 0.18);
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-weight: 600;
 }
 
 .priority-low {
-  @apply bg-green-500/20 text-green-300 border-green-500/30;
+  background: rgba(34, 197, 94, 0.12);
+  color: rgba(34, 197, 94, 1);
+  border: 1px solid rgba(34, 197, 94, 0.18);
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-weight: 600;
 }
 
 /* Loading animations */
@@ -707,8 +885,8 @@ select option:hover {
 
 .dark-dropdown:focus {
   outline: none;
-  ring: 2px;
-  ring-color: rgba(147, 51, 234, 0.5);
+  /* Replace Tailwind 'ring' helpers with standard box-shadow for broader compatibility */
+  box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.5);
   border-color: rgba(147, 51, 234, 0.5);
 }
 

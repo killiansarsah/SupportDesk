@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Clock, CheckCircle, AlertCircle, MessageSquare } from 'lucide-react';
+import { Clock, CheckCircle, AlertCircle, MessageSquare } from 'lucide-react';
 import { User, Ticket } from '../types';
 import CreateTicket from './CreateTicket';
 import TicketList from './TicketList';

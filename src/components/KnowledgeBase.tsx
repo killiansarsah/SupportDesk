@@ -101,9 +101,13 @@ const KnowledgeBase = () => {
       <div className="max-w-4xl mx-auto">
         <button
           onClick={() => setSelectedArticle(null)}
-          className="mb-6 text-blue-400 hover:text-blue-300 transition-colors"
+          className="mb-6 back-btn-animate inline-flex items-center gap-3 text-blue-400 hover:text-blue-300 transition-colors"
+          aria-label="Back to Knowledge Base"
         >
-          ← Back to Knowledge Base
+          <span className="back-btn-glass back-btn-animate inline-flex items-center justify-center w-9 h-9 rounded-full text-blue-400 shadow-sm">
+            <span className="back-icon text-current">←</span>
+          </span>
+          <span>Back to Knowledge Base</span>
         </button>
         
         <div className="backdrop-blur-lg bg-white/10 border border-white/20 rounded-xl p-8">
