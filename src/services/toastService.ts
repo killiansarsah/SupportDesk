@@ -10,6 +10,7 @@ class ToastService {
   private static instance: ToastService;
   private listeners: ((toasts: ToastData[]) => void)[] = [];
   private toasts: ToastData[] = [];
+  private counter: number = 0;
 
   static getInstance(): ToastService {
     if (!ToastService.instance) {
@@ -31,7 +32,7 @@ class ToastService {
 
   success(title: string, message?: string, duration?: number) {
     const toast: ToastData = {
-      id: `toast_${Date.now()}`,
+      id: `toast_${Date.now()}_${this.counter++}`,
       type: 'success',
       title,
       message,
@@ -43,7 +44,7 @@ class ToastService {
 
   error(title: string, message?: string, duration?: number) {
     const toast: ToastData = {
-      id: `toast_${Date.now()}`,
+      id: `toast_${Date.now()}_${this.counter++}`,
       type: 'error',
       title,
       message,
@@ -55,7 +56,7 @@ class ToastService {
 
   info(title: string, message?: string, duration?: number) {
     const toast: ToastData = {
-      id: `toast_${Date.now()}`,
+      id: `toast_${Date.now()}_${this.counter++}`,
       type: 'info',
       title,
       message,
