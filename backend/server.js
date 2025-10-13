@@ -7,6 +7,7 @@ import cors from 'cors';
 import bcrypt from 'bcryptjs';
 import User from './models/User.js';
 import Ticket from './models/Ticket.js';
+import Template from './models/Template.js';
 import emailService from './emailService.js';
 import TicketIdGenerator from './utils/ticketIdGenerator.js';
 import { getUserAvatar } from './utils/avatarGenerator.js';
@@ -820,6 +821,126 @@ app.post('/api/tickets/:id/send-resolution-email', async (req, res) => {
 
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Template Routes (using simple mock data for now)
+app.get('/api/templates', async (req, res) => {
+  try {
+    // Fetch templates from MongoDB
+    const templates = await Template.find({ isActive: true });
+    const formattedTemplates = templates.map(t => ({
+      id: t._id.toString(),
+      name: t.name,
+      category: t.category,
+      title: t.title,
+      description: t.description,
+      priority: t.priority,
+      assignedTo: t.assignedTo,
+      isActive: t.isActive,
+      createdAt: t.createdAt,
+      updatedAt: t.updatedAt
+    }));
+    res.json({ success: true, data: formattedTemplates });
+  } catch (error) {
+    console.error('Error fetching templates:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/templates', async (req, res) => {
+  try {
+    const { name, category, title, description, priority, assignedTo } = req.body;
+    if (!name || !category || !title || !description) {
+      return res.status(400).json({ success: false, error: 'Name, category, title, and description are required' });
+    }
+    // Save template to MongoDB
+    // Use a placeholder ObjectId for createdBy (replace with real user in production)
+    const newTemplate = await Template.create({
+      name,
+      category,
+      title,
+      description,
+      priority: priority || 'medium',
+      assignedTo,
+      isActive: true,
+      createdBy: '000000000000000000000000' // <-- placeholder ObjectId
+    });
+    res.status(201).json({ success: true, data: {
+      id: newTemplate._id.toString(),
+      name: newTemplate.name,
+      category: newTemplate.category,
+      title: newTemplate.title,
+      description: newTemplate.description,
+      priority: newTemplate.priority,
+      assignedTo: newTemplate.assignedTo,
+      isActive: newTemplate.isActive,
+      createdAt: newTemplate.createdAt,
+      updatedAt: newTemplate.updatedAt
+    }});
+  } catch (error) {
+    console.error('Error creating template:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.put('/api/templates/:id', async (req, res) => {
+  try {
+    const { name, category, title, description, priority, assignedTo } = req.body;
+    
+    const template = await Template.findById(req.params.id);
+    if (!template) {
+      return res.status(404).json({ success: false, error: 'Template not found' });
+    }
+
+    // Update template fields
+    if (name !== undefined) template.name = name;
+    if (category !== undefined) template.category = category;
+    if (title !== undefined) template.title = title;
+    if (description !== undefined) template.description = description;
+    if (priority !== undefined) template.priority = priority;
+    if (assignedTo !== undefined) template.assignedTo = assignedTo;
+
+    await template.save();
+    await template.populate('createdBy', 'name email');
+
+    // Format response for frontend
+    const formattedTemplate = {
+      id: template._id.toString(),
+      name: template.name,
+      category: template.category,
+      title: template.title,
+      description: template.description,
+      priority: template.priority,
+      assignedTo: template.assignedTo,
+      isActive: template.isActive,
+      createdBy: template.createdBy,
+      createdAt: template.createdAt,
+      updatedAt: template.updatedAt
+    };
+
+    res.json({ success: true, data: formattedTemplate });
+  } catch (error) {
+    console.error('Error updating template:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.delete('/api/templates/:id', async (req, res) => {
+  try {
+    const template = await Template.findById(req.params.id);
+    if (!template) {
+      return res.status(404).json({ success: false, error: 'Template not found' });
+    }
+
+    // Soft delete by setting isActive to false
+    template.isActive = false;
+    await template.save();
+
+    res.json({ success: true, message: 'Template deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting template:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

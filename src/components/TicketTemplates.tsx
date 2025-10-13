@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Copy } from 'lucide-react';
 import { TicketTemplate } from '../types';
 import CustomSelect from './CustomSelect';
+import TemplateService from '../services/templateService';
 
 const MOCK_TEMPLATES: TicketTemplate[] = [
   {
@@ -70,6 +71,32 @@ const TicketTemplates = () => {
   const [templates, setTemplates] = useState<TicketTemplate[]>(MOCK_TEMPLATES);
   const [editingTemplate, setEditingTemplate] = useState<TicketTemplate | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Load templates from server on component mount
+  useEffect(() => {
+    loadTemplates();
+  }, []);
+
+  const loadTemplates = async () => {
+    try {
+      setLoading(true);
+      const response = await TemplateService.getInstance().getTemplates();
+      if (response.success) {
+        setTemplates(response.data || MOCK_TEMPLATES);
+      } else {
+        // If API fails, use mock templates
+        setTemplates(MOCK_TEMPLATES);
+      }
+    } catch (error) {
+      console.error('Error loading templates:', error);
+      // Fallback to mock templates if API fails
+      setTemplates(MOCK_TEMPLATES);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleUseTemplate = (template: TicketTemplate) => {
     console.log('Using template:', template.name);
@@ -81,14 +108,77 @@ const TicketTemplates = () => {
     setIsEditing(true);
   };
 
-  const handleSaveEdit = (updatedTemplate: TicketTemplate) => {
-    setTemplates(prev => prev.map(t => t.id === updatedTemplate.id ? updatedTemplate : t));
-    setIsEditing(false);
-    setEditingTemplate(null);
+  const handleNewTemplate = () => {
+    setIsCreating(true);
   };
 
-  const handleDelete = (templateId: string) => {
-    setTemplates(prev => prev.filter(t => t.id !== templateId));
+  const handleSaveEdit = async (updatedTemplate: TicketTemplate) => {
+    try {
+      const response = await TemplateService.getInstance().updateTemplate(updatedTemplate.id, {
+        name: updatedTemplate.name,
+        category: updatedTemplate.category,
+        title: updatedTemplate.title,
+        description: updatedTemplate.description,
+        priority: updatedTemplate.priority,
+        assignedTo: updatedTemplate.assignedTo
+      });
+      
+      if (response.success) {
+        setTemplates(prev => prev.map(t => t.id === updatedTemplate.id ? updatedTemplate : t));
+        setIsEditing(false);
+        setEditingTemplate(null);
+      }
+    } catch (error) {
+      console.error('Error updating template:', error);
+      // For now, update locally even if API fails
+      setTemplates(prev => prev.map(t => t.id === updatedTemplate.id ? updatedTemplate : t));
+      setIsEditing(false);
+      setEditingTemplate(null);
+    }
+  };
+
+  const handleSaveNew = async (newTemplate: Omit<TicketTemplate, 'id'>) => {
+    try {
+      console.log('🔧 Creating template with payload:', newTemplate);
+      const response = await TemplateService.getInstance().createTemplate(newTemplate);
+      
+      if (response.success && response.data) {
+        setTemplates(prev => [...prev, response.data!]);
+      } else {
+        // Fallback to local creation if API fails
+        const templateWithId = {
+          ...newTemplate,
+          id: Date.now().toString(),
+          isActive: true
+        };
+        setTemplates(prev => [...prev, templateWithId]);
+      }
+      setIsCreating(false);
+    } catch (error) {
+      console.error('Error creating template:', error);
+      // Fallback to local creation
+      const templateWithId = {
+        ...newTemplate,
+        id: Date.now().toString(),
+        isActive: true
+      };
+      setTemplates(prev => [...prev, templateWithId]);
+      setIsCreating(false);
+    }
+  };
+
+  const handleDelete = async (templateId: string) => {
+    try {
+      const response = await TemplateService.getInstance().deleteTemplate(templateId);
+      
+      if (response.success) {
+        setTemplates(prev => prev.filter(t => t.id !== templateId));
+      }
+    } catch (error) {
+      console.error('Error deleting template:', error);
+      // For now, delete locally even if API fails
+      setTemplates(prev => prev.filter(t => t.id !== templateId));
+    }
   };
 
   return (
@@ -98,14 +188,23 @@ const TicketTemplates = () => {
           <h1 className="text-3xl font-bold text-white mb-2">Ticket Templates</h1>
           <p className="text-gray-300">Pre-configured templates for common event management issues</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+        <button 
+          onClick={handleNewTemplate}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+        >
           <Plus className="w-4 h-4" />
           New Template
         </button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {templates.map(template => (
+      {loading ? (
+        <div className="text-center py-12">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+          <p className="text-gray-300 mt-4">Loading templates...</p>
+        </div>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {templates.map(template => (
           <div key={template.id} className="backdrop-blur-lg bg-white/10 border border-white/20 rounded-xl p-6">
             <div className="flex justify-between items-start mb-4">
               <div>
@@ -161,9 +260,10 @@ const TicketTemplates = () => {
             </button>
           </div>
         ))}
-      </div>
+        </div>
+      )}
 
-      {templates.length === 0 && (
+      {!loading && templates.length === 0 && (
         <div className="text-center py-12">
           <Plus className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-400">No templates created yet. Create your first template to get started.</p>
@@ -179,6 +279,19 @@ const TicketTemplates = () => {
               template={editingTemplate}
               onSave={handleSaveEdit}
               onCancel={() => setIsEditing(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Create New Template Modal */}
+      {isCreating && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl p-6 w-full max-w-2xl mx-4">
+            <h3 className="text-xl font-bold text-white mb-4">Create New Ticket Template</h3>
+            <CreateTemplateForm 
+              onSave={handleSaveNew}
+              onCancel={() => setIsCreating(false)}
             />
           </div>
         </div>
@@ -283,6 +396,114 @@ const EditTemplateForm: React.FC<EditTemplateFormProps> = ({ template, onSave, o
           className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
         >
           Save Changes
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+};
+
+interface CreateTemplateFormProps {
+  onSave: (template: Omit<TicketTemplate, 'id'>) => void;
+  onCancel: () => void;
+}
+
+const CreateTemplateForm: React.FC<CreateTemplateFormProps> = ({ onSave, onCancel }) => {
+  const [name, setName] = useState('');
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [category, setCategory] = useState('');
+  const [priority, setPriority] = useState<TicketTemplate['priority']>('medium');
+  const [assignedTo, setAssignedTo] = useState('');
+
+  const categoryOptions = ['Technical', 'Payment', 'Registration', 'Meals'].map(cat => ({
+    value: cat,
+    label: cat
+  }));
+
+  const priorityOptions = ['low', 'medium', 'high', 'urgent'].map(level => ({
+    value: level,
+    label: level.charAt(0).toUpperCase() + level.slice(1)
+  }));
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave({
+      name,
+      title,
+      description,
+      category,
+      priority,
+      assignedTo,
+      isActive: true
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <input
+        type="text"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Template name"
+        className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        required
+      />
+      
+      <input
+        type="text"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        placeholder="Ticket title"
+        className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        required
+      />
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <CustomSelect
+          value={category}
+          onChange={setCategory}
+          options={categoryOptions}
+          placeholder="Category"
+        />
+
+        <CustomSelect
+          value={priority}
+          onChange={(value) => setPriority(value as TicketTemplate['priority'])}
+          options={priorityOptions}
+          placeholder="Priority"
+        />
+        
+        <input
+          type="text"
+          value={assignedTo}
+          onChange={(e) => setAssignedTo(e.target.value)}
+          placeholder="Assigned to"
+          className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      
+      <textarea
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        placeholder="Template description"
+        rows={6}
+        className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+        required
+      />
+      
+      <div className="flex gap-3">
+        <button
+          type="submit"
+          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+        >
+          Create Template
         </button>
         <button
           type="button"
