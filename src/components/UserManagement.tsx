@@ -103,17 +103,15 @@ const UserManagement = () => {
     <div className="max-w-7xl mx-auto">
       {/* Header with Stats */}
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">User Management</h1>
-            <p className="text-gray-600 dark:text-gray-400">Manage all users in the system</p>
-          </div>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-white">User Management</h1>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white rounded-full shadow-lg transition-transform transform hover:scale-110 hover:shadow-xl"
+            style={{ backdropFilter: 'blur(10px)', border: '2px solid rgba(255, 255, 255, 0.3)' }}
           >
             <UserPlus className="w-5 h-5" />
-            <span>Add User</span>
+            <span className="text-lg font-medium">Add User</span>
           </button>
         </div>
 
@@ -143,7 +141,6 @@ const UserManagement = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Support Agents</p>
-                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{counts.supportAgents}</p>
               </div>
               <Users className="w-8 h-8 text-blue-400" />
             </div>
