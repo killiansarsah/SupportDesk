@@ -341,11 +341,11 @@ const LayoutModern: React.FC<LayoutModernProps> = ({
                       <span className="hidden sm:inline">Back to Dashboard</span>
                     </button>
                   )}
-                  <div>
+                  <div className="bg-white/30 dark:bg-gray-800/30 backdrop-blur-md p-4 rounded-2xl shadow-lg">
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                       {filteredNav.find(item => item.id === currentPage)?.name || 'Dashboard'}
                     </h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <p className="hidden lg:block text-sm text-gray-500 dark:text-gray-400">
                       Welcome back, {user.name}
                     </p>
                   </div>
