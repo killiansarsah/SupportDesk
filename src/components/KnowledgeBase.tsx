@@ -162,7 +162,7 @@ const KnowledgeBase = () => {
   return (
     <div className="max-w-6xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-4">Elira Event Management - Help Center</h1>
+        <h1 className="text-3xl font-bold text-white mb-4">Help Center</h1>
         <p className="text-gray-300">Find answers about event registration, QR codes, payments, and meal management</p>
       </div>
 

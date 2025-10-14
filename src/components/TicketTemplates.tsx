@@ -186,14 +186,14 @@ const TicketTemplates = () => {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-white mb-2">Ticket Templates</h1>
-          <p className="text-gray-300">Pre-configured templates for common event management issues</p>
         </div>
         <button 
           onClick={handleNewTemplate}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white rounded-full shadow-md transition-transform transform hover:scale-105 hover:shadow-lg"
+          style={{ backdropFilter: 'blur(8px)', border: '1px solid rgba(255, 255, 255, 0.3)' }}
         >
           <Plus className="w-4 h-4" />
-          New Template
+          <span className="text-sm font-medium">Create Template</span>
         </button>
       </div>
 
