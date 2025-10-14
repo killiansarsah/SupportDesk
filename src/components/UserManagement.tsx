@@ -163,7 +163,7 @@ const UserManagement = () => {
 
       {/* Filters */}
       <div className="mb-6">
-        <div className="flex gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {(['all', 'administrator', 'support-agent', 'customer'] as const).map(role => (
             <button
               key={role}
@@ -270,7 +270,7 @@ const UserManagement = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => setShowCreateModal(false)} />
           <div className="relative z-10 w-full max-w-xl p-6">
-            <div className="bg-white dark:bg-dark-900 border border-gray-200 dark:border-dark-800 rounded-lg p-6">
+            <div className="bg-white/30 dark:bg-dark-900/30 backdrop-blur-md border border-gray-200 dark:border-dark-800 rounded-lg p-6 shadow-lg">
               <div className="flex items-start justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Create New User</h3>
                 <button

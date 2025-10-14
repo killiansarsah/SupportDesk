@@ -46,13 +46,13 @@ const AdminCreateUser: React.FC = () => {
   };
 
   return (
-    <div className="max-w-md bg-white/10 dark:bg-dark-900 border border-white/10 dark:border-dark-800 rounded-lg p-4">
+    <div className="max-w-md bg-white/30 dark:bg-dark-900/30 backdrop-blur-md border border-white/20 dark:border-dark-800 rounded-lg p-6 shadow-lg">
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Create User</h3>
       {message && <div className="mb-3 text-sm text-gray-700 dark:text-gray-300">{message}</div>}
       <form onSubmit={handleSubmit} className="space-y-3">
-        <input className="w-full px-3 py-2 bg-white/10 dark:bg-dark-800 border border-white/20 dark:border-dark-700 rounded text-gray-900 dark:text-white" placeholder="Full name" value={name} onChange={e => setName(e.target.value)} required />
-        <input className="w-full px-3 py-2 bg-white/10 dark:bg-dark-800 border border-white/20 dark:border-dark-700 rounded text-gray-900 dark:text-white" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} type="email" required />
-        <input className="w-full px-3 py-2 bg-white/10 dark:bg-dark-800 border border-white/20 dark:border-dark-700 rounded text-gray-900 dark:text-white" placeholder="Phone" value={phone} onChange={e => setPhone(e.target.value)} />
+        <input className="w-full px-3 py-2 bg-white/30 dark:bg-dark-800/30 backdrop-blur-md border border-white/20 dark:border-dark-700 rounded text-gray-900 dark:text-white" placeholder="Full name" value={name} onChange={e => setName(e.target.value)} required />
+        <input className="w-full px-3 py-2 bg-white/30 dark:bg-dark-800/30 backdrop-blur-md border border-white/20 dark:border-dark-700 rounded text-gray-900 dark:text-white" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} type="email" required />
+        <input className="w-full px-3 py-2 bg-white/30 dark:bg-dark-800/30 backdrop-blur-md border border-white/20 dark:border-dark-700 rounded text-gray-900 dark:text-white" placeholder="Phone" value={phone} onChange={e => setPhone(e.target.value)} />
         <CustomSelect
           value={role}
           onChange={(selectedRole) => setRole(selectedRole as 'administrator' | 'support-agent' | 'customer')}
@@ -60,7 +60,7 @@ const AdminCreateUser: React.FC = () => {
           placeholder="Select role"
           className="w-full"
         />
-        <input className="w-full px-3 py-2 bg-white/10 dark:bg-dark-800 border border-white/20 dark:border-dark-700 rounded text-gray-900 dark:text-white" placeholder="Password (optional)" value={password} onChange={e => setPassword(e.target.value)} />
+        <input className="w-full px-3 py-2 bg-white/30 dark:bg-dark-800/30 backdrop-blur-md border border-white/20 dark:border-dark-700 rounded text-gray-900 dark:text-white" placeholder="Password (optional)" value={password} onChange={e => setPassword(e.target.value)} />
         <div className="flex items-center justify-end">
           <button type="submit" disabled={loading} className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded">
             {loading ? 'Creating...' : 'Create User'}
