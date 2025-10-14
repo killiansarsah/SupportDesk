@@ -10,10 +10,9 @@ interface TicketDetailProps {
   ticket: Ticket;
   user: UserType;
   onBack: () => void;
-  onUpdate: () => void;
 }
 
-const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpdate }) => {
+const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack }) => {
   const [currentTicket, setCurrentTicket] = useState(ticket);
   const [newMessage, setNewMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -167,16 +166,24 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
     setIsUpdatingStatus(true);
     try {
       const ticketService = TicketService.getInstance();
-      await ticketService.updateTicket(
+      const updatedTicket = await ticketService.updateTicket(
         currentTicket.id,
-        { status: newStatus as 'open' | 'in-progress' | 'resolved' | 'closed' },
+        { status: newStatus },
         user.id,
         user.name
       );
-      setTicketStatus(newStatus as 'open' | 'in-progress' | 'resolved' | 'closed');
-      onUpdate();
+
+      if (updatedTicket) {
+        setTicketStatus(newStatus);
+
+        // Show success notification
+        const toastService = ToastService.getInstance();
+        toastService.success('Status Updated', `Ticket status updated to ${newStatus}`);
+      }
     } catch (error) {
       console.error('Error updating status:', error);
+      const toastService = ToastService.getInstance();
+      toastService.error('Status Update Failed', 'Failed to update ticket status');
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -199,7 +206,7 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
       
       if (updatedTicket) {
         setAssignedTo(newAssignedTo);
-        
+
         // Show success notification
         const toastService = ToastService.getInstance();
         if (newAssignedTo) {
@@ -208,16 +215,11 @@ const TicketDetail: React.FC<TicketDetailProps> = ({ ticket, user, onBack, onUpd
         } else {
           toastService.success('Ticket Unassigned', 'Ticket has been unassigned successfully');
         }
-        
-        // Refresh parent component to update ticket list
-        setTimeout(() => {
-          onUpdate();
-        }, 500);
       }
     } catch (error) {
       console.error('Error updating assignment:', error);
       const toastService = ToastService.getInstance();
-      toastService.error('Assignment Failed', 'Failed to update ticket assignment. Please try again.');
+      toastService.error('Assignment Update Failed', 'Failed to update ticket assignment');
     } finally {
       setIsUpdatingAssignment(false);
     }
