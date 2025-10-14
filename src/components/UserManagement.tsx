@@ -107,11 +107,11 @@ const UserManagement = () => {
           <h1 className="text-3xl font-bold text-white">User Management</h1>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white rounded-full shadow-lg transition-transform transform hover:scale-110 hover:shadow-xl"
-            style={{ backdropFilter: 'blur(10px)', border: '2px solid rgba(255, 255, 255, 0.3)' }}
+            className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white rounded-full shadow-md transition-transform transform hover:scale-105 hover:shadow-lg"
+            style={{ backdropFilter: 'blur(8px)', border: '1px solid rgba(255, 255, 255, 0.3)' }}
           >
-            <UserPlus className="w-5 h-5" />
-            <span className="text-lg font-medium">Add User</span>
+            <UserPlus className="w-4 h-4" />
+            <span className="text-sm font-medium">Add User</span>
           </button>
         </div>
 

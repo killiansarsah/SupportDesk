@@ -154,10 +154,11 @@ const CannedResponses = () => {
         </div>
         <button 
           onClick={handleCreateNew}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+          className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white rounded-full shadow-md transition-transform transform hover:scale-105 hover:shadow-lg"
+          style={{ backdropFilter: 'blur(8px)', border: '1px solid rgba(255, 255, 255, 0.3)' }}
         >
           <Plus className="w-4 h-4" />
-          New Response
+          <span className="text-sm font-medium">Create Response</span>
         </button>
       </div>
 
