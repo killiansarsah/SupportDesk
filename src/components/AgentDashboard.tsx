@@ -144,27 +144,27 @@ const AgentDashboard: React.FC<AgentDashboardProps> = ({ user, tickets, onTicket
       />
 
       {/* Tab Navigation */}
-      <div className="backdrop-blur-md bg-white/15 border border-white/30 rounded-xl p-1 flex shadow-lg w-full sm:w-auto">
+      <div className="flex justify-center items-center gap-4">
         <button
           onClick={() => setActiveTab('tickets')}
-          className={`flex-1 sm:flex-initial px-3 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base ${
+          className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 transform flex items-center justify-center gap-2 text-sm sm:text-base ${
             activeTab === 'tickets'
-              ? 'bg-white/30 text-white shadow-lg'
-              : 'text-white/80 hover:text-white hover:bg-white/10'
+              ? 'bg-gradient-to-r from-blue-500 to-blue-700 text-white shadow-lg scale-105'
+              : 'text-gray-300 hover:text-white hover:bg-blue-500/20 hover:scale-105'
           }`}
         >
-          <MessageSquare className="w-4 h-4" />
+          <MessageSquare className="w-5 h-5" />
           <span>Tickets</span>
         </button>
         <button
           onClick={() => setActiveTab('templates')}
-          className={`flex-1 sm:flex-initial px-3 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base ${
+          className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 transform flex items-center justify-center gap-2 text-sm sm:text-base ${
             activeTab === 'templates'
-              ? 'bg-white/30 text-white shadow-lg'
-              : 'text-white/80 hover:text-white hover:bg-white/10'
+              ? 'bg-gradient-to-r from-green-500 to-green-700 text-white shadow-lg scale-105'
+              : 'text-gray-300 hover:text-white hover:bg-green-500/20 hover:scale-105'
           }`}
         >
-          <Clipboard className="w-4 h-4" />
+          <Clipboard className="w-5 h-5" />
           <span>Templates</span>
         </button>
       </div>
