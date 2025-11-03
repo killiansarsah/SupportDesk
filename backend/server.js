@@ -80,7 +80,7 @@ const apiLimiter = rateLimit({
 });
 
 // Apply rate limiting to all API routes
-app.use('/api/', apiLimiter);
+app.use('/api', apiLimiter);
 
 // Security: Validate JWT_SECRET is configured
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'your-super-secret-jwt-key-here') {
@@ -604,7 +604,8 @@ app.get('/api/tickets', verifyAuth, async (req, res) => {
     if (category) query.category = category;
     if (search) {
       // Sanitize search input to prevent NoSQL injection
-      const sanitizedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      // Escape all special regex characters including hyphen
+      const sanitizedSearch = search.replace(/[.*+?^${}()|[\]\\-]/g, '\\$&');
       query.$or = [
         { title: { $regex: sanitizedSearch, $options: 'i' } },
         { description: { $regex: sanitizedSearch, $options: 'i' } }
