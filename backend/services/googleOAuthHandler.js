@@ -46,8 +46,11 @@ class GoogleOAuthHandler {
     );
     this.clientId = clientId;
     
-    // JWT secret for token generation (should be in environment variables)
-    this.JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
+    // JWT secret for token generation (must be configured in environment variables)
+    this.JWT_SECRET = process.env.JWT_SECRET;
+    if (!this.JWT_SECRET) {
+      console.error('⚠️ JWT_SECRET not configured in environment variables');
+    }
   }
 
   /**
@@ -195,6 +198,10 @@ class GoogleOAuthHandler {
       }
 
       // Generate JWT token for session management
+      if (!this.JWT_SECRET) {
+        throw new Error('JWT_SECRET not configured - cannot generate secure token');
+      }
+      
       const jwtToken = jwt.sign(
         {
           userId: user._id,

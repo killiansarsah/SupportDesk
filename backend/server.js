@@ -5,6 +5,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import bcrypt from 'bcryptjs';
+import rateLimit from 'express-rate-limit';
 import User from './models/User.js';
 import Ticket from './models/Ticket.js';
 import Template from './models/Template.js';
@@ -61,6 +62,38 @@ app.use((req, res, next) => {
   next();
 });
 
+// Rate limiting configuration
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each IP to 5 requests per windowMs for auth routes
+  message: 'Too many authentication attempts, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs for API routes
+  message: 'Too many requests, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Apply rate limiting to all API routes
+app.use('/api/', apiLimiter);
+
+// Security: Validate JWT_SECRET is configured
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'your-super-secret-jwt-key-here') {
+  console.error('❌ SECURITY ERROR: JWT_SECRET is not properly configured in environment variables');
+  console.error('⚠️  Please set a strong JWT_SECRET in your .env file');
+  if (process.env.NODE_ENV === 'production') {
+    console.error('🛑 Refusing to start in production without proper JWT_SECRET');
+    process.exit(1);
+  } else {
+    console.warn('⚠️  Running in development mode with weak JWT secret - DO NOT USE IN PRODUCTION');
+  }
+}
+
 // MongoDB Connection
 const connectDB = async () => {
   try {
@@ -78,8 +111,8 @@ connectDB();
 
 
 
-// Auth Routes
-app.post('/api/auth/login', async (req, res) => {
+// Auth Routes - Apply stricter rate limiting
+app.post('/api/auth/login', authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
     
@@ -115,7 +148,7 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-app.post('/api/auth/register', async (req, res) => {
+app.post('/api/auth/register', authLimiter, async (req, res) => {
   try {
     const { email, name, phone, role, password } = req.body;
     
@@ -175,7 +208,7 @@ console.log('🔧 Google Client Secret:', process.env.GOOGLE_CLIENT_SECRET ? 'Co
  * - CSRF protection
  * - Rate limiting ready
  */
-app.post('/api/auth/google/signin', async (req, res) => {
+app.post('/api/auth/google/signin', authLimiter, async (req, res) => {
   try {
     const { credential, csrfToken } = req.body;
     
@@ -215,7 +248,7 @@ app.post('/api/auth/google/signin', async (req, res) => {
  * 
  * Note: For OAuth, sign-up and sign-in are typically the same process
  */
-app.post('/api/auth/google/signup', async (req, res) => {
+app.post('/api/auth/google/signup', authLimiter, async (req, res) => {
   try {
     const { credential, csrfToken } = req.body;
     
@@ -314,15 +347,76 @@ app.post('/api/auth/google/unlink', async (req, res) => {
 });
 // End of Google OAuth routes
 
-// User Routes
-app.get('/api/users', async (req, res) => {
+// ============================================
+// Authentication & Authorization Middleware
+// ============================================
+
+// General authentication middleware
+const verifyAuth = async (req, res, next) => {
   try {
-    const users = await User.find();
-    res.json(users);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+    const authHeader = req.headers.authorization || req.headers.Authorization || '';
+    let token = authHeader;
+    if (authHeader.startsWith('Bearer ')) token = authHeader.slice(7);
+
+    if (!token) {
+      console.log('❌ verifyAuth - No token provided');
+      return res.status(401).json({ success: false, error: 'Unauthorized - No token provided' });
+    }
+
+    let userId;
+
+    // Handle mock token format: mock_token_<userId> (from email/password login)
+    if (token.startsWith('mock_token_')) {
+      userId = token.replace('mock_token_', '');
+      console.log('✅ verifyAuth - Using mock token, userId:', userId);
+    } 
+    // Handle JWT token format (from Google OAuth login)
+    else if (token.includes('.')) {
+      try {
+        const jwt = await import('jsonwebtoken');
+        const jwtSecret = process.env.JWT_SECRET;
+        if (!jwtSecret) {
+          console.error('❌ JWT_SECRET not configured');
+          return res.status(500).json({ success: false, error: 'Server configuration error' });
+        }
+        const decoded = jwt.default.verify(token, jwtSecret);
+        userId = decoded.userId;
+        console.log('✅ verifyAuth - JWT verified, userId:', userId);
+      } catch (jwtError) {
+        console.error('❌ JWT verification error:', jwtError.message);
+        return res.status(401).json({ success: false, error: 'Invalid or expired token' });
+      }
+    } 
+    else {
+      console.log('❌ verifyAuth - Invalid token format');
+      return res.status(401).json({ success: false, error: 'Invalid token format' });
+    }
+
+    if (!userId) {
+      console.log('❌ verifyAuth - No userId extracted');
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      console.log('❌ verifyAuth - User not found:', userId);
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    if (!user.isActive) {
+      console.log('❌ verifyAuth - User account is inactive:', user.email);
+      return res.status(403).json({ success: false, error: 'Account is inactive' });
+    }
+
+    console.log('✅ verifyAuth - User authenticated:', user.email);
+    // Attach user to request for downstream use
+    req.user = user;
+    next();
+  } catch (err) {
+    console.error('❌ Authentication error:', err.message || err);
+    return res.status(500).json({ success: false, error: 'Server error during authentication' });
   }
-});
+};
 
 // Simple admin verification middleware
 const verifyAdmin = async (req, res, next) => {
@@ -347,7 +441,11 @@ const verifyAdmin = async (req, res, next) => {
     else if (token.includes('.')) {
       try {
         const jwt = await import('jsonwebtoken');
-        const jwtSecret = process.env.JWT_SECRET || 'your-super-secret-jwt-key-here-change-in-production';
+        const jwtSecret = process.env.JWT_SECRET;
+        if (!jwtSecret) {
+          console.error('❌ JWT_SECRET not configured');
+          return res.status(500).json({ success: false, error: 'Server configuration error' });
+        }
         const decoded = jwt.default.verify(token, jwtSecret);
         userId = decoded.userId;
         console.log('✅ verifyAdmin - JWT verified, userId:', userId);
@@ -386,6 +484,24 @@ const verifyAdmin = async (req, res, next) => {
     return res.status(500).json({ success: false, error: 'Server error during admin verification' });
   }
 };
+
+// ============================================
+// User Routes
+// ============================================
+
+// Get all users - Protected: requires authentication
+app.get('/api/users', verifyAuth, async (req, res) => {
+  try {
+    // Only admins and agents can see all users
+    if (req.user.role === 'customer') {
+      return res.status(403).json({ success: false, error: 'Forbidden - insufficient permissions' });
+    }
+    const users = await User.find();
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 /**
  * Admin create user
@@ -459,8 +575,8 @@ app.delete('/api/users/:id', verifyAdmin, async (req, res) => {
   }
 });
 
-// Ticket Routes
-app.get('/api/tickets', async (req, res) => {
+// Ticket Routes - Protected: requires authentication
+app.get('/api/tickets', verifyAuth, async (req, res) => {
   try {
     const { userId, userRole, status, priority, category, search } = req.query;
     
@@ -487,9 +603,11 @@ app.get('/api/tickets', async (req, res) => {
     if (priority) query.priority = { $in: priority.split(',') };
     if (category) query.category = category;
     if (search) {
+      // Sanitize search input to prevent NoSQL injection
+      const sanitizedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
+        { title: { $regex: sanitizedSearch, $options: 'i' } },
+        { description: { $regex: sanitizedSearch, $options: 'i' } }
       ];
     }
     
@@ -518,7 +636,7 @@ app.get('/api/tickets', async (req, res) => {
   }
 });
 
-app.post('/api/tickets', async (req, res) => {
+app.post('/api/tickets', verifyAuth, async (req, res) => {
   try {
     let customerId = req.body.customerId;
     
@@ -627,7 +745,7 @@ app.post('/api/tickets', async (req, res) => {
   }
 });
 
-app.put('/api/tickets/:id', async (req, res) => {
+app.put('/api/tickets/:id', verifyAuth, async (req, res) => {
   try {
     const updateData = { ...req.body, updatedAt: new Date() };
     
@@ -732,7 +850,7 @@ app.put('/api/tickets/:id', async (req, res) => {
   }
 });
 
-app.get('/api/tickets/:id', async (req, res) => {
+app.get('/api/tickets/:id', verifyAuth, async (req, res) => {
   try {
     // Try to find by ticketNumber first, then by MongoDB ObjectId
     let ticket;
@@ -767,7 +885,7 @@ app.get('/api/tickets/:id', async (req, res) => {
 // Email Routes
 
 // Manually send resolution email
-app.post('/api/tickets/:id/send-resolution-email', async (req, res) => {
+app.post('/api/tickets/:id/send-resolution-email', verifyAuth, async (req, res) => {
   try {
     let ticket;
     if (req.params.id.startsWith('TKT-') || req.params.id.startsWith('T-')) {
@@ -824,8 +942,8 @@ app.post('/api/tickets/:id/send-resolution-email', async (req, res) => {
   }
 });
 
-// Template Routes (using simple mock data for now)
-app.get('/api/templates', async (req, res) => {
+// Template Routes - Protected: requires authentication
+app.get('/api/templates', verifyAuth, async (req, res) => {
   try {
     // Fetch templates from MongoDB
     const templates = await Template.find({ isActive: true });
@@ -848,7 +966,7 @@ app.get('/api/templates', async (req, res) => {
   }
 });
 
-app.post('/api/templates', async (req, res) => {
+app.post('/api/templates', verifyAuth, async (req, res) => {
   try {
     const { name, category, title, description, priority, assignedTo } = req.body;
     if (!name || !category || !title || !description) {
@@ -884,7 +1002,7 @@ app.post('/api/templates', async (req, res) => {
   }
 });
 
-app.put('/api/templates/:id', async (req, res) => {
+app.put('/api/templates/:id', verifyAuth, async (req, res) => {
   try {
     const { name, category, title, description, priority, assignedTo } = req.body;
     
@@ -926,7 +1044,7 @@ app.put('/api/templates/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/templates/:id', async (req, res) => {
+app.delete('/api/templates/:id', verifyAuth, async (req, res) => {
   try {
     const template = await Template.findById(req.params.id);
     if (!template) {
@@ -944,8 +1062,8 @@ app.delete('/api/templates/:id', async (req, res) => {
   }
 });
 
-// Performance Analytics Routes
-app.get('/api/performance/overview', async (req, res) => {
+// Performance Analytics Routes - Protected: requires authentication
+app.get('/api/performance/overview', verifyAuth, async (req, res) => {
   try {
     const totalTickets = await Ticket.countDocuments();
     const resolvedTickets = await Ticket.countDocuments({ status: { $in: ['resolved', 'closed'] } });
@@ -991,7 +1109,7 @@ app.get('/api/performance/overview', async (req, res) => {
   }
 });
 
-app.get('/api/performance/agents', async (req, res) => {
+app.get('/api/performance/agents', verifyAuth, async (req, res) => {
   try {
     const agents = await User.find({ role: 'support-agent' }).select('name email');
     
@@ -1043,7 +1161,7 @@ app.get('/api/performance/agents', async (req, res) => {
 });
 
 // Message Routes
-app.post('/api/tickets/:id/messages', async (req, res) => {
+app.post('/api/tickets/:id/messages', verifyAuth, async (req, res) => {
   try {
     const ticket = await Ticket.findOne({ ticketNumber: req.params.id });
     if (!ticket) {
